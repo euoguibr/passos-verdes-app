@@ -1,5 +1,5 @@
 // Service worker simples: deixa o app instalável e abre mesmo com internet ruim.
-const CACHE = 'pv-v3';
+const CACHE = 'pv-v4';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/logo.png', '/icons/icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

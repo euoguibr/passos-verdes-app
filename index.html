@@ -56,7 +56,18 @@ button,input,textarea,select{font:inherit;color:inherit}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{background:#000 url(icons/logo.png) center/cover no-repeat;border-radius:50%;border:1px solid var(--line);flex:none}
 .mark{width:40px;height:40px}
-.hero-logo{width:96px;height:96px;margin-bottom:6px}
+.banners{position:relative;margin-bottom:4px}
+.bn-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;border-radius:var(--r);background:var(--sunk)}
+.bn-track::-webkit-scrollbar{display:none}
+.bn-slide{flex:0 0 100%;scroll-snap-align:start;display:block}
+.bn-slide img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.bn-dots{display:flex;justify-content:center;gap:6px;margin-top:8px}
+.bn-dots button{appearance:none;border:0;padding:0;width:7px;height:7px;border-radius:999px;background:var(--line);cursor:pointer;transition:width .2s,background .2s}
+.bn-dots button[aria-current="true"]{width:20px;background:var(--green)}
+.bn-adm{display:grid;grid-template-columns:120px 1fr;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.bn-adm:first-child{border-top:0}
+.bn-adm img{width:120px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:var(--sunk)}
+.bn-adm>div{min-width:0}
 .pic{display:block;width:100%;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--sunk)}
 .card>.pic:first-child{margin:-16px -16px 2px;width:calc(100% + 32px);max-width:none;border-radius:var(--r) var(--r) 0 0}
 .capa{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r);background:var(--sunk);margin-top:16px}
@@ -241,11 +252,11 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MESL=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos'];
+const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banners'];
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],bnIdx:0,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -307,7 +318,7 @@ function render(){
   root.innerHTML=h;
   for(const[id,v]of Object.entries(saved)){const el=document.getElementById(id);if(el)el.value=v}
   if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
-  renderTabs();refreshNames();
+  renderTabs();refreshNames();bnSync(false);
 }
 function visitante(){
   if(!S.ready)return '';
@@ -319,9 +330,9 @@ function loading(c,txt){return !S.loaded[c]&&!S.offline?`<div class="empty">${tx
 
 function vInicio(){
   const m=me();const nm=m.apelido||S.myName||'';
-  let h=`<section class="section"><span class="logo hero-logo" role="img" aria-label="Logo Passos Verdes"></span><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
+  let h=bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
    <h1 class="h-display">Bora correr junto?</h1>
-   <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p>${S.info?picHtml(S.info.capa,'capa'):''}</section>`;
+   <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p></section>`;
   h+=visitante();
   if(S.uid){
     const pedir=!m.apelido||S.editNome;
@@ -482,6 +493,26 @@ document.addEventListener('click',e=>{
   if(S.uid)S.db.collection('pedidos').add({uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:sel.t||'',cor:sel.c||'',qtd:q,total,status:'novo',criado:Date.now()}).catch(()=>{});
 },true);
 
+function bannerList(){return S.banners.filter(b=>okPic(b.foto)).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
+function bannersHtml(){
+  const bs=bannerList();if(!bs.length)return '';
+  if(S.bnIdx>=bs.length)S.bnIdx=0;
+  return `<section class="banners" aria-label="Destaques"><div class="bn-track" id="bn-track">${bs.map((b,i)=>{const img=`<img src="${b.foto}" alt="${esc(b.titulo||'Destaque '+(i+1))}" ${i?'loading="lazy"':''}>`;
+    return /^https?:\/\//.test(b.link||'')?`<a class="bn-slide" href="${esc(b.link)}" target="_blank" rel="noopener">${img}</a>`:`<div class="bn-slide">${img}</div>`}).join('')}</div>
+    ${bs.length>1?`<div class="bn-dots">${bs.map((b,i)=>`<button data-action="bn" data-i="${i}" aria-label="Destaque ${i+1}" aria-current="${i===S.bnIdx}"></button>`).join('')}</div>`:''}</section>`;
+}
+function bnSync(smooth){const t=document.getElementById('bn-track');if(!t)return;const x=S.bnIdx*t.clientWidth;if(Math.abs(t.scrollLeft-x)>2)t.scrollTo({left:x,behavior:smooth?'smooth':'instant'});
+  document.querySelectorAll('.bn-dots button').forEach((d,i)=>d.setAttribute('aria-current',String(i===S.bnIdx)))}
+let bnHold=0,bnScrollT;
+document.addEventListener('scroll',e=>{const t=e.target;if(!(t&&t.id==='bn-track'))return;clearTimeout(bnScrollT);bnScrollT=setTimeout(()=>{const i=Math.round(t.scrollLeft/Math.max(1,t.clientWidth));if(i!==S.bnIdx){S.bnIdx=i;bnSync(false)}},120)},true);
+document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#bn-track'))bnHold=Date.now()},{passive:true});
+setInterval(()=>{
+  if(view!=='inicio'||document.hidden)return;const n=bannerList().length;if(n<2)return;
+  if(Date.now()-bnHold<8000)return;
+  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
+  S.bnIdx=(S.bnIdx+1)%n;bnSync(true);
+},5000);
+
 function vGalera(){
   let h=`<section class="section"><p class="eyebrow">Galera</p><h1 class="h-display">Vota, responde, participa</h1></section>`+visitante();
   const ps=[...S.enquetes].sort((a,b)=>(b.ativa?1:0)-(a.ativa?1:0)||(b.criado||0)-(a.criado||0));
@@ -517,6 +548,14 @@ function vAdmin(){
     <div class="row" style="flex-wrap:nowrap">${p.status==='concluido'?`<span class="st ok">Entregue</span>`:`<button class="btn small" data-action="pedok" data-id="${esc(p.id)}">Entregue</button>`}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
   <p class="muted small" style="margin:0">O WhatsApp que recebe os pedidos é o do formulário "Sobre o projeto", mais abaixo.</p></div></section>
+
+  <section class="section"><h2 class="sec">Banners do Início</h2><form class="card" data-form="banner">
+    ${photoField('bn-f','Imagem do banner (horizontal, 1600 × 900 px)')}
+    <div class="grid2"><label for="bn-l">Link ao tocar (opcional)<input type="url" id="bn-l" placeholder="https://"></label><label for="bn-o">Ordem<input type="number" id="bn-o" step="1" placeholder="1, 2, 3…"></label></div>
+    <label for="bn-t">Descrição curta (para acessibilidade)<input type="text" id="bn-t" placeholder="Ex.: Inscrições abertas Corrida Kids"></label>
+    <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Adicionar banner</button></div>
+    <p class="muted small" style="margin:0">Com mais de um banner, eles passam sozinhos a cada 5 segundos. Sem nenhum, o espaço some do Início.</p></form>
+    <div class="card">${bannerList().length?bannerList().map(b=>`<div class="bn-adm"><img src="${b.foto}" alt=""><div class="row" style="justify-content:space-between"><span class="small muted">${esc(b.titulo||'Sem descrição')}${b.ordem!=null?' · ordem '+esc(b.ordem):''}</span><button class="btn small danger ${S.armed==='banners'+b.id?'armed':''}" data-action="del" data-col="banners" data-id="${esc(b.id)}">${S.armed==='banners'+b.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum banner. O Início abre direto na saudação.</p>`}</div></section>
 
   <section class="section"><h2 class="sec">${ep?'Editar produto':'Novo produto'}</h2><form class="card" data-form="produto">
     <label for="pr-n">Nome<input type="text" id="pr-n" required placeholder="Ex.: Camisa Passos Verdes 2026" value="${ep?esc(ep.nome):''}"></label>
@@ -569,7 +608,6 @@ function vAdmin(){
   <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
     <label for="in-s">Texto de apresentação<textarea id="in-s">${esc(i.sobre||'')}</textarea></label>
     <div class="grid2"><label for="in-i">Instagram<input type="text" id="in-i" value="${esc(i.instagram||'')}" placeholder="@perfil"></label><label for="in-w">WhatsApp<input type="text" id="in-w" value="${esc(i.whatsapp||'')}" placeholder="(21) 9…"></label></div>
-    ${photoField('in-c','Foto de capa do Início',i.capa)}
     <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`;
 }
 
@@ -655,6 +693,10 @@ document.addEventListener('submit',e=>{
   if(!S.db)return;
   if(k==='evento')addTo('eventos',{titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),foto:S.pending['ev-f']||''},f);
   else if(k==='noticia')addTo('noticias',{titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''},f);
+  else if(k==='banner'){
+    const foto=S.pending['bn-f'];if(!okPic(foto)){toast('Escolha a imagem do banner.');return}
+    addTo('banners',{foto,link:/^https?:\/\//.test(val('bn-l'))?val('bn-l'):'',ordem:val('bn-o')===''?null:Number(val('bn-o')),titulo:val('bn-t')},f);
+  }
   else if(k==='produto'){
     const preco=parseFloat(String(val('pr-p')).replace(',','.'));if(!(preco>=0)){toast('Confira o preço.');return}
     const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
@@ -667,7 +709,7 @@ document.addEventListener('submit',e=>{
   else if(k==='desafio')addTo('desafios',{titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f'),ativo:true},f);
   else if(k==='enquete'){const o=lines('en-o');if(o.length<2){toast('Coloque pelo menos 2 opções.');return}addTo('enquetes',{pergunta:val('en-p'),opcoes:o,ativa:true},f)}
   else if(k==='quiz'){const o=lines('qz-o');const c=parseInt(val('qz-c'),10)-1;if(o.length<2){toast('Coloque pelo menos 2 opções.');return}if(!(c>=0&&c<o.length)){toast('O número da opção certa precisa existir na lista.');return}addTo('quiz',{pergunta:val('qz-p'),opcoes:o,correta:c,explicacao:val('qz-e')},f)}
-  else if(k==='info'){const capa=S.pending['in-c']!==undefined?S.pending['in-c']:((S.info&&S.info.capa)||'');S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),capa}).then(()=>{delete S.pending['in-c'];render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
+  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w')}).then(()=>{render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
 });
 
 document.addEventListener('click',async e=>{
@@ -678,6 +720,7 @@ document.addEventListener('click',async e=>{
   else if(a==='unvote')saveMe(m=>delete m.votos[id]);
   else if(a==='quiz')saveMe(m=>m.quiz[id]=Number(b.dataset.i));
   else if(a==='rmpic'){S.pending[id]='';render()}
+  else if(a==='bn'){S.bnIdx=Number(b.dataset.i)||0;bnHold=Date.now();bnSync(true)}
   else if(a==='theme'){applyTheme(b.dataset.v);render()}
   else if(a==='login')login();
   else if(a==='logout'){try{await signOut(auth)}catch(err){}}
