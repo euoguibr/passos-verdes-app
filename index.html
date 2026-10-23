@@ -231,6 +231,24 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 
 .news{display:flex;flex-direction:column;gap:6px}
 .news p{margin:0;white-space:pre-line}
+.react{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:8px;margin-top:4px}
+.rbtn{appearance:none;border:0;background:none;display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted);cursor:pointer;min-height:40px}
+.rbtn svg{width:20px;height:20px}
+.rbtn:hover{background:var(--sunk)}
+.rbtn.on{color:#E0245E}
+.rbtn.on svg{fill:#E0245E;stroke:#E0245E}
+.rbtn.pop svg{animation:pop .35s ease}
+@keyframes pop{40%{transform:scale(1.35)}}
+.coms{display:flex;flex-direction:column;gap:10px;padding-top:4px}
+.com{display:flex;gap:10px;align-items:flex-start}
+.com>div{min-width:0;flex:1;background:var(--sunk);border-radius:12px;padding:8px 12px}
+.com b{font-size:13px}
+.com p{margin:2px 0 0;font-size:14px;white-space:pre-line;overflow-wrap:anywhere}
+.com .meta2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.com .del{appearance:none;border:0;background:none;color:var(--muted);font-size:12px;cursor:pointer;padding:2px 4px}
+.cform{display:flex;gap:8px;align-items:flex-end}
+.cform textarea{min-height:44px;height:44px;resize:none;flex:1}
+.cform .btn{flex:none}
 
 /* Abas */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
@@ -301,7 +319,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -322,7 +340,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -426,7 +444,7 @@ function vInicio(){
   // Notícias
   h+=`<section class="section"><h2 class="sec">Notícias</h2>`;
   const ns=[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.criado||0)-(a.criado||0));
-  h+=loading('noticias','Carregando notícias…')??(ns.length?ns.map(n=>`<article class="card news">${picHtml(n.foto,'pic')}${n.tag?`<span class="chip">${esc(n.tag)}</span>`:''}<h3>${esc(n.titulo)}</h3><p>${esc(n.texto)}</p>${n.data?`<span class="muted small">${esc(fmtLong(n.data))}</span>`:''}</article>`).join(''):`<div class="empty">Sem notícias por enquanto.</div>`);
+  h+=loading('noticias','Carregando notícias…')??(ns.length?ns.map(newsCard).join(''):`<div class="empty">Sem notícias por enquanto.</div>`);
   h+=`</section>`;
   // Sobre
   const i=S.info;
@@ -546,6 +564,10 @@ function vLoja(){
   return h;
 }
 function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>p.status!=='concluido').length:0}
+document.addEventListener('input',e=>{const el=e.target;if(!el.id)return;
+  if(el.id==='pf-a'){let d=el.value.replace(/\D/g,'').slice(0,4);if(d.length===1&&Number(d)>3)d='0'+d;el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d}
+  else if(el.id==='pf-p'){let d=el.value.replace(/\D/g,'').slice(0,4);el.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d}
+});
 document.addEventListener('change',e=>{const el=e.target;if(el.dataset&&el.dataset.aviso){const k=el.dataset.aviso,v=el.checked;saveMe(m=>{m.avisos={...(m.avisos||{}),[k]:v}});return}if(el.dataset&&el.dataset.sel){const id=el.dataset.sel;S.sel[id]={...(S.sel[id]||{}),[el.dataset.k]:el.value}}});
 document.addEventListener('click',e=>{
   const a=e.target.closest('a[data-buy]');if(!a)return;
@@ -667,6 +689,45 @@ function renderCard(){
   el.hidden=false;
   const tick=()=>{const c=document.getElementById('mclock');if(c)c.textContent=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})};
   tick();if(!clockT)clockT=setInterval(tick,1000);
+}
+const HEART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
+const BUBBLE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+function quando(ms){if(!ms)return '';const d=(Date.now()-ms)/1000;if(d<60)return 'agora';if(d<3600)return Math.floor(d/60)+' min';if(d<86400)return Math.floor(d/3600)+' h';if(d<86400*7)return Math.floor(d/86400)+' d';return new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+function newsCard(n){
+  const cur=n.curtidas&&typeof n.curtidas==='object'?n.curtidas:{};const nl=Object.keys(cur).length;const liked=!!(S.uid&&cur[S.uid]);
+  const nc=Math.max(0,Number(n.nComentarios)||0);const open=!!S.openCom[n.id];const cs=S.coms[n.id];
+  let com='';
+  if(open){
+    com=`<div class="coms">${cs===undefined?`<p class="small muted" style="margin:0">Carregando comentários…</p>`:(cs.length?cs.map(c=>`<div class="com">${avatar(c.uid,32)}<div><div class="meta2"><b>${esc(c.uid===S.uid?(me().apelido||S.myName||c.nome):(nome(c.uid)!=='Corredor(a)'?nome(c.uid):(c.nome||'Corredor(a)')))}</b><span class="muted small">${esc(quando(c.criado))}${c.uid===S.uid||S.admin?` <button class="del" data-action="delcom" data-n="${esc(n.id)}" data-id="${esc(c.id)}">${S.armed==='dc'+c.id?'confirmar':'apagar'}</button>`:''}</span></div><p>${esc(c.texto)}</p></div></div>`).join(''):`<p class="small muted" style="margin:0">Ninguém comentou ainda. Comece a conversa.</p>`)}
+    ${S.uid?`<form class="cform" data-form="comentario" data-id="${esc(n.id)}"><textarea id="cm-${esc(n.id)}" maxlength="500" placeholder="Escreva um comentário" aria-label="Seu comentário" required></textarea><button class="btn primary small" type="submit">Enviar</button></form>`:`<p class="small muted" style="margin:0">Entre com sua conta para comentar.</p>`}</div>`;
+  }
+  return `<article class="card news">${picHtml(n.foto,'pic')}${n.tag?`<span class="chip">${esc(n.tag)}</span>`:''}<h3>${esc(n.titulo)}</h3><p>${esc(n.texto)}</p>${n.data?`<span class="muted small">${esc(fmtLong(n.data))}</span>`:''}
+  <div class="react"><button class="rbtn ${liked?'on':''} ${S.popLike===n.id?'pop':''}" data-action="like" data-id="${esc(n.id)}" aria-pressed="${liked}" aria-label="Curtir">${HEART}<span class="num">${nl||''}</span>${nl?'':'Curtir'}</button>
+  <button class="rbtn" data-action="coms" data-id="${esc(n.id)}" aria-expanded="${open}">${BUBBLE}<span class="num">${nc||''}</span>${nc?(nc===1?'comentário':'comentários'):'Comentar'}</button></div>${com}</article>`;
+}
+const comSubs={};
+function toggleComs(id){
+  if(S.openCom[id]){delete S.openCom[id];if(comSubs[id]){comSubs[id]();delete comSubs[id]}delete S.coms[id];render();return}
+  S.openCom[id]=true;render();
+  comSubs[id]=onSnapshot(query(collection(fs,'noticias',id,'comentarios'),orderBy('criado','asc'),limit(200)),s=>{S.coms[id]=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{S.coms[id]=[];schedule()});
+  setTimeout(()=>document.getElementById('cm-'+id)?.focus({preventScroll:true}),50);
+}
+async function toggleLike(id){
+  if(!S.uid){toast('Entre com sua conta para curtir.');return}
+  const n=S.noticias.find(x=>x.id===id);if(!n)return;const liked=!!(n.curtidas&&n.curtidas[S.uid]);
+  const cur={...(n.curtidas||{})};if(liked)delete cur[S.uid];else cur[S.uid]=true;n.curtidas=cur;S.popLike=liked?null:id;render();setTimeout(()=>{S.popLike=null},400);
+  try{await updateDoc(doc(fs,'noticias',id),{['curtidas.'+S.uid]:liked?deleteField():true})}catch(e){toast('Não deu para curtir agora.')}
+}
+async function enviarCom(id,form){
+  const el=document.getElementById('cm-'+id);const t=(el&&el.value||'').trim();if(!t)return;if(t.length>500){toast('O comentário pode ter até 500 caracteres.');return}
+  el.value='';
+  try{await addDoc(collection(fs,'noticias',id,'comentarios'),{uid:S.uid,nome:me().apelido||S.myName||'',texto:t,criado:Date.now()});
+    updateDoc(doc(fs,'noticias',id),{nComentarios:increment(1)}).catch(()=>{});}
+  catch(e){el.value=t;toast('Não deu para comentar agora.')}
+}
+async function apagarCom(nid,cid){
+  try{await deleteDoc(doc(fs,'noticias',nid,'comentarios',cid));updateDoc(doc(fs,'noticias',nid),{nComentarios:increment(-1)}).catch(()=>{});toast('Comentário apagado.')}
+  catch(e){toast('Não deu para apagar.')}
 }
 function bannerList(){return S.banners.filter(b=>okPic(b.foto)).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
 function bannersHtml(){
@@ -942,6 +1003,7 @@ document.addEventListener('submit',e=>{
   else if(k==='noticia'){const av=checked('nt-av');const d={titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''};
     addTo('noticias',d,f).then(ok=>{if(ok&&av)notificar({tipo:'noticias',titulo:d.titulo,texto:resumo(d.texto),url:'/#inicio'})})}
   else if(k==='aviso'){notificar({tipo:'geral',titulo:val('aw-t'),texto:val('aw-x'),url:'/#'+(val('aw-u')||'inicio')}).then(ok=>{if(ok){['aw-t','aw-x'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''})}})}
+  else if(k==='comentario'){enviarCom(f.dataset.id,f);return}
   else if(k==='perfil'){
     const n=val('pf-n');if(!n){toast('Coloque como a galera te chama.');return}
     const pace=val('pf-p');if(pace&&!/^\d{1,2}:[0-5]\d$/.test(pace)){toast('Escreva o ritmo assim: 5:30');return}
@@ -991,6 +1053,9 @@ document.addEventListener('click',async e=>{
     if(!me().apelido&&n)saveMe(m=>{m.apelido=n});
     S.onbDone=true;try{localStorage.setItem('pv-onb-'+S.uid,'1')}catch(err){}render();
   }
+  else if(a==='like')toggleLike(id);
+  else if(a==='coms')toggleComs(id);
+  else if(a==='delcom'){const k='dc'+id;if(S.armed!==k){arm(k);return}S.armed=null;apagarCom(b.dataset.n,id)}
   else if(a==='crop-ok'){if(CROP.img){S.pending['pf-f']=cropExport();closeCrop();render();toast('Foto ajustada. Toque em Salvar perfil.')}}
   else if(a==='crop-cancel')closeCrop();
   else if(a==='card'){S.cardOpen=true;renderCard()}
@@ -1017,7 +1082,7 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details[data-past]'))S.showPast=e.target.open},true);
 function renderZoom(){const z=$('#zoom');if(S.zoom){$('#zoom-img').src=S.zoom;z.hidden=false}else{z.hidden=true;$('#zoom-img').removeAttribute('src')}}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.zoom){S.zoom=null;renderZoom()}if(S.cardOpen){S.cardOpen=false;renderCard()}}if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.bib[data-go]')){e.preventDefault();go('perfil')}});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&e.target.matches&&e.target.matches('.cform textarea')){e.preventDefault();e.target.form.requestSubmit();return}if(e.key==='Escape'){if(S.zoom){S.zoom=null;renderZoom()}if(S.cardOpen){S.cardOpen=false;renderCard()}}if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.bib[data-go]')){e.preventDefault();go('perfil')}});
 let armT;function arm(k){S.armed=k;render();clearTimeout(armT);armT=setTimeout(()=>{S.armed=null;render()},3500)}
 
 /* ---------- Firebase ---------- */

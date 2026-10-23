@@ -11,7 +11,26 @@ service cloud.firestore {
 
     // Conteúdo publicado pela equipe: todo mundo vê, só organizador mexe.
     match /eventos/{id}   { allow read: if true; allow write: if organizador(); }
-    match /noticias/{id}  { allow read: if true; allow write: if organizador(); }
+    // Notícias: a equipe publica; quem está logado pode curtir e comentar.
+    match /noticias/{id} {
+      allow read: if true;
+      allow write: if organizador();
+      allow update: if logado() && (
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['curtidas'])
+          && request.resource.data.get('curtidas', {}).diff(resource.data.get('curtidas', {})).affectedKeys().hasOnly([request.auth.uid]))
+        || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nComentarios'])
+          && (request.resource.data.nComentarios == resource.data.get('nComentarios', 0) + 1
+              || request.resource.data.nComentarios == resource.data.get('nComentarios', 0) - 1))
+      );
+      match /comentarios/{cid} {
+        allow read: if true;
+        allow create: if eu(request.resource.data.uid)
+          && request.resource.data.texto is string
+          && request.resource.data.texto.size() > 0 && request.resource.data.texto.size() <= 500
+          && request.resource.data.keys().hasOnly(['uid','nome','texto','criado']);
+        allow delete: if organizador() || eu(resource.data.uid);
+      }
+    }
     match /desafios/{id}  { allow read: if true; allow write: if organizador(); }
     match /enquetes/{id}  { allow read: if true; allow write: if organizador(); }
     match /quiz/{id}      { allow read: if true; allow write: if organizador(); }
