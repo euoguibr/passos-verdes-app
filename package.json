@@ -1,0 +1,8 @@
+{
+  "name": "passos-verdes-app",
+  "private": true,
+  "description": "App da comunidade Passos Verdes",
+  "dependencies": {
+    "firebase-admin": "12.7.0"
+  }
+}

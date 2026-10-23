@@ -17,6 +17,7 @@ service cloud.firestore {
     match /quiz/{id}      { allow read: if true; allow write: if organizador(); }
     match /projeto/{id}   { allow read: if true; allow write: if organizador(); }
     match /produtos/{id}  { allow read: if true; allow write: if organizador(); }
+    match /banners/{id}   { allow read: if true; allow write: if organizador(); }
 
     // Cada corredor: quem está logado vê todos (presença, enquetes), mas só altera o próprio.
     match /membros/{uid} {
@@ -48,6 +49,14 @@ service cloud.firestore {
       allow create: if eu(request.resource.data.uid) && request.resource.data.status == 'novo';
       allow read: if organizador() || eu(resource.data.uid);
       allow update, delete: if organizador();
+    }
+
+    // Celulares que ativaram os avisos: cada um registra o próprio; só o servidor lê a lista.
+    match /dispositivos/{token} {
+      allow create, update: if eu(request.resource.data.uid)
+        && request.resource.data.keys().hasOnly(['uid','criado','atualizado','plataforma']);
+      allow delete: if logado() && resource.data.uid == request.auth.uid;
+      allow read: if false;
     }
 
     // Lista de organizadores: só se gerencia pelo console do Firebase.
