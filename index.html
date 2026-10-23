@@ -56,6 +56,13 @@ button,input,textarea,select{font:inherit;color:inherit}
 .logo{background:#fff url(icons/logo.png) center/cover no-repeat;border-radius:50%;border:1px solid var(--line);flex:none}
 .mark{width:40px;height:40px}
 .hero-logo{width:96px;height:96px;margin-bottom:6px}
+.pic{display:block;width:100%;max-width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:var(--sunk)}
+.card>.pic:first-child{margin:-16px -16px 2px;width:calc(100% + 32px);max-width:none;border-radius:var(--r) var(--r) 0 0}
+.capa{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r);background:var(--sunk);margin-top:16px}
+.photo-in{display:flex;flex-direction:column;gap:8px}
+.photo-in .prev{width:100%;max-width:280px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.filebtn{position:relative;overflow:hidden;align-self:flex-start}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .brand b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
 .brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
 .who{font-size:13px;color:var(--muted);text-align:right;flex:none}
@@ -202,7 +209,7 @@ const MESL=['janeiro','fevereiro','março','abril','maio','junho','julho','agost
 const COLS=['eventos','noticias','desafios','enquetes','quiz'];
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
-  editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null};
+  editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null};
 const BLANK=()=>({apelido:'',presencas:{},votos:{},quiz:{},km:{}});
 
 function hoje(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -246,7 +253,7 @@ let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;ren
 function render(){
   if(view==='admin'&&!S.admin&&S.ready)view='inicio';
   const root=$('#view');const saved={};
-  root.querySelectorAll('input[id],textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
+  root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
   if(view==='agenda')h=vAgenda();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
@@ -267,7 +274,7 @@ function vInicio(){
   const m=me();const nm=m.apelido||S.myName||'';
   let h=`<section class="section"><span class="logo hero-logo" role="img" aria-label="Logo Passos Verdes"></span><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
    <h1 class="h-display">Bora correr junto?</h1>
-   <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p></section>`;
+   <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p>${S.info?picHtml(S.info.capa,'capa'):''}</section>`;
   h+=visitante();
   if(S.uid){
     const pedir=!m.apelido||S.editNome;
@@ -292,7 +299,7 @@ function vInicio(){
   // Notícias
   h+=`<section class="section"><h2 class="sec">Notícias</h2>`;
   const ns=[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.criado||0)-(a.criado||0));
-  h+=loading('noticias','Carregando notícias…')??(ns.length?ns.map(n=>`<article class="card news">${n.tag?`<span class="chip">${esc(n.tag)}</span>`:''}<h3>${esc(n.titulo)}</h3><p>${esc(n.texto)}</p>${n.data?`<span class="muted small">${esc(fmtLong(n.data))}</span>`:''}</article>`).join(''):`<div class="empty">Sem notícias por enquanto.</div>`);
+  h+=loading('noticias','Carregando notícias…')??(ns.length?ns.map(n=>`<article class="card news">${picHtml(n.foto,'pic')}${n.tag?`<span class="chip">${esc(n.tag)}</span>`:''}<h3>${esc(n.titulo)}</h3><p>${esc(n.texto)}</p>${n.data?`<span class="muted small">${esc(fmtLong(n.data))}</span>`:''}</article>`).join(''):`<div class="empty">Sem notícias por enquanto.</div>`);
   h+=`</section>`;
   // Sobre
   const i=S.info;
@@ -306,7 +313,7 @@ function evCard(e){
   const vou=!!me().presencas[e.id];const past=(e.data||'')<hoje();
   const tipo=(e.tipo||'Treino');const cls=tipo==='Corrida'?'corrida':tipo==='Ação'?'acao':'treino';
   const avs=ids.slice(0,5).map(id=>{const n=nome(id);return `<span class="av" style="background:${AVC[hash(id)%AVC.length]}" title="${esc(n)}">${esc(ini(n))}</span>`}).join('');
-  return `<article class="card"><div class="ev"><div class="date"><div class="d">${d?d.getDate():'–'}</div><div class="m">${d?MES[d.getMonth()]:''}</div></div>
+  return `<article class="card">${picHtml(e.foto,'pic')}<div class="ev"><div class="date"><div class="d">${d?d.getDate():'–'}</div><div class="m">${d?MES[d.getMonth()]:''}</div></div>
   <div class="ev-body"><div class="row"><span class="chip ${cls}">${esc(tipo)}</span></div><h3>${esc(e.titulo)}</h3>
   <div class="meta">${d?`<span>${esc(fmtLong(e.data))}</span>`:''}${e.hora?`<span class="num">${esc(e.hora)}</span>`:''}${e.local?`<span>${esc(e.local)}</span>`:''}</div>
   ${e.descricao?`<p style="margin:0" class="small">${esc(e.descricao)}</p>`:''}
@@ -398,14 +405,16 @@ function vAdmin(){
     <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp"><option>Treino</option><option>Corrida</option><option>Ação</option></select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo"></label></div>
     <label for="ev-ds">Detalhes<textarea id="ev-ds" placeholder="Distância, ritmo, o que levar"></textarea></label>
     <label for="ev-lk">Link de inscrição (opcional)<input type="url" id="ev-lk" placeholder="https://"></label>
-    <button class="btn primary" type="submit">Publicar encontro</button></form>
+    ${photoField('ev-f','Banner do encontro (opcional)')}
+    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Publicar encontro</button></form>
     <div class="card">${admList('eventos',[...S.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>fmtLong(x.data)+(x.hora?' · '+x.hora:''))}</div></section>
 
   <section class="section"><h2 class="sec">Nova notícia</h2><form class="card" data-form="noticia">
     <label for="nt-t">Título<input type="text" id="nt-t" required></label>
     <label for="nt-x">Texto<textarea id="nt-x" required></textarea></label>
     <div class="grid2"><label for="nt-g">Etiqueta<input type="text" id="nt-g" placeholder="Ex.: Assessoria"></label><label for="nt-d">Data<input type="date" id="nt-d"></label></div>
-    <button class="btn primary" type="submit">Publicar notícia</button></form>
+    ${photoField('nt-f','Foto da notícia (opcional)')}
+    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Publicar notícia</button></form>
     <div class="card">${admList('noticias',[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>x.data?fmtLong(x.data):'')}</div></section>
 
   <section class="section"><h2 class="sec">Novo desafio</h2><form class="card" data-form="desafio">
@@ -432,8 +441,38 @@ function vAdmin(){
   <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
     <label for="in-s">Texto de apresentação<textarea id="in-s">${esc(i.sobre||'')}</textarea></label>
     <div class="grid2"><label for="in-i">Instagram<input type="text" id="in-i" value="${esc(i.instagram||'')}" placeholder="@perfil"></label><label for="in-w">WhatsApp<input type="text" id="in-w" value="${esc(i.whatsapp||'')}" placeholder="(21) 9…"></label></div>
-    <button class="btn primary" type="submit">Salvar</button></form></section>`;
+    ${photoField('in-c','Foto de capa do Início',i.capa)}
+    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`;
 }
+
+/* ---------- Fotos ---------- */
+const okPic=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
+function picHtml(u,cls){return okPic(u)?`<img class="${cls}" src="${u}" alt="" loading="lazy">`:''}
+function photoField(id,label,current){
+  const p=S.pending[id];const shown=p!==undefined?p:(current||'');
+  return `<div class="photo-in"><span class="small" style="font-weight:600;color:var(--muted)">${label}</span>
+  ${okPic(shown)?`<img class="prev" src="${shown}" alt="Prévia da foto">`:''}
+  <div class="row"><span class="btn small filebtn">${S.busyPic===id?'Preparando…':(okPic(shown)?'Trocar foto':'Escolher foto')}<input type="file" id="${id}" accept="image/*" aria-label="${label}"></span>
+  ${okPic(shown)?`<button type="button" class="btn small danger" data-action="rmpic" data-id="${id}">Remover</button>`:''}</div></div>`;
+}
+function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej()};i.src=u})}
+async function compress(file){
+  const img=await loadImg(file);let max=1280,q=0.75,out='';
+  for(let t=0;t<6;t++){
+    const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
+    const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
+    const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
+    out=c.toDataURL('image/jpeg',q);if(out.length<450000)return out;
+    q-=0.1;max=Math.round(max*0.85);
+  }
+  if(out.length<900000)return out;throw new Error('grande');
+}
+document.addEventListener('change',async e=>{
+  const el=e.target;if(!(el.matches&&el.matches('input[type=file]'))||!el.files||!el.files[0])return;
+  const id=el.id;S.busyPic=id;render();
+  try{S.pending[id]=await compress(el.files[0])}catch(err){toast('Não deu para usar essa foto. Tente outra em JPG ou PNG.')}
+  S.busyPic=null;render();
+});
 
 /* ---------- Nomes ---------- */
 function refreshNames(){}
@@ -454,7 +493,7 @@ function saveMe(mut){
   }).finally(()=>{writing--});
 }
 async function addTo(col,data,form){
-  try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input,textarea').forEach(el=>el.value='');toast('Publicado.');}
+  try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');form.querySelectorAll('input[type=file]').forEach(el=>delete S.pending[el.id]);render();toast('Publicado.');}
   catch(e){toast('Não foi possível publicar. '+(e&&e.code==='permission-denied'?'Só quem edita o app pode publicar.':'Tente de novo.'))}
 }
 const val=id=>(document.getElementById(id)?.value||'').trim();
@@ -466,12 +505,12 @@ document.addEventListener('submit',e=>{
   if(k==='km'){const id=f.dataset.id;const inp=document.getElementById('km-'+id);const n=parseFloat(String(inp.value).replace(',','.'));
     if(!(n>0)||n>300){toast('Digite os km entre 0,1 e 300.');return}inp.value='';saveMe(m=>{m.km[id]=Math.round(((Number(m.km[id])||0)+n)*10)/10});toast('+'+kmf(n)+' km lançados. Boa!');return}
   if(!S.db)return;
-  if(k==='evento')addTo('eventos',{titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk')},f);
-  else if(k==='noticia')addTo('noticias',{titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje()},f);
+  if(k==='evento')addTo('eventos',{titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),foto:S.pending['ev-f']||''},f);
+  else if(k==='noticia')addTo('noticias',{titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''},f);
   else if(k==='desafio')addTo('desafios',{titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f'),ativo:true},f);
   else if(k==='enquete'){const o=lines('en-o');if(o.length<2){toast('Coloque pelo menos 2 opções.');return}addTo('enquetes',{pergunta:val('en-p'),opcoes:o,ativa:true},f)}
   else if(k==='quiz'){const o=lines('qz-o');const c=parseInt(val('qz-c'),10)-1;if(o.length<2){toast('Coloque pelo menos 2 opções.');return}if(!(c>=0&&c<o.length)){toast('O número da opção certa precisa existir na lista.');return}addTo('quiz',{pergunta:val('qz-p'),opcoes:o,correta:c,explicacao:val('qz-e')},f)}
-  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w')}).then(()=>toast('Salvo.')).catch(()=>toast('Não foi possível salvar.'))}
+  else if(k==='info'){const capa=S.pending['in-c']!==undefined?S.pending['in-c']:((S.info&&S.info.capa)||'');S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),capa}).then(()=>{delete S.pending['in-c'];render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
 });
 
 document.addEventListener('click',async e=>{
@@ -481,6 +520,7 @@ document.addEventListener('click',async e=>{
   else if(a==='vote')saveMe(m=>m.votos[id]=Number(b.dataset.i));
   else if(a==='unvote')saveMe(m=>delete m.votos[id]);
   else if(a==='quiz')saveMe(m=>m.quiz[id]=Number(b.dataset.i));
+  else if(a==='rmpic'){S.pending[id]='';render()}
   else if(a==='login')login();
   else if(a==='logout'){try{await signOut(auth)}catch(err){}}
   else if(a==='editnome'){S.editNome=true;render();document.getElementById('f-apelido')?.focus()}
