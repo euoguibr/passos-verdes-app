@@ -19,6 +19,9 @@ service cloud.firestore {
     match /produtos/{id}  { allow read: if true; allow write: if organizador(); }
     match /banners/{id}   { allow read: if true; allow write: if organizador(); }
 
+    // Clube de vantagens: só quem está logado vê os parceiros.
+    match /parceiros/{id} { allow read: if logado(); allow write: if organizador(); }
+
     // Cada corredor: quem está logado vê todos (presença, enquetes), mas só altera o próprio.
     match /membros/{uid} {
       allow read: if logado();

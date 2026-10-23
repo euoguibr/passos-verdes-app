@@ -91,7 +91,50 @@ button,input,textarea,select{font:inherit;color:inherit}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .brand b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
 .brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
-.who{font-size:13px;color:var(--muted);text-align:right;flex:none}
+.brand>div{min-width:0}
+.brand b,.brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:420px){.brand small{letter-spacing:.06em;font-size:10.5px}}
+.who{display:flex;align-items:center;gap:6px;flex:none}
+.hbtn{appearance:none;border:0;background:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:var(--muted);padding:0}
+.hbtn svg{width:22px;height:22px}
+.hbtn[aria-current="page"]{color:var(--green);background:var(--green-soft)}
+.avt{border-radius:50%;object-fit:cover;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;overflow:hidden}
+.hbtn .avt{border:2px solid var(--line)}
+.hbtn[aria-current="page"] .avt{border-color:var(--green)}
+.bib{cursor:pointer}
+.bib-hint{display:block;text-align:center;font-size:13px;color:var(--muted);margin-top:6px}
+.prof-head{display:flex;gap:16px;align-items:center}
+.prof-head>div{min-width:0}
+.prof-head h1{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;text-transform:uppercase;font-size:34px;line-height:1;margin:0 0 6px;overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:28px;line-height:1;font-variant-numeric:tabular-nums}
+.stat span{font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.linkrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 0;border:0;border-top:1px solid var(--line);font-weight:600;background:none;width:100%;text-align:left;cursor:pointer;color:var(--ink);font-size:16px}
+.linkrow:first-child{border-top:0}
+.linkrow svg{width:18px;height:18px;color:var(--muted)}
+.overlay{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;padding:calc(24px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;align-items:center;justify-content:center}
+.overlay .in{width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px}
+.onb-logo{width:88px;height:88px;border-radius:22px}
+.mcard{position:relative;border-radius:20px;overflow:hidden;background:var(--surface);border:1px solid var(--line);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.mcard .band{background:var(--green);color:var(--on-green);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:10px 16px;display:flex;justify-content:space-between;gap:8px}
+.mcard .body{padding:20px 18px;display:flex;gap:16px;align-items:center}
+.mcard .body>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.mcard .nm{font-family:var(--display);font-weight:850;font-stretch:70%;font-variation-settings:"wdth" 70;text-transform:uppercase;font-size:32px;line-height:1;overflow-wrap:anywhere}
+.mcard .live{position:relative;overflow:hidden;background:var(--sunk);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}
+.mcard .live::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,rgba(93,187,124,.35) 50%,transparent 70%);background-size:220% 100%;animation:shine 2.4s linear infinite}
+.mcard .live>*{position:relative}
+.dot-live{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes shine{from{background-position:120% 0}to{background-position:-120% 0}}
+@keyframes pulse{50%{opacity:.25}}
+.partner{flex-direction:row;align-items:flex-start;gap:14px}
+.partner .plogo{width:60px;height:60px;border-radius:14px;object-fit:cover;background:var(--sunk);flex:none;display:grid;place-items:center;font-weight:800;color:var(--muted)}
+.partner>div{min-width:0;display:flex;flex-direction:column;gap:6px;flex:1}
+.benef{align-self:flex-start;background:var(--ipe-soft);color:var(--ipe);font-weight:800;font-size:14px;padding:4px 10px;border-radius:8px}
+.logos{display:flex}
+.logos img,.logos span{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid var(--surface);margin-left:-8px;background:var(--sunk);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--muted)}
+.logos>:first-child{margin-left:0}
 
 /* Tipografia */
 .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0}
@@ -152,7 +195,7 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .meta{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
 .people{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .avs{display:flex}
-.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;border:2px solid var(--surface);margin-left:-6px}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;border:2px solid var(--surface);margin-left:-6px;object-fit:cover}
 .avs .av:first-child{margin-left:0}
 
 /* Progresso */
@@ -163,7 +206,7 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 
 /* Ranking */
 .rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.rank li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.rank li{display:grid;grid-template-columns:28px 30px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 .rank li:first-child{border-top:0}
 .rank .pos{font-family:var(--display);font-weight:800;font-size:18px;color:var(--muted);text-align:center}
 .rank li.top1 .pos{color:var(--ipe)}
@@ -245,6 +288,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 </div>
 
 <nav class="tabs" aria-label="Seções"><div class="tabs-in" id="tabs"></div></nav>
+<div class="overlay" id="onb" hidden role="dialog" aria-label="Boas-vindas"></div>
+<div class="overlay" id="mcard" hidden role="dialog" aria-label="Cartão de membro"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -271,7 +316,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],bnIdx:0,push:'checking',pushBusy:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -302,7 +347,8 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 
 /* ---------- Navegação ---------- */
-const VIEWS=['inicio','agenda','desafios','loja','galera','admin'];
+const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube'];
+const TABS=['inicio','agenda','desafios','loja','galera','admin'];
 const ICON={
  inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
  agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
@@ -317,9 +363,9 @@ window.addEventListener('hashchange',()=>{const v=(location.hash||'').slice(1);i
 function go(v){view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
 
 function renderTabs(){
-  const list=VIEWS.filter(v=>v!=='admin'||S.admin);
+  const list=TABS.filter(v=>v!=='admin'||S.admin);
   $('#tabs').innerHTML=list.map(v=>`<button class="tab" data-go="${v}" ${v===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[v]}</svg>${v==='admin'&&pendCount()?`<span class="badge num">${pendCount()}</span>`:''}${LABEL[v]}</button>`).join('');
-  $('#who').innerHTML=S.uid?`<span class="num">Nº ${bibNum()}</span>`:'';
+  $('#who').innerHTML=`<button class="hbtn" data-go="config" aria-label="Configurações" ${view==='config'?'aria-current="page"':''}>${GEAR}</button>${S.uid?`<button class="hbtn" data-go="perfil" aria-label="Meu perfil" ${view==='perfil'?'aria-current="page"':''}>${avatar(S.uid,34)}</button>`:''}`;
 }
 
 /* ---------- Render ---------- */
@@ -327,11 +373,14 @@ let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;ren
 function render(){
   if(view==='admin'&&!S.admin&&S.ready)view='inicio';
   const root=$('#view');const saved={};
+  document.querySelectorAll('#onb input[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
-  if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
+  if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
   root.innerHTML=h;
+  const ob=onbHtml();const oe=$('#onb');if(ob){oe.innerHTML=ob;oe.hidden=false}else{oe.hidden=true;oe.innerHTML=''}
+  renderCard();
   for(const[id,v]of Object.entries(saved)){const el=document.getElementById(id);if(el)el.value=v}
   if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
   renderTabs();refreshNames();bnSync(false);
@@ -351,10 +400,8 @@ function vInicio(){
    <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p></section>`;
   h+=visitante();
   if(S.uid){
-    const pedir=!m.apelido||S.editNome;
-    h+=`<section class="section"><div class="bib"><div class="bib-band">Passos Verdes · Magé/RJ</div><div class="bib-num">${bibNum()}</div><div class="bib-name">${esc(nm||'Seu nome aqui')}</div><span class="pin tl"></span><span class="pin tr"></span><span class="pin bl"></span><span class="pin br"></span></div>
-    ${pedir?`<form class="card" data-form="apelido"><label for="f-apelido">Como a galera te chama?<input type="text" id="f-apelido" maxlength="28" placeholder="Ex.: Gui" required></label><button class="btn primary" type="submit">Salvar meu nome</button></form>`
-    :`<div class="row" style="justify-content:center;gap:18px"><button class="linkbtn" data-action="editnome">Trocar o nome do meu peito</button><button class="linkbtn" data-action="logout" style="color:var(--muted)">Sair da conta</button></div>`}</section>`+pushCard();
+    h+=`<section class="section"><div class="bib" data-go="perfil" role="button" tabindex="0" aria-label="Abrir meu perfil"><div class="bib-band">Passos Verdes · Magé/RJ</div><div class="bib-num">${bibNum()}</div><div class="bib-name">${esc(nm||'Seu nome aqui')}</div><span class="pin tl"></span><span class="pin tr"></span><span class="pin bl"></span><span class="pin br"></span></div><span class="bib-hint">Toque no seu número para ver seu perfil</span></section>`;
+    h+=clubeTeaser();
   }
   // Próximo evento
   const prox=S.eventos.filter(e=>(e.data||'')>=hoje()).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
@@ -379,8 +426,6 @@ function vInicio(){
   const i=S.info;
   if(i){h+=`<section class="section"><h2 class="sec">Sobre o projeto</h2><div class="card">${i.sobre?`<p style="margin:0;white-space:pre-line">${esc(i.sobre)}</p>`:''}
     ${i.instagram||i.whatsapp?`<div class="stack small">${i.instagram?`<div>Instagram: <a href="https://instagram.com/${esc(i.instagram.replace(/^@/,''))}" target="_blank" rel="noopener">@${esc(i.instagram.replace(/^@/,''))}</a></div>`:''}${i.whatsapp?`<div class="row">WhatsApp: <span class="num" style="user-select:all">${esc(i.whatsapp)}</span><button class="btn small" data-action="copy" data-v="${esc(i.whatsapp)}">Copiar</button></div>`:''}</div>`:''}</div></section>`}
-  const th=getTheme();
-  h+=`<section class="section"><h2 class="sec">Aparência</h2><div class="seg" role="group" aria-label="Aparência do app">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([k,l])=>`<button data-action="theme" data-v="${k}" aria-pressed="${th===k}">${l}</button>`).join('')}</div><p class="muted small" style="margin:0">Automático segue o modo do seu celular.</p></section>`;
   return h;
 }
 
@@ -388,7 +433,7 @@ function evCard(e){
   const d=pd(e.data);const ids=Object.keys(S.membros).filter(id=>S.membros[id].presencas&&S.membros[id].presencas[e.id]);
   const vou=!!me().presencas[e.id];const past=(e.data||'')<hoje();
   const tipo=(e.tipo||'Treino');const cls=tipo==='Corrida'?'corrida':tipo==='Ação'?'acao':'treino';
-  const avs=ids.slice(0,5).map(id=>{const n=nome(id);return `<span class="av" style="background:${AVC[hash(id)%AVC.length]}" title="${esc(n)}">${esc(ini(n))}</span>`}).join('');
+  const avs=ids.slice(0,5).map(id=>avatar(id,28,'av')).join('');
   return `<article class="card">${picHtml(e.foto,'pic')}<div class="ev"><div class="date"><div class="d">${d?d.getDate():'–'}</div><div class="m">${d?MES[d.getMonth()]:''}</div></div>
   <div class="ev-body"><div class="row"><span class="chip ${cls}">${esc(tipo)}</span></div><h3>${esc(e.titulo)}</h3>
   <div class="meta">${d?`<span>${esc(fmtLong(e.data))}</span>`:''}${e.hora?`<span class="num">${esc(e.hora)}</span>`:''}${e.local?`<span>${esc(e.local)}</span>`:''}</div>
@@ -427,7 +472,7 @@ function desafioCard(d,ativo){
   const by={};for(const l of aprovados(d.id)){by[l.uid]=(by[l.uid]||{uid:l.uid,km:0,l});by[l.uid].km+=Number(l.km)||0}
   const rk=Object.values(by).sort((a,b)=>b.km-a.km);
   const pos=rk.findIndex(r=>r.uid===S.uid);
-  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}"><span class="pos">${i+1}</span><span class="nm">${esc(nomeL(r.l))}${r.uid===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeL(r.l))}${r.uid===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
   let rh=rk.slice(0,10).map(li).join('');if(pos>=10)rh+=li(rk[pos],pos);
   const meus=S.lancamentos.filter(l=>l.desafio===d.id&&l.uid===S.uid).sort((a,b)=>(b.criado||0)-(a.criado||0));
   const meuOk=meus.filter(l=>l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0);
@@ -512,16 +557,110 @@ document.addEventListener('click',e=>{
 const AVISOS=[['eventos','Treinos, corridas e ações'],['noticias','Notícias'],['desafios','Desafios'],['loja','Novidades da loja']];
 function avisos(){return {eventos:true,noticias:true,desafios:true,loja:true,...(me().avisos||{})}}
 const BELL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
-function pushCard(){
-  if(!S.uid||S.push==='checking'||S.push==='unsupported')return '';
-  const head=(t,p)=>`<div class="ph"><span class="bell">${BELL}</span><div><h3>${t}</h3><p class="small muted" style="margin:0">${p}</p></div></div>`;
-  let body='';
-  if(S.push==='needs-install')body=head('Receba os avisos no celular','No iPhone, os avisos só funcionam com o app instalado. No Safari, toque em Compartilhar e depois em Adicionar à Tela de Início. Depois abra pelo ícone.');
-  else if(S.push==='denied')body=head('Avisos bloqueados','Você não permitiu os avisos. Para liberar, vá nos Ajustes do celular, procure Passos Verdes em Notificações e ative.');
-  else if(S.push==='default')body=head('Fique por dentro','Receba um aviso quando sair treino novo, corrida, desafio ou novidade na loja.')+`<div><button class="btn primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button></div>`;
-  else if(S.push==='granted'){const a=avisos();body=head('Avisos ativados','Escolha o que você quer receber.')+`<div class="prefs">${AVISOS.map(([k,l])=>`<label class="pref" for="av-${k}">${l}<input class="sw" type="checkbox" id="av-${k}" data-aviso="${k}" ${a[k]!==false?'checked':''}></label>`).join('')}</div>`}
-  else if(S.push==='error')body=head('Não deu para ativar agora','Feche e abra o app e tente de novo.')+`<div><button class="btn" data-action="push-on">Tentar de novo</button></div>`;
-  return `<section class="section"><div class="card push">${body}</div></section>`;
+const GEAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
+const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+function memb(id){return id===S.uid?me():(S.membros[id]||{})}
+function avatar(id,size=32,cls='avt'){
+  const m=memb(id);const n=id===S.uid?(m.apelido||S.myName||''):nome(id);
+  if(okPic(m.foto))return `<img class="${cls}" src="${m.foto}" alt="" style="width:${size}px;height:${size}px" loading="lazy">`;
+  return `<span class="${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.38)}px;background:${AVC[hash(id||'x')%AVC.length]}" aria-hidden="true">${esc(ini(n||'PV'))}</span>`;
+}
+const OBJETIVOS=['Começando a correr','5 km','10 km','21 km','42 km','Ultra','Trilha'];
+function desdeTxt(m){const d=m.desde?new Date(m.desde):new Date();return d.toLocaleDateString('pt-BR',{month:'short',year:'numeric'}).replace('.','')}
+function meusNumeros(){
+  const km=S.lancamentos.filter(l=>l.uid===S.uid&&l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0);
+  const t=hoje();const pres=S.eventos.filter(e=>(e.data||'')<t&&me().presencas&&me().presencas[e.id]).length;
+  const des=new Set(S.lancamentos.filter(l=>l.uid===S.uid&&l.status==='aprovado').map(l=>l.desafio)).size;
+  return {km,pres,des};
+}
+function vPerfil(){
+  if(!S.uid)return `<section class="section"><p class="eyebrow">Perfil</p><h1 class="h-display">Seu perfil</h1></section>`+visitante();
+  const m=me();const nm=m.apelido||S.myName||'Corredor(a)';const n=meusNumeros();
+  const aniv=m.aniversario?m.aniversario:'';
+  return `<section class="section"><div class="prof-head">${avatar(S.uid,88)}<div><p class="eyebrow">Nº ${bibNum()} · desde ${esc(desdeTxt(m))}</p><h1>${esc(nm)}</h1>
+    <div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div></div></div>
+    <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
+  <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
+  <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
+    ${photoField('pf-f','Sua foto',m.foto)}
+    <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
+    <div class="grid2"><label for="pf-b">Bairro ou cidade<input type="text" id="pf-b" maxlength="40" placeholder="Ex.: Santo Aleixo" value="${esc(m.bairro||'')}"></label>
+    <label for="pf-o">Seu objetivo<select id="pf-o"><option value="">Escolha</option>${OBJETIVOS.map(o=>`<option ${m.objetivo===o?'selected':''}>${o}</option>`).join('')}</select></label></div>
+    <div class="grid2"><label for="pf-p">Ritmo médio (min/km)<input type="text" id="pf-p" maxlength="5" inputmode="numeric" placeholder="Ex.: 5:30" value="${esc(m.pace||'')}"></label>
+    <label for="pf-a">Aniversário (dia/mês)<input type="text" id="pf-a" maxlength="5" inputmode="numeric" placeholder="Ex.: 15/03" value="${esc(aniv)}"></label></div>
+    <div class="grid2"><label for="pf-i">Instagram<input type="text" id="pf-i" maxlength="40" placeholder="@seuperfil" value="${esc(m.instagram||'')}"></label>
+    <label for="pf-s">Perfil no Strava<input type="url" id="pf-s" placeholder="https://strava.com/athletes/…" value="${esc(m.strava||'')}"></label></div>
+    <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar perfil</button></div></form></section>
+  <section class="section"><div class="card" style="padding-block:4px"><button class="linkrow" data-go="clube">Clube de vantagens${CHEV}</button><button class="linkrow" data-go="config">Configurações${CHEV}</button></div></section>`;
+}
+function pushStatus(){
+  const st={granted:['ok','Ativados','Você recebe um aviso quando sair treino, corrida, desafio, notícia ou novidade na loja.'],
+    default:['wait','Desativados','Toque no botão para receber os avisos da Passos Verdes.'],
+    denied:['no','Bloqueados','Para liberar, abra os Ajustes do celular, procure Passos Verdes em Notificações e ative.'],
+    'needs-install':['wait','Instale o app','No iPhone, os avisos só funcionam com o app instalado. No Safari, toque em Compartilhar e depois em Adicionar à Tela de Início.'],
+    unsupported:['no','Indisponível','Este navegador não recebe avisos. Instale o app na tela de início do celular.'],
+    error:['no','Não ativou','Feche e abra o app e tente de novo.'],
+    checking:['wait','Verificando…','']}[S.push]||['wait','',''];
+  return st;
+}
+function vConfig(){
+  const th=getTheme();const [c,t,p]=pushStatus();
+  let h=`<section class="section"><p class="eyebrow">Configurações</p><h1 class="h-display">Do seu jeito</h1></section>
+  <section class="section"><h2 class="sec">Aparência</h2><div class="seg" role="group" aria-label="Aparência do app">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([k,l])=>`<button data-action="theme" data-v="${k}" aria-pressed="${th===k}">${l}</button>`).join('')}</div><p class="muted small" style="margin:0">Automático segue o modo do seu celular.</p></section>`;
+  if(S.uid)h+=`<section class="section"><h2 class="sec">Notificações</h2><div class="card"><div class="row" style="justify-content:space-between"><b>Avisos no celular</b><span class="st ${c}">${t}</span></div>${p?`<p class="small muted" style="margin:0">${p}</p>`:''}
+    ${S.push==='default'||S.push==='error'?`<div><button class="btn primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button></div>`:''}</div></section>
+  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-action="logout" style="color:var(--danger)">Sair da conta</button></div>
+    ${auth.currentUser&&auth.currentUser.email?`<p class="muted small" style="margin:0">Conectado como ${esc(auth.currentUser.email)}</p>`:''}</section>`;
+  else h+=visitante();
+  return h;
+}
+function parceirosAtivos(){return S.parceiros.filter(p=>p.ativo!==false).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
+function plogo(p,cls='plogo'){return okPic(p.logo)?`<img class="${cls}" src="${p.logo}" alt="" loading="lazy">`:`<span class="${cls}">${esc(ini(p.nome||'?'))}</span>`}
+function clubeTeaser(){
+  const ps=parceirosAtivos();if(!ps.length)return '';
+  return `<section class="section"><div class="sec-head"><h2 class="sec">Clube de vantagens</h2><button class="linkbtn" data-go="clube">Ver todos</button></div>
+  <div class="card"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><p class="small" style="margin:0">Mostre seu cartão de membro e ganhe desconto em <b>${ps.length} ${ps.length===1?'parceiro':'parceiros'}</b>.</p><div class="logos">${ps.slice(0,4).map(p=>plogo(p,'')).join('')}</div></div>
+  <button class="btn" data-go="clube">Ver vantagens</button></div></section>`;
+}
+function vClube(){
+  let h=`<section class="section"><p class="eyebrow">Clube de vantagens</p><h1 class="h-display">Correr com a gente vale mais</h1><p class="lede">Benefícios exclusivos para a comunidade Passos Verdes. No parceiro, mostre seu cartão de membro pelo app.</p>
+  ${S.uid?`<div><button class="btn primary" data-action="card">Mostrar meu cartão</button></div>`:''}</section>`;
+  if(!S.uid)return h+visitante();
+  const ps=parceirosAtivos();
+  h+=ps.length?ps.map(p=>`<article class="card partner">${plogo(p)}<div><h3>${esc(p.nome)}</h3><span class="benef">${esc(p.beneficio)}</span>
+    ${p.regras?`<p class="small" style="margin:0">${esc(p.regras)}</p>`:''}
+    ${p.endereco?`<span class="small muted">${esc(p.endereco)}</span>`:''}
+    <div class="row small">${p.instagram?`<a href="https://instagram.com/${esc(String(p.instagram).replace(/^@/,''))}" target="_blank" rel="noopener">@${esc(String(p.instagram).replace(/^@/,''))}</a>`:''}${p.whatsapp?`<span class="muted num" style="user-select:all">${esc(p.whatsapp)}</span>`:''}</div></div></article>`).join('')
+    :`<div class="empty">Os parceiros estão chegando. Em breve as vantagens aparecem aqui.</div>`;
+  return h;
+}
+function onbHtml(){
+  if(!S.uid||!S.ready||!S.loaded.membros||S.onbDone)return '';
+  try{if(localStorage.getItem('pv-onb-'+S.uid)){S.onbDone=true;return ''}}catch(e){}
+  const needName=!me().apelido;const needPush=S.push==='default';
+  if(S.push==='checking')return '';
+  if(!needName&&!needPush){S.onbDone=true;return ''}
+  const first=(S.myName||'').split(' ')[0]||'';
+  return `<div class="in"><img class="onb-logo" src="/icons/icon-192.png" alt="Passos Verdes"><div><p class="eyebrow">Boas-vindas</p><h1 class="h-display" style="font-size:44px">Bem-vindo(a) à Passos Verdes!</h1></div>
+  ${needName?`<label for="onb-n">Como a galera te chama?<input type="text" id="onb-n" maxlength="28" value="${esc(first)}"></label>`:''}
+  ${needPush?`<p class="lede">A gente te avisa quando sair treino novo, corrida, desafio e novidade na loja. Na próxima tela, toque em <b>Permitir</b>.</p>`:''}
+  <button class="btn primary" data-action="onb-go" style="min-height:52px;font-size:17px">Começar</button></div>`;
+}
+let clockT=null;
+function renderCard(){
+  const el=$('#mcard');
+  if(!S.cardOpen||!S.uid){el.hidden=true;el.innerHTML='';clearInterval(clockT);clockT=null;return}
+  const m=me();const nm=m.apelido||S.myName||'Corredor(a)';
+  if(!el.innerHTML){
+    el.innerHTML=`<div class="in"><div class="mcard"><div class="band"><span>Cartão de membro</span><span>Passos Verdes</span></div>
+    <div class="body">${avatar(S.uid,84)}<div><span class="eyebrow num">Nº ${bibNum()}</span><span class="nm">${esc(nm)}</span><span class="small muted">Membro desde ${esc(desdeTxt(m))}${m.objetivo?' · '+esc(m.objetivo):''}</span></div></div>
+    <div class="live"><span><i class="dot-live"></i>Válido agora</span><span id="mclock" class="num"></span></div></div>
+    <p class="small muted" style="margin:0;text-align:center">O relógio e a faixa em movimento mostram que o cartão está aberto no app, e não é um print.</p>
+    <button class="btn" data-action="card-close">Fechar</button></div>`;
+  }
+  el.hidden=false;
+  const tick=()=>{const c=document.getElementById('mclock');if(c)c.textContent=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})};
+  tick();if(!clockT)clockT=setInterval(tick,1000);
 }
 function bannerList(){return S.banners.filter(b=>okPic(b.foto)).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
 function bannersHtml(){
@@ -563,6 +702,7 @@ function vAdmin(){
   const dtit=id=>(S.desafios.find(d=>d.id===id)||{}).titulo||'Desafio';
   const peds=[...S.pedidos].sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,40);
   const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
+  const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
   ${pend.length?pend.map(l=>{const pv=S.provas[l.id];return `<div class="check">${pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
@@ -585,6 +725,18 @@ function vAdmin(){
     <label for="aw-u">Ao tocar, abrir<select id="aw-u"><option value="inicio">Início</option><option value="agenda">Agenda</option><option value="desafios">Desafios</option><option value="loja">Loja</option><option value="galera">Galera</option></select></label>
     <div><button class="btn primary" type="submit">Enviar para todos</button></div>
     <p class="muted small" style="margin:0">Vai para todo mundo que ativou os avisos. Use para recados importantes. Ao publicar treino, notícia, desafio ou produto, o aviso já sai sozinho se a caixinha estiver marcada.</p></form></section>
+
+  <section class="section"><h2 class="sec">${pa?'Editar parceiro':'Novo parceiro do clube'}</h2><form class="card" data-form="parceiro">
+    <label for="pa-n">Nome do parceiro<input type="text" id="pa-n" required placeholder="Ex.: Açaí do Porto" value="${pa?esc(pa.nome):''}"></label>
+    <label for="pa-b">Benefício<input type="text" id="pa-b" required maxlength="60" placeholder="Ex.: 10% de desconto" value="${pa?esc(pa.beneficio):''}"></label>
+    <label for="pa-r">Regras (opcional)<textarea id="pa-r" placeholder="Ex.: Válido de segunda a sexta, não cumulativo">${pa?esc(pa.regras||''):''}</textarea></label>
+    <label for="pa-e">Endereço (opcional)<input type="text" id="pa-e" value="${pa?esc(pa.endereco||''):''}"></label>
+    <div class="grid2"><label for="pa-i">Instagram<input type="text" id="pa-i" placeholder="@parceiro" value="${pa?esc(pa.instagram||''):''}"></label><label for="pa-w">WhatsApp<input type="text" id="pa-w" value="${pa?esc(pa.whatsapp||''):''}"></label></div>
+    <label for="pa-o">Ordem<input type="number" id="pa-o" step="1" placeholder="1, 2, 3…" value="${pa&&pa.ordem!=null?esc(pa.ordem):''}"></label>
+    ${photoField('pa-f','Logo do parceiro (quadrada)',pa?pa.logo:'')}
+    ${pa?'':`<label class="chk" for="pa-av"><input type="checkbox" id="pa-av" checked> Avisar a galera no celular</label>`}
+    <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${pa?'Salvar alterações':'Adicionar ao clube'}</button>${pa?`<button type="button" class="btn" data-action="cancelpar">Cancelar edição</button>`:''}</div></form>
+    <div class="card">${S.parceiros.length?S.parceiros.map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small">${esc(p.beneficio)}${p.ativo===false?' · pausado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="editpar" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="parceiros" data-id="${esc(p.id)}" data-f="ativo">${p.ativo===false?'Ativar':'Pausar'}</button><button class="btn small danger ${S.armed==='parceiros'+p.id?'armed':''}" data-action="del" data-col="parceiros" data-id="${esc(p.id)}">${S.armed==='parceiros'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum parceiro cadastrado.</p>`}</div></section>
 
   <section class="section"><h2 class="sec">Banners do Início</h2><form class="card" data-form="banner">
     ${photoField('bn-f','Imagem do banner (horizontal, 1600 × 900 px)')}
@@ -663,13 +815,13 @@ function photoField(id,label,current){
   ${okPic(shown)?`<button type="button" class="btn small danger" data-action="rmpic" data-id="${id}">Remover</button>`:''}</div></div>`;
 }
 function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej()};i.src=u})}
-async function compress(file){
-  const img=await loadImg(file);let max=1280,q=0.75,out='';
+async function compress(file,small){
+  const img=await loadImg(file);let max=small?360:1280,q=small?0.8:0.75,out='';const lim=small?70000:450000;
   for(let t=0;t<6;t++){
     const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
     const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
     const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.drawImage(img,0,0,c.width,c.height);
-    out=c.toDataURL('image/jpeg',q);if(out.length<450000)return out;
+    out=c.toDataURL('image/jpeg',q);if(out.length<lim)return out;
     q-=0.1;max=Math.round(max*0.85);
   }
   if(out.length<900000)return out;throw new Error('grande');
@@ -677,7 +829,7 @@ async function compress(file){
 document.addEventListener('change',async e=>{
   const el=e.target;if(!(el.matches&&el.matches('input[type=file]'))||!el.files||!el.files[0])return;
   const id=el.id;S.busyPic=id;render();
-  try{S.pending[id]=await compress(el.files[0])}catch(err){toast('Não deu para usar essa foto. Tente outra em JPG ou PNG.')}
+  try{S.pending[id]=await compress(el.files[0],id==='pf-f'||id==='pa-f')}catch(err){toast('Não deu para usar essa foto. Tente outra em JPG ou PNG.')}
   S.busyPic=null;render();
 });
 
@@ -706,7 +858,7 @@ let wq=Promise.resolve(),writing=0;
 function saveMe(mut){
   if(!S.uid||!S.db){toast('Entre com sua conta para participar.');return}
   if(S.readOnly){toast('Seu acesso está só para ver. Nada foi salvo.');render();return}
-  const next=JSON.parse(JSON.stringify(me()));mut(next);next.atualizado=Date.now();next.nome=S.myName||'';
+  const next=JSON.parse(JSON.stringify(me()));mut(next);next.atualizado=Date.now();if(!next.desde)next.desde=Date.now();next.nome=S.myName||'';
   S.me=next;S.membros={...S.membros,[S.uid]:next};render();
   writing++;
   wq=wq.then(()=>S.db.doc('membros/'+S.uid).set(S.me)).then(()=>{S.confirmed=JSON.parse(JSON.stringify(next))}).catch(e=>{
@@ -720,6 +872,7 @@ async function addTo(col,data,form){
   try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');form.querySelectorAll('input[type=file]').forEach(el=>delete S.pending[el.id]);render();toast('Publicado.');return true}
   catch(e){toast('Não foi possível publicar. '+(e&&e.code==='permission-denied'?'Só quem edita o app pode publicar.':'Tente de novo.'));return false}
 }
+function clearPar(){document.querySelectorAll('#pa-n,#pa-b,#pa-r,#pa-e,#pa-i,#pa-w,#pa-o').forEach(el=>el.value='')}
 const checked=id=>!!document.getElementById(id)?.checked;
 function resumo(t,n=150){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t}
 const val=id=>(document.getElementById(id)?.value||'').trim();
@@ -740,6 +893,21 @@ document.addEventListener('submit',e=>{
   else if(k==='noticia'){const av=checked('nt-av');const d={titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''};
     addTo('noticias',d,f).then(ok=>{if(ok&&av)notificar({tipo:'noticias',titulo:d.titulo,texto:resumo(d.texto),url:'/#inicio'})})}
   else if(k==='aviso'){notificar({tipo:'geral',titulo:val('aw-t'),texto:val('aw-x'),url:'/#'+(val('aw-u')||'inicio')}).then(ok=>{if(ok){['aw-t','aw-x'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''})}})}
+  else if(k==='perfil'){
+    const n=val('pf-n');if(!n){toast('Coloque como a galera te chama.');return}
+    const pace=val('pf-p');if(pace&&!/^\d{1,2}:[0-5]\d$/.test(pace)){toast('Escreva o ritmo assim: 5:30');return}
+    const an=val('pf-a');if(an&&!/^(0?[1-9]|[12]\d|3[01])\/(0?[1-9]|1[0-2])$/.test(an)){toast('Escreva o aniversário assim: 15/03');return}
+    const foto=S.pending['pf-f'];const ig=val('pf-i').replace(/^@?/,'');const st=val('pf-s');
+    saveMe(m=>{m.apelido=n;m.bairro=val('pf-b');m.objetivo=val('pf-o');m.pace=pace;m.aniversario=an;m.instagram=ig?'@'+ig:'';m.strava=/^https?:\/\//.test(st)?st:'';if(foto!==undefined)m.foto=foto});
+    delete S.pending['pf-f'];toast('Perfil salvo.');
+  }
+  else if(k==='parceiro'){
+    const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
+    const logo=S.pending['pa-f']!==undefined?S.pending['pa-f']:(pa?pa.logo||'':'');
+    const data={nome:val('pa-n'),beneficio:val('pa-b'),regras:val('pa-r'),endereco:val('pa-e'),instagram:val('pa-i'),whatsapp:val('pa-w'),ordem:val('pa-o')===''?null:Number(val('pa-o')),logo};
+    if(pa){S.db.doc('parceiros/'+pa.id).update(data).then(()=>{S.editPar=null;delete S.pending['pa-f'];clearPar();render();toast('Parceiro atualizado.')}).catch(()=>toast('Não foi possível salvar.'))}
+    else{const av=checked('pa-av');addTo('parceiros',{...data,ativo:true},f).then(ok=>{if(ok&&av)notificar({tipo:'geral',titulo:'Novo parceiro no Clube: '+data.nome,texto:data.beneficio+' para quem é da Passos Verdes. Toque para ver.',url:'/#clube'})})}
+  }
   else if(k==='banner'){
     const foto=S.pending['bn-f'];if(!okPic(foto)){toast('Escolha a imagem do banner.');return}
     addTo('banners',{foto,link:/^https?:\/\//.test(val('bn-l'))?val('bn-l'):'',ordem:val('bn-o')===''?null:Number(val('bn-o')),titulo:val('bn-t')},f);
@@ -768,6 +936,16 @@ document.addEventListener('click',async e=>{
   else if(a==='unvote')saveMe(m=>delete m.votos[id]);
   else if(a==='quiz')saveMe(m=>m.quiz[id]=Number(b.dataset.i));
   else if(a==='rmpic'){S.pending[id]='';render()}
+  else if(a==='onb-go'){
+    const needPush=S.push==='default';if(needPush)pushOn();
+    const el=document.getElementById('onb-n');const n=(el&&el.value.trim())||((S.myName||'').split(' ')[0])||'';
+    if(!me().apelido&&n)saveMe(m=>{m.apelido=n});
+    S.onbDone=true;try{localStorage.setItem('pv-onb-'+S.uid,'1')}catch(err){}render();
+  }
+  else if(a==='card'){S.cardOpen=true;renderCard()}
+  else if(a==='card-close'){S.cardOpen=false;renderCard()}
+  else if(a==='editpar'){S.editPar=id;delete S.pending['pa-f'];clearPar();render();const p=S.parceiros.find(x=>x.id===id);if(p){const set=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v??''};set('pa-n',p.nome);set('pa-b',p.beneficio);set('pa-r',p.regras);set('pa-e',p.endereco);set('pa-i',p.instagram);set('pa-w',p.whatsapp);set('pa-o',p.ordem)}document.getElementById('pa-n')?.scrollIntoView({block:'center'})}
+  else if(a==='cancelpar'){S.editPar=null;delete S.pending['pa-f'];clearPar();render()}
   else if(a==='bn'){S.bnIdx=Number(b.dataset.i)||0;bnHold=Date.now();bnSync(true)}
   else if(a==='theme'){applyTheme(b.dataset.v);render()}
   else if(a==='login')login();
@@ -788,7 +966,7 @@ document.addEventListener('click',async e=>{
 });
 document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details[data-past]'))S.showPast=e.target.open},true);
 function renderZoom(){const z=$('#zoom');if(S.zoom){$('#zoom-img').src=S.zoom;z.hidden=false}else{z.hidden=true;$('#zoom-img').removeAttribute('src')}}
-document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.zoom){S.zoom=null;renderZoom()}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(S.zoom){S.zoom=null;renderZoom()}if(S.cardOpen){S.cardOpen=false;renderCard()}}if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('.bib[data-go]')){e.preventDefault();go('perfil')}});
 let armT;function arm(k){S.armed=k;render();clearTimeout(armT);armT=setTimeout(()=>{S.armed=null;render()},3500)}
 
 /* ---------- Firebase ---------- */
@@ -860,9 +1038,9 @@ async function login(){
 }
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubM=null,unsubL=null,unsubP=null,unsubO=null;
+let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null;
 onAuthStateChanged(auth,async u=>{
-  for(const u of [unsubM,unsubL,unsubP,unsubO])if(u)u();unsubM=unsubL=unsubP=unsubO=null;S.lancamentos=[];S.provas={};S.pedidos=[];
+  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
   if(u){
@@ -871,6 +1049,7 @@ onAuthStateChanged(auth,async u=>{
       if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
       if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
       if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;S.loaded.membros=true;schedule()},()=>{});
+    unsubC=DB.collection('parceiros').onSnapshot(s=>{S.parceiros=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubL=DB.collection('lancamentos').onSnapshot(s=>{S.lancamentos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     if(S.admin){
       unsubP=onSnapshot(collection(fs,'provas'),s=>{const p={};s.docs.forEach(d=>{p[d.id]=d.data()});
