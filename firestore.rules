@@ -3,6 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     function logado() { return request.auth != null; }
+    function eu(uid) { return logado() && request.auth.uid == uid; }
     function organizador() {
       return logado() && request.auth.token.email != null &&
         exists(/databases/$(database)/documents/admins/$(request.auth.token.email.lower()));
@@ -15,12 +16,38 @@ service cloud.firestore {
     match /enquetes/{id}  { allow read: if true; allow write: if organizador(); }
     match /quiz/{id}      { allow read: if true; allow write: if organizador(); }
     match /projeto/{id}   { allow read: if true; allow write: if organizador(); }
+    match /produtos/{id}  { allow read: if true; allow write: if organizador(); }
 
-    // Cada corredor: quem está logado vê todos (ranking, presença), mas só altera o próprio.
+    // Cada corredor: quem está logado vê todos (presença, enquetes), mas só altera o próprio.
     match /membros/{uid} {
       allow read: if logado();
-      allow write: if logado() && request.auth.uid == uid && request.resource.size() < 20000;
-      allow delete: if logado() && request.auth.uid == uid;
+      allow write: if eu(uid) && request.resource.data.size() < 20;
+    }
+
+    // Km lançados nos desafios: entram como "pendente"; só a organização aprova ou recusa.
+    match /lancamentos/{id} {
+      allow read: if logado();
+      allow create: if eu(request.resource.data.uid)
+        && request.resource.data.status == 'pendente'
+        && request.resource.data.km is number
+        && request.resource.data.km > 0 && request.resource.data.km <= 300
+        && request.resource.data.keys().hasOnly(['uid','nome','desafio','km','link','status','criado']);
+      allow update: if organizador();
+      allow delete: if organizador() || (eu(resource.data.uid) && resource.data.status == 'pendente');
+    }
+
+    // Print da corrida: só o próprio corredor e a organização veem.
+    match /provas/{id} {
+      allow read: if organizador() || eu(resource.data.uid);
+      allow create: if eu(request.resource.data.uid) && request.resource.data.keys().hasOnly(['uid','foto']);
+      allow delete: if organizador() || eu(resource.data.uid);
+    }
+
+    // Pedidos da loja: o corredor cria o próprio; só a organização vê a lista e atualiza.
+    match /pedidos/{id} {
+      allow create: if eu(request.resource.data.uid) && request.resource.data.status == 'novo';
+      allow read: if organizador() || eu(resource.data.uid);
+      allow update, delete: if organizador();
     }
 
     // Lista de organizadores: só se gerencia pelo console do Firebase.
