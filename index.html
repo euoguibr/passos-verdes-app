@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Passos Verdes</title>
+<meta name="description" content="App da comunidade de corrida Passos Verdes, de Magé/RJ: agenda, desafios, enquetes e notícias.">
+<meta name="theme-color" content="#1E6B3B">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Passos Verdes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: app de uma coluna (máx. 560px), cabeçalho fixo no topo, abas fixas embaixo; número de peito como cartão do corredor */
+:root{
+  --bg:#EDF1E8; --surface:#FFFFFF; --sunk:#E2E8DC; --ink:#14241A; --muted:#5A6B5F; --line:#D2DBCB;
+  --green:#1E6B3B; --green-soft:#D6E8D9; --on-green:#FFFFFF;
+  --ipe:#C98F0E; --ipe-soft:#F6E6B8; --danger:#B3261E;
+  --display:"Archivo","Arial Narrow",Arial,sans-serif;
+  --body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D1510; --surface:#16211A; --sunk:#1D2B22; --ink:#E6EEE7; --muted:#9AAD9F; --line:#2A3A2F;
+  --green:#5DBB7C; --green-soft:#1F3A28; --on-green:#0A1A0F;
+  --ipe:#E9BE4C; --ipe-soft:#3A3117; --danger:#F2867E; color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0D1510; --surface:#16211A; --sunk:#1D2B22; --ink:#E6EEE7; --muted:#9AAD9F; --line:#2A3A2F;
+  --green:#5DBB7C; --green-soft:#1F3A28; --on-green:#0A1A0F;
+  --ipe:#E9BE4C; --ipe-soft:#3A3117; --danger:#F2867E; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{margin:0}
+img{max-width:100%}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 calc(84px + env(safe-area-inset-bottom,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2.5px solid var(--green);outline-offset:2px}
+
+/* Cabeçalho */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 10px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{background:#fff url(icons/logo.png) center/cover no-repeat;border-radius:50%;border:1px solid var(--line);flex:none}
+.mark{width:40px;height:40px}
+.hero-logo{width:96px;height:96px;margin-bottom:6px}
+.brand b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
+.brand small{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+.who{font-size:13px;color:var(--muted);text-align:right;flex:none}
+
+/* Tipografia */
+.eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0}
+.h-display{font-family:var(--display);font-weight:850;font-stretch:70%;font-variation-settings:"wdth" 70;text-transform:uppercase;font-size:clamp(40px,11vw,58px);line-height:.92;margin:6px 0 10px;text-wrap:balance;letter-spacing:.005em}
+h2.sec{font-family:var(--display);font-weight:800;font-stretch:78%;font-variation-settings:"wdth" 78;text-transform:uppercase;font-size:22px;letter-spacing:.02em;margin:0;line-height:1.1}
+h3{font-size:17px;margin:0;line-height:1.3;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:44ch}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+
+main{display:flex;flex-direction:column;gap:28px;padding-top:20px}
+.section{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.linkbtn{background:none;border:0;padding:0;color:var(--green);font-weight:600;font-size:14px;cursor:pointer}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.chip.treino{background:var(--green-soft);color:var(--green)}
+.chip.corrida{background:var(--ipe-soft);color:var(--ipe)}
+.chip.acao{background:var(--sunk);color:var(--ink)}
+
+.btn{appearance:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:10px 18px;font-weight:600;font-size:15px;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.btn.on{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.btn.small{padding:6px 12px;min-height:36px;font-size:13px}
+.btn.danger{color:var(--danger);border-color:var(--line)}
+.btn.danger.armed{background:var(--danger);border-color:var(--danger);color:var(--surface)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+input[type=text],input[type=number],input[type=date],input[type=time],input[type=url],textarea,select{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+textarea{min-height:88px;resize:vertical}
+label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:5px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:400px){.grid2{grid-template-columns:1fr}}
+
+/* Aviso */
+.notice{background:var(--ipe-soft);border-radius:var(--r);padding:12px 14px;font-size:14px}
+
+/* Número de peito */
+.bib{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;text-align:center;box-shadow:0 1px 0 var(--line)}
+.bib-band{background:var(--green);color:var(--on-green);font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:7px 10px}
+.bib-num{font-family:var(--display);font-weight:900;font-stretch:66%;font-variation-settings:"wdth" 66;font-size:88px;line-height:.95;padding-top:10px;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.bib-name{font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;padding:2px 12px 14px;overflow-wrap:anywhere}
+.pin{position:absolute;width:9px;height:9px;border-radius:50%;background:var(--bg);border:1.5px solid var(--line)}
+.pin.tl{top:38px;left:12px}.pin.tr{top:38px;right:12px}.pin.bl{bottom:12px;left:12px}.pin.br{bottom:12px;right:12px}
+
+/* Evento */
+.ev{display:grid;grid-template-columns:62px 1fr;gap:14px;align-items:start}
+.date{background:var(--sunk);border-radius:10px;text-align:center;padding:8px 4px}
+.date .d{font-family:var(--display);font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70;font-size:32px;line-height:1;font-variant-numeric:tabular-nums}
+.date .m{font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--muted)}
+.ev-body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.meta{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.people{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.avs{display:flex}
+.av{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff;border:2px solid var(--surface);margin-left:-6px}
+.avs .av:first-child{margin-left:0}
+
+/* Progresso */
+.bar{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .4s}
+.bar.ipe>i{background:var(--ipe)}
+.bignum{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+
+/* Ranking */
+.rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.rank li{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.rank li:first-child{border-top:0}
+.rank .pos{font-family:var(--display);font-weight:800;font-size:18px;color:var(--muted);text-align:center}
+.rank li.top1 .pos{color:var(--ipe)}
+.rank li.me{background:var(--green-soft);border-radius:8px;padding-inline:8px;margin-inline:-8px}
+.rank .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+
+/* Enquete / Quiz */
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{appearance:none;text-align:left;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:11px 14px;cursor:pointer;min-height:44px;font-weight:500}
+.opt:hover{border-color:var(--green)}
+.res{position:relative;border-radius:10px;background:var(--sunk);overflow:hidden;padding:10px 14px;display:flex;justify-content:space-between;gap:10px}
+.res>i{position:absolute;inset:0 auto 0 0;background:var(--green-soft)}
+.res>span{position:relative;min-width:0}
+.res.mine{outline:1.5px solid var(--green)}
+.res.right>i{background:var(--green-soft)}
+.res.wrong>i{background:var(--ipe-soft)}
+
+.news{display:flex;flex-direction:column;gap:6px}
+.news p{margin:0;white-space:pre-line}
+
+/* Abas */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabs-in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;gap:4px}
+.tab{appearance:none;background:none;border:0;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em;min-height:52px}
+.tab svg{width:22px;height:22px}
+.tab[aria-current="page"]{color:var(--green);background:var(--green-soft)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:7;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;font-weight:600;max-width:calc(100% - 32px)}
+.empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:18px;color:var(--muted);font-size:14px}
+details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px}
+.adm-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.adm-item:first-of-type{border-top:0}
+.adm-item>div{min-width:0}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <span class="logo mark" role="img" aria-label="Logo Passos Verdes"></span>
+      <div><b>Passos Verdes</b><small>Corrida em comunidade · Magé</small></div>
+    </div>
+    <div class="who" id="who"></div>
+  </header>
+  <main id="view" aria-live="polite"></main>
+</div>
+
+<nav class="tabs" aria-label="Seções"><div class="tabs-in" id="tabs"></div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCumaJKVTwag1FhGoOKFvgm5eLh6PlIi_A",
+  authDomain: "passos-verdes-app.firebaseapp.com",
+  projectId: "passos-verdes-app",
+  storageBucket: "passos-verdes-app.firebasestorage.app",
+  messagingSenderId: "237395782308",
+  appId: "1:237395782308:web:74d48a7edf0e378bf4d431"
+};
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+const MESL=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const COLS=['eventos','noticias','desafios','enquetes','quiz'];
+const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
+  eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
+  editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null};
+const BLANK=()=>({apelido:'',presencas:{},votos:{},quiz:{},km:{}});
+
+function hoje(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function pd(iso){if(!iso)return null;const p=String(iso).split('-').map(Number);if(p.length<3)return null;const d=new Date(p[0],p[1]-1,p[2]);return isNaN(d)?null:d}
+function fmtLong(iso){const d=pd(iso);return d?d.toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'}):''}
+function fmtShort(iso){const d=pd(iso);return d?d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}
+function kmf(n){return (Math.round((n||0)*10)/10).toLocaleString('pt-BR',{maximumFractionDigits:1})}
+function hash(s){let h=0;for(const c of String(s))h=(h*31+c.charCodeAt(0))>>>0;return h}
+function bibNum(){return S.uid?100+hash(S.uid)%900:'000'}
+const AVC=['#2E7D4F','#B07A0A','#3F6E8C','#8C4F3F','#5C6B2E','#6B4F8C'];
+function nome(id){const m=S.membros[id];return (m&&(m.apelido||m.nome))||'Corredor(a)'}
+function ini(n){return n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'PV'}
+function saud(){const h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}
+function me(){return S.me||BLANK()}
+function sumKm(did){let t=0;for(const m of Object.values(S.membros))t+=Number(m.km&&m.km[did])||0;return t}
+
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
+
+/* ---------- Navegação ---------- */
+const VIEWS=['inicio','agenda','desafios','galera','admin'];
+const ICON={
+ inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
+ agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+ desafios:'<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+ galera:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15 14.5c3 0 6 1.8 6 5"/>',
+ admin:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>'};
+const LABEL={inicio:'Início',agenda:'Agenda',desafios:'Desafios',galera:'Galera',admin:'Organizar'};
+let view=(location.hash||'').slice(1);
+if(!VIEWS.includes(view)){view='inicio';try{const v=localStorage.getItem('pv-tab');if(VIEWS.includes(v))view=v}catch(e){}}
+function go(v){view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
+
+function renderTabs(){
+  const list=VIEWS.filter(v=>v!=='admin'||S.admin);
+  $('#tabs').innerHTML=list.map(v=>`<button class="tab" data-go="${v}" ${v===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[v]}</svg>${LABEL[v]}</button>`).join('');
+  $('#who').innerHTML=S.uid?`<span class="num">Nº ${bibNum()}</span>`:'';
+}
+
+/* ---------- Render ---------- */
+let rq=0;function schedule(){if(rq)return;rq=requestAnimationFrame(()=>{rq=0;render()})}
+function render(){
+  if(view==='admin'&&!S.admin&&S.ready)view='inicio';
+  const root=$('#view');const saved={};
+  root.querySelectorAll('input[id],textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
+  const fid=document.activeElement&&document.activeElement.id;
+  let h='';
+  if(view==='agenda')h=vAgenda();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
+  root.innerHTML=h;
+  for(const[id,v]of Object.entries(saved)){const el=document.getElementById(id);if(el)el.value=v}
+  if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
+  renderTabs();refreshNames();
+}
+function visitante(){
+  if(!S.ready)return '';
+  if(!S.uid)return `<div class="notice stack"><span>Entre com sua conta Google para confirmar presença, votar e entrar no ranking.</span><div><button class="btn primary" data-action="login">Entrar com Google</button></div></div>`;
+  if(S.readOnly)return `<div class="notice"><b>Seu acesso está só para ver.</b> O que você marcou não foi salvo. Peça para a organização te dar acesso de edição no app e depois recarregue a página.</div>`;
+  return '';
+}
+function loading(c,txt){return !S.loaded[c]&&!S.offline?`<div class="empty">${txt}</div>`:null}
+
+function vInicio(){
+  const m=me();const nm=m.apelido||S.myName||'';
+  let h=`<section class="section"><span class="logo hero-logo" role="img" aria-label="Logo Passos Verdes"></span><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
+   <h1 class="h-display">Bora correr junto?</h1>
+   <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p></section>`;
+  h+=visitante();
+  if(S.uid){
+    const pedir=!m.apelido||S.editNome;
+    h+=`<section class="section"><div class="bib"><div class="bib-band">Passos Verdes · Magé/RJ</div><div class="bib-num">${bibNum()}</div><div class="bib-name">${esc(nm||'Seu nome aqui')}</div><span class="pin tl"></span><span class="pin tr"></span><span class="pin bl"></span><span class="pin br"></span></div>
+    ${pedir?`<form class="card" data-form="apelido"><label for="f-apelido">Como a galera te chama?<input type="text" id="f-apelido" maxlength="28" placeholder="Ex.: Gui" required></label><button class="btn primary" type="submit">Salvar meu nome</button></form>`
+    :`<div class="row" style="justify-content:center;gap:18px"><button class="linkbtn" data-action="editnome">Trocar o nome do meu peito</button><button class="linkbtn" data-action="logout" style="color:var(--muted)">Sair da conta</button></div>`}</section>`;
+  }
+  // Próximo evento
+  const prox=S.eventos.filter(e=>(e.data||'')>=hoje()).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
+  h+=`<section class="section"><div class="sec-head"><h2 class="sec">Próximo encontro</h2><button class="linkbtn" data-go="agenda">Agenda completa</button></div>`;
+  h+=loading('eventos','Carregando a agenda…')??(prox?evCard(prox):`<div class="empty">Nenhum encontro marcado ainda. Os próximos treinos e corridas aparecem aqui assim que a organização publicar.</div>`);
+  h+=`</section>`;
+  // Desafio ativo
+  const d=S.desafios.filter(x=>x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0))[0];
+  if(d){const tot=sumKm(d.id),meta=Number(d.meta)||0,pct=meta?Math.min(100,tot/meta*100):0;
+    h+=`<section class="section"><div class="sec-head"><h2 class="sec">Desafio do mês</h2><button class="linkbtn" data-go="desafios">Ver ranking</button></div>
+    <div class="card"><h3>${esc(d.titulo)}</h3><div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">meta da galera: ${kmf(meta)} km</span>`:''}</div>
+    ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}<button class="btn" data-go="desafios">Lançar meus km</button></div></section>`}
+  // Enquete ativa
+  const q=S.enquetes.filter(x=>x.ativa).sort((a,b)=>(b.criado||0)-(a.criado||0))[0];
+  if(q)h+=`<section class="section"><div class="sec-head"><h2 class="sec">A galera decide</h2><button class="linkbtn" data-go="galera">Mais</button></div>${pollCard(q)}</section>`;
+  // Notícias
+  h+=`<section class="section"><h2 class="sec">Notícias</h2>`;
+  const ns=[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')||(b.criado||0)-(a.criado||0));
+  h+=loading('noticias','Carregando notícias…')??(ns.length?ns.map(n=>`<article class="card news">${n.tag?`<span class="chip">${esc(n.tag)}</span>`:''}<h3>${esc(n.titulo)}</h3><p>${esc(n.texto)}</p>${n.data?`<span class="muted small">${esc(fmtLong(n.data))}</span>`:''}</article>`).join(''):`<div class="empty">Sem notícias por enquanto.</div>`);
+  h+=`</section>`;
+  // Sobre
+  const i=S.info;
+  if(i){h+=`<section class="section"><h2 class="sec">Sobre o projeto</h2><div class="card">${i.sobre?`<p style="margin:0;white-space:pre-line">${esc(i.sobre)}</p>`:''}
+    ${i.instagram||i.whatsapp?`<div class="stack small">${i.instagram?`<div>Instagram: <a href="https://instagram.com/${esc(i.instagram.replace(/^@/,''))}" target="_blank" rel="noopener">@${esc(i.instagram.replace(/^@/,''))}</a></div>`:''}${i.whatsapp?`<div class="row">WhatsApp: <span class="num" style="user-select:all">${esc(i.whatsapp)}</span><button class="btn small" data-action="copy" data-v="${esc(i.whatsapp)}">Copiar</button></div>`:''}</div>`:''}</div></section>`}
+  return h;
+}
+
+function evCard(e){
+  const d=pd(e.data);const ids=Object.keys(S.membros).filter(id=>S.membros[id].presencas&&S.membros[id].presencas[e.id]);
+  const vou=!!me().presencas[e.id];const past=(e.data||'')<hoje();
+  const tipo=(e.tipo||'Treino');const cls=tipo==='Corrida'?'corrida':tipo==='Ação'?'acao':'treino';
+  const avs=ids.slice(0,5).map(id=>{const n=nome(id);return `<span class="av" style="background:${AVC[hash(id)%AVC.length]}" title="${esc(n)}">${esc(ini(n))}</span>`}).join('');
+  return `<article class="card"><div class="ev"><div class="date"><div class="d">${d?d.getDate():'–'}</div><div class="m">${d?MES[d.getMonth()]:''}</div></div>
+  <div class="ev-body"><div class="row"><span class="chip ${cls}">${esc(tipo)}</span></div><h3>${esc(e.titulo)}</h3>
+  <div class="meta">${d?`<span>${esc(fmtLong(e.data))}</span>`:''}${e.hora?`<span class="num">${esc(e.hora)}</span>`:''}${e.local?`<span>${esc(e.local)}</span>`:''}</div>
+  ${e.descricao?`<p style="margin:0" class="small">${esc(e.descricao)}</p>`:''}
+  ${e.link?`<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Inscrição e detalhes</a>`:''}
+  <div class="people">${avs?`<span class="avs">${avs}</span>`:''}<span class="muted small num">${ids.length?ids.length+(ids.length===1?' vai':' vão'):'Ninguém confirmou ainda'}</span></div>
+  ${past?'':`<div><button class="btn ${vou?'on':'primary'}" data-action="rsvp" data-id="${esc(e.id)}" ${S.uid?'':'disabled'}>${vou?'✓ Eu vou':'Eu vou'}</button></div>`}
+  </div></div></article>`;
+}
+
+function vAgenda(){
+  let h=`<section class="section"><p class="eyebrow">Agenda</p><h1 class="h-display">Onde a gente se encontra</h1></section>`+visitante();
+  const l=loading('eventos','Carregando a agenda…');if(l)return h+l;
+  const t=hoje();
+  const fut=S.eventos.filter(e=>(e.data||'')>=t).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')));
+  const pas=S.eventos.filter(e=>(e.data||'')<t).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
+  if(!fut.length)h+=`<div class="empty">Nenhum encontro marcado ainda.</div>`;
+  let mes='';
+  for(const e of fut){const d=pd(e.data);const k=d?MESL[d.getMonth()]+' '+d.getFullYear():'';if(k!==mes){mes=k;h+=`<p class="eyebrow" style="margin-top:6px">${esc(k)}</p>`}h+=evCard(e)}
+  if(pas.length)h+=`<details${S.showPast?' open':''} data-past><summary>Encontros anteriores (${pas.length})</summary><div class="stack" style="margin-top:10px">${pas.map(evCard).join('')}</div></details>`;
+  return h;
+}
+
+function vDesafios(){
+  let h=`<section class="section"><p class="eyebrow">Desafios</p><h1 class="h-display">Cada km conta</h1><p class="lede">Lance os quilômetros que você correu. Somamos tudo na meta da galera.</p></section>`+visitante();
+  const l=loading('desafios','Carregando desafios…');if(l)return h+l;
+  const at=S.desafios.filter(x=>x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  const enc=S.desafios.filter(x=>!x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  if(!at.length)h+=`<div class="empty">Nenhum desafio rolando agora. Fica de olho que logo vem o próximo.</div>`;
+  for(const d of at)h+=desafioCard(d,true);
+  if(enc.length)h+=`<details><summary>Desafios encerrados (${enc.length})</summary><div class="stack" style="margin-top:10px">${enc.map(d=>desafioCard(d,false)).join('')}</div></details>`;
+  return h;
+}
+function desafioCard(d,ativo){
+  const tot=sumKm(d.id),meta=Number(d.meta)||0,pct=meta?Math.min(100,tot/meta*100):0;
+  const meu=Number(me().km[d.id])||0;
+  const rk=Object.keys(S.membros).map(id=>({id,km:Number(S.membros[id].km&&S.membros[id].km[d.id])||0})).filter(r=>r.km>0).sort((a,b)=>b.km-a.km);
+  const pos=rk.findIndex(r=>r.id===S.uid);
+  let list=rk.slice(0,10);
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.id===S.uid?'me':''}"><span class="pos">${i+1}</span><span class="nm">${esc(nome(r.id))}${r.id===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
+  let rh=list.map(li).join('');if(pos>=10)rh+=li(rk[pos],pos);
+  return `<article class="card"><div class="row" style="justify-content:space-between"><span class="chip ${ativo?'treino':''}">${ativo?'Valendo':'Encerrado'}</span>${d.inicio||d.fim?`<span class="muted small num">${esc(fmtShort(d.inicio))}${d.fim?' a '+esc(fmtShort(d.fim)):''}</span>`:''}</div>
+  <h3>${esc(d.titulo)}</h3>${d.descricao?`<p class="small" style="margin:0">${esc(d.descricao)}</p>`:''}
+  <div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">${Math.round(pct)}% de ${kmf(meta)} km</span>`:''}</div>
+  ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}
+  ${ativo&&S.uid?`<form class="row" data-form="km" data-id="${esc(d.id)}" style="flex-wrap:nowrap"><label for="km-${esc(d.id)}" style="flex:1">Você já fez <span class="num">${kmf(meu)} km</span>. Somar:<input type="number" id="km-${esc(d.id)}" min="0.1" max="300" step="0.1" inputmode="decimal" placeholder="Ex.: 5,2" required></label><button class="btn primary" type="submit" style="align-self:flex-end">+ km</button></form>
+  ${meu>0?`<div><button class="btn small danger ${S.armed==='zera'+d.id?'armed':''}" data-action="zerar" data-id="${esc(d.id)}">${S.armed==='zera'+d.id?'Toque de novo para zerar':'Errei, zerar meus km'}</button></div>`:''}`:''}
+  <div><p class="eyebrow" style="margin-bottom:4px">Ranking</p>${rk.length?`<ol class="rank">${rh}</ol>`:`<p class="muted small" style="margin:0">Ninguém lançou km ainda. Que tal ser o primeiro?</p>`}</div></article>`;
+}
+
+function pollCard(p){
+  const opts=Array.isArray(p.opcoes)?p.opcoes:[];const myv=me().votos[p.id];
+  const counts=opts.map(()=>0);let total=0;
+  for(const m of Object.values(S.membros)){const v=m.votos&&m.votos[p.id];if(typeof v==='number'&&v<opts.length){counts[v]++;total++}}
+  const show=!p.ativa||typeof myv==='number'||!S.uid;
+  let body;
+  if(show)body=`<div class="opts">${opts.map((o,i)=>{const pc=total?Math.round(counts[i]/total*100):0;return `<div class="res ${myv===i?'mine':''}"><i style="width:${pc}%"></i><span>${esc(o)}${myv===i?' · seu voto':''}</span><span class="num">${pc}%</span></div>`}).join('')}</div>
+   <div class="row" style="justify-content:space-between"><span class="muted small num">${total} ${total===1?'voto':'votos'}${p.ativa?'':' · encerrada'}</span>${p.ativa&&typeof myv==='number'?`<button class="linkbtn" data-action="unvote" data-id="${esc(p.id)}">Mudar voto</button>`:''}</div>`;
+  else body=`<div class="opts">${opts.map((o,i)=>`<button class="opt" data-action="vote" data-id="${esc(p.id)}" data-i="${i}">${esc(o)}</button>`).join('')}</div>`;
+  return `<article class="card"><h3>${esc(p.pergunta)}</h3>${body}</article>`;
+}
+function quizCard(q){
+  const opts=Array.isArray(q.opcoes)?q.opcoes:[];const a=me().quiz[q.id];const c=Number(q.correta);
+  if(typeof a==='number'||!S.uid){
+    return `<article class="card"><h3>${esc(q.pergunta)}</h3><div class="opts">${opts.map((o,i)=>`<div class="res ${i===c?'right':(i===a?'wrong':'')} ${i===a?'mine':''}"><i style="width:${i===c||i===a?100:0}%"></i><span>${esc(o)}</span><span>${i===c?'✓ certa':(i===a?'sua':'')}</span></div>`).join('')}</div>
+    ${typeof a==='number'?`<p class="small" style="margin:0"><b>${a===c?'Acertou!':'Quase.'}</b> ${esc(q.explicacao||'')}</p>`:''}</article>`;
+  }
+  return `<article class="card"><h3>${esc(q.pergunta)}</h3><div class="opts">${opts.map((o,i)=>`<button class="opt" data-action="quiz" data-id="${esc(q.id)}" data-i="${i}">${esc(o)}</button>`).join('')}</div></article>`;
+}
+function vGalera(){
+  let h=`<section class="section"><p class="eyebrow">Galera</p><h1 class="h-display">Vota, responde, participa</h1></section>`+visitante();
+  const ps=[...S.enquetes].sort((a,b)=>(b.ativa?1:0)-(a.ativa?1:0)||(b.criado||0)-(a.criado||0));
+  h+=`<section class="section"><h2 class="sec">Enquetes</h2>${loading('enquetes','Carregando enquetes…')??(ps.length?ps.map(pollCard).join(''):`<div class="empty">Nenhuma enquete aberta. Quando a organização perguntar algo, aparece aqui.</div>`)}</section>`;
+  const qs=[...S.quiz].sort((a,b)=>(a.criado||0)-(b.criado||0));
+  const m=me();const resp=qs.filter(q=>typeof m.quiz[q.id]==='number');const ac=resp.filter(q=>m.quiz[q.id]===Number(q.correta)).length;
+  h+=`<section class="section"><div class="sec-head"><h2 class="sec">Quiz da corrida</h2>${S.uid&&qs.length?`<span class="muted small num">${ac}/${qs.length} acertos</span>`:''}</div>${loading('quiz','Carregando quiz…')??(qs.length?qs.map(quizCard).join(''):`<div class="empty">O quiz ainda não tem perguntas.</div>`)}</section>`;
+  return h;
+}
+
+function admList(col,items,title,sub,toggle){
+  if(!items.length)return `<p class="muted small" style="margin:0">Nada publicado.</p>`;
+  return items.map(x=>{const k=col+x.id;return `<div class="adm-item"><div><b class="small">${esc(title(x))}</b><div class="muted small">${esc(sub(x))}</div></div><div class="row" style="flex-wrap:nowrap">${toggle?`<button class="btn small" data-action="toggle" data-col="${col}" data-id="${esc(x.id)}" data-f="${toggle}">${x[toggle]?'Encerrar':'Reabrir'}</button>`:''}<button class="btn small danger ${S.armed===k?'armed':''}" data-action="del" data-col="${col}" data-id="${esc(x.id)}">${S.armed===k?'Confirmar':'Apagar'}</button></div></div>`}).join('');
+}
+function vAdmin(){
+  const i=S.info||{};
+  return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
+  <section class="section"><h2 class="sec">Novo encontro</h2><form class="card" data-form="evento">
+    <label for="ev-t">Nome<input type="text" id="ev-t" required placeholder="Ex.: Treino coletivo de sábado"></label>
+    <div class="grid2"><label for="ev-d">Data<input type="date" id="ev-d" required></label><label for="ev-h">Horário<input type="time" id="ev-h"></label></div>
+    <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp"><option>Treino</option><option>Corrida</option><option>Ação</option></select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo"></label></div>
+    <label for="ev-ds">Detalhes<textarea id="ev-ds" placeholder="Distância, ritmo, o que levar"></textarea></label>
+    <label for="ev-lk">Link de inscrição (opcional)<input type="url" id="ev-lk" placeholder="https://"></label>
+    <button class="btn primary" type="submit">Publicar encontro</button></form>
+    <div class="card">${admList('eventos',[...S.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>fmtLong(x.data)+(x.hora?' · '+x.hora:''))}</div></section>
+
+  <section class="section"><h2 class="sec">Nova notícia</h2><form class="card" data-form="noticia">
+    <label for="nt-t">Título<input type="text" id="nt-t" required></label>
+    <label for="nt-x">Texto<textarea id="nt-x" required></textarea></label>
+    <div class="grid2"><label for="nt-g">Etiqueta<input type="text" id="nt-g" placeholder="Ex.: Assessoria"></label><label for="nt-d">Data<input type="date" id="nt-d"></label></div>
+    <button class="btn primary" type="submit">Publicar notícia</button></form>
+    <div class="card">${admList('noticias',[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>x.data?fmtLong(x.data):'')}</div></section>
+
+  <section class="section"><h2 class="sec">Novo desafio</h2><form class="card" data-form="desafio">
+    <label for="ds-t">Nome<input type="text" id="ds-t" required placeholder="Ex.: 500 km da galera em novembro"></label>
+    <label for="ds-x">Regras<textarea id="ds-x" placeholder="O que vale, como lançar"></textarea></label>
+    <div class="grid2"><label for="ds-m">Meta da galera (km)<input type="number" id="ds-m" min="1" step="1"></label><label for="ds-i">Começa<input type="date" id="ds-i"></label></div>
+    <label for="ds-f">Termina<input type="date" id="ds-f"></label>
+    <button class="btn primary" type="submit">Lançar desafio</button></form>
+    <div class="card">${admList('desafios',S.desafios,x=>x.titulo,x=>kmf(sumKm(x.id))+' km lançados','ativo')}</div></section>
+
+  <section class="section"><h2 class="sec">Nova enquete</h2><form class="card" data-form="enquete">
+    <label for="en-p">Pergunta<input type="text" id="en-p" required placeholder="Ex.: Qual percurso no próximo longão?"></label>
+    <label for="en-o">Opções (uma por linha)<textarea id="en-o" required></textarea></label>
+    <button class="btn primary" type="submit">Abrir enquete</button></form>
+    <div class="card">${admList('enquetes',S.enquetes,x=>x.pergunta,x=>(x.opcoes||[]).length+' opções','ativa')}</div></section>
+
+  <section class="section"><h2 class="sec">Nova pergunta do quiz</h2><form class="card" data-form="quiz">
+    <label for="qz-p">Pergunta<input type="text" id="qz-p" required></label>
+    <label for="qz-o">Opções (uma por linha)<textarea id="qz-o" required></textarea></label>
+    <div class="grid2"><label for="qz-c">Nº da opção certa<input type="number" id="qz-c" min="1" step="1" required></label><label for="qz-e">Explicação<input type="text" id="qz-e"></label></div>
+    <button class="btn primary" type="submit">Adicionar ao quiz</button></form>
+    <div class="card">${admList('quiz',S.quiz,x=>x.pergunta,x=>'Certa: '+((x.opcoes||[])[x.correta]||''))}</div></section>
+
+  <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
+    <label for="in-s">Texto de apresentação<textarea id="in-s">${esc(i.sobre||'')}</textarea></label>
+    <div class="grid2"><label for="in-i">Instagram<input type="text" id="in-i" value="${esc(i.instagram||'')}" placeholder="@perfil"></label><label for="in-w">WhatsApp<input type="text" id="in-w" value="${esc(i.whatsapp||'')}" placeholder="(21) 9…"></label></div>
+    <button class="btn primary" type="submit">Salvar</button></form></section>`;
+}
+
+/* ---------- Nomes ---------- */
+function refreshNames(){}
+
+/* ---------- Gravações ---------- */
+let wq=Promise.resolve(),writing=0;
+function saveMe(mut){
+  if(!S.uid||!S.db){toast('Entre com sua conta para participar.');return}
+  if(S.readOnly){toast('Seu acesso está só para ver. Nada foi salvo.');render();return}
+  const next=JSON.parse(JSON.stringify(me()));mut(next);next.atualizado=Date.now();next.nome=S.myName||'';
+  S.me=next;S.membros={...S.membros,[S.uid]:next};render();
+  writing++;
+  wq=wq.then(()=>S.db.doc('membros/'+S.uid).set(S.me)).then(()=>{S.confirmed=JSON.parse(JSON.stringify(next))}).catch(e=>{
+    const ro=e&&e.code==='permission-denied';if(ro)S.readOnly=true;
+    S.me=S.confirmed?JSON.parse(JSON.stringify(S.confirmed)):BLANK();
+    const m={...S.membros};if(S.confirmed)m[S.uid]=S.me;else delete m[S.uid];S.membros=m;
+    toast(ro?'Não foi salvo: seu acesso está só para ver.':'Não deu para salvar agora. Tenta de novo em instantes.');render();
+  }).finally(()=>{writing--});
+}
+async function addTo(col,data,form){
+  try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input,textarea').forEach(el=>el.value='');toast('Publicado.');}
+  catch(e){toast('Não foi possível publicar. '+(e&&e.code==='permission-denied'?'Só quem edita o app pode publicar.':'Tente de novo.'))}
+}
+const val=id=>(document.getElementById(id)?.value||'').trim();
+const lines=id=>val(id).split('\n').map(s=>s.trim()).filter(Boolean);
+
+document.addEventListener('submit',e=>{
+  const f=e.target.closest('form[data-form]');if(!f)return;e.preventDefault();const k=f.dataset.form;
+  if(k==='apelido'){const n=val('f-apelido');if(!n)return;S.editNome=false;document.getElementById('f-apelido').value='';saveMe(m=>m.apelido=n);toast('Nome salvo no seu peito.');return}
+  if(k==='km'){const id=f.dataset.id;const inp=document.getElementById('km-'+id);const n=parseFloat(String(inp.value).replace(',','.'));
+    if(!(n>0)||n>300){toast('Digite os km entre 0,1 e 300.');return}inp.value='';saveMe(m=>{m.km[id]=Math.round(((Number(m.km[id])||0)+n)*10)/10});toast('+'+kmf(n)+' km lançados. Boa!');return}
+  if(!S.db)return;
+  if(k==='evento')addTo('eventos',{titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk')},f);
+  else if(k==='noticia')addTo('noticias',{titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje()},f);
+  else if(k==='desafio')addTo('desafios',{titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f'),ativo:true},f);
+  else if(k==='enquete'){const o=lines('en-o');if(o.length<2){toast('Coloque pelo menos 2 opções.');return}addTo('enquetes',{pergunta:val('en-p'),opcoes:o,ativa:true},f)}
+  else if(k==='quiz'){const o=lines('qz-o');const c=parseInt(val('qz-c'),10)-1;if(o.length<2){toast('Coloque pelo menos 2 opções.');return}if(!(c>=0&&c<o.length)){toast('O número da opção certa precisa existir na lista.');return}addTo('quiz',{pergunta:val('qz-p'),opcoes:o,correta:c,explicacao:val('qz-e')},f)}
+  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w')}).then(()=>toast('Salvo.')).catch(()=>toast('Não foi possível salvar.'))}
+});
+
+document.addEventListener('click',async e=>{
+  const g=e.target.closest('[data-go]');if(g){go(g.dataset.go);return}
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,id=b.dataset.id;
+  if(a==='rsvp')saveMe(m=>{if(m.presencas[id])delete m.presencas[id];else m.presencas[id]=true});
+  else if(a==='vote')saveMe(m=>m.votos[id]=Number(b.dataset.i));
+  else if(a==='unvote')saveMe(m=>delete m.votos[id]);
+  else if(a==='quiz')saveMe(m=>m.quiz[id]=Number(b.dataset.i));
+  else if(a==='login')login();
+  else if(a==='logout'){try{await signOut(auth)}catch(err){}}
+  else if(a==='editnome'){S.editNome=true;render();document.getElementById('f-apelido')?.focus()}
+  else if(a==='zerar'){const k='zera'+id;if(S.armed!==k){arm(k);return}S.armed=null;saveMe(m=>delete m.km[id]);toast('Seus km deste desafio foram zerados.')}
+  else if(a==='copy'){try{await navigator.clipboard.writeText(b.dataset.v);toast('Copiado.')}catch(err){toast('Selecione o número e copie.')}}
+  else if(a==='del'){const k=b.dataset.col+id;if(S.armed!==k){arm(k);return}S.armed=null;try{await S.db.doc(b.dataset.col+'/'+id).delete();toast('Apagado.')}catch(err){toast('Não foi possível apagar.')}}
+  else if(a==='toggle'){const f=b.dataset.f;const x=S[b.dataset.col].find(z=>z.id===id);try{await S.db.doc(b.dataset.col+'/'+id).update({[f]:!x[f]})}catch(err){toast('Não foi possível alterar.')}}
+});
+document.addEventListener('toggle',e=>{if(e.target.matches&&e.target.matches('details[data-past]'))S.showPast=e.target.open},true);
+let armT;function arm(k){S.armed=k;render();clearTimeout(armT);armT=setTimeout(()=>{S.armed=null;render()},3500)}
+
+/* ---------- Firebase ---------- */
+const app=initializeApp(firebaseConfig);
+const fs=getFirestore(app);const auth=getAuth(app);
+const DB={
+  doc:p=>{const r=doc(fs,p);return{
+    set:d=>setDoc(r,d),update:d=>updateDoc(r,d),delete:()=>deleteDoc(r),
+    onSnapshot:(n,e)=>onSnapshot(r,s=>n({exists:s.exists(),data:()=>s.data()}),e)}},
+  collection:c=>{const r=collection(fs,c);return{
+    add:d=>addDoc(r,d),
+    onSnapshot:(n,e)=>onSnapshot(r,s=>n({docs:s.docs.map(d=>({id:d.id,data:()=>d.data()}))}),e)}}
+};
+S.db=DB;
+async function login(){
+  const p=new GoogleAuthProvider();
+  try{await signInWithPopup(auth,p)}
+  catch(e){
+    if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')){try{await signInWithRedirect(auth,p)}catch(err){toast('Não deu para entrar. Tente de novo.')}}
+    else if(!(e&&e.code==='auth/popup-closed-by-user'||e&&e.code==='auth/cancelled-popup-request'))toast('Não deu para entrar. Tente de novo.');
+  }
+}
+for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
+DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
+let unsubM=null;
+onAuthStateChanged(auth,async u=>{
+  if(unsubM){unsubM();unsubM=null}
+  S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
+  S.me=u?BLANK():null;S.membros={};
+  if(u){
+    try{const a=await getDoc(doc(fs,'admins',(u.email||'').toLowerCase()));S.admin=a.exists()}catch(e){}
+    unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
+      if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
+      if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
+      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;S.loaded.membros=true;schedule()},()=>{});
+  }
+  S.ready=true;render();
+});
+render();
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
