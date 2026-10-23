@@ -1180,15 +1180,30 @@ let wq=Promise.resolve(),writing=0;
 function saveMe(mut){
   if(!S.uid||!S.db){toast('Entre com sua conta para participar.');return}
   if(S.readOnly){toast('Seu acesso está só para ver. Nada foi salvo.');render();return}
-  const next=JSON.parse(JSON.stringify(me()));mut(next);next.atualizado=Date.now();if(!next.desde)next.desde=Date.now();next.nome=S.myName||'';
+  const prev=JSON.parse(JSON.stringify(me()));
+  const next=JSON.parse(JSON.stringify(prev));mut(next);if(!next.desde)next.desde=Date.now();next.nome=S.myName||next.nome||'';
+  const patch=diffPatch(prev,next);if(!Object.keys(patch).length)return;
+  patch.atualizado=Date.now();next.atualizado=patch.atualizado;
   S.me=next;S.membros={...S.membros,[S.uid]:next};render();
   writing++;
-  wq=wq.then(()=>S.db.doc('membros/'+S.uid).set(S.me)).then(()=>{S.confirmed=JSON.parse(JSON.stringify(next))}).catch(e=>{
+  // grava só o que mudou: uma aba antiga aberta em outro lugar não apaga mais o resto do perfil
+  wq=wq.then(()=>S.db.doc('membros/'+S.uid).merge(patch)).then(()=>{S.confirmed=JSON.parse(JSON.stringify(next))}).catch(e=>{
     const ro=e&&e.code==='permission-denied';if(ro)S.readOnly=true;
     S.me=S.confirmed?JSON.parse(JSON.stringify(S.confirmed)):BLANK();
     const m={...S.membros};if(S.confirmed)m[S.uid]=S.me;else delete m[S.uid];S.membros=m;
     toast(ro?'Não foi salvo: seu acesso está só para ver.':'Não deu para salvar agora. Tenta de novo em instantes.');render();
   }).finally(()=>{writing--});
+}
+const isObj=v=>v&&typeof v==='object'&&!Array.isArray(v);
+function diffPatch(a,b){
+  const out={};const keys=new Set([...Object.keys(a||{}),...Object.keys(b||{})]);
+  for(const k of keys){
+    const va=a?a[k]:undefined,vb=b?b[k]:undefined;
+    if(isObj(va)&&isObj(vb)){const sub={};for(const s of new Set([...Object.keys(va),...Object.keys(vb)])){if(!(s in vb))sub[s]=deleteField();else if(JSON.stringify(va[s])!==JSON.stringify(vb[s]))sub[s]=vb[s]}if(Object.keys(sub).length)out[k]=sub}
+    else if(vb===undefined){if(va!==undefined)out[k]=deleteField()}
+    else if(JSON.stringify(va)!==JSON.stringify(vb))out[k]=vb;
+  }
+  return out;
 }
 async function addTo(col,data,form){
   try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');form.querySelectorAll('input[type=file]').forEach(el=>delete S.pending[el.id]);render();toast('Publicado.');return true}
@@ -1306,7 +1321,7 @@ const app=initializeApp(firebaseConfig);
 const fs=getFirestore(app);const auth=getAuth(app);
 const DB={
   doc:p=>{const r=doc(fs,p);return{
-    set:d=>setDoc(r,d),update:d=>updateDoc(r,d),delete:()=>deleteDoc(r),
+    set:d=>setDoc(r,d),merge:d=>setDoc(r,d,{merge:true}),update:d=>updateDoc(r,d),delete:()=>deleteDoc(r),
     onSnapshot:(n,e)=>onSnapshot(r,s=>n({exists:s.exists(),data:()=>s.data()}),e)}},
   collection:c=>{const r=collection(fs,c);return{
     add:d=>addDoc(r,d),
