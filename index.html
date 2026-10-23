@@ -87,6 +87,11 @@ button,input,textarea,select{font:inherit;color:inherit}
 .capa{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:var(--r);background:var(--sunk);margin-top:16px}
 .photo-in{display:flex;flex-direction:column;gap:8px}
 .photo-in .prev{width:100%;max-width:280px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.photo-in .prev.round{width:96px;height:96px;aspect-ratio:1;border-radius:50%}
+#crop canvas{width:100%;max-width:340px;aspect-ratio:1;align-self:center;touch-action:none;border-radius:18px;cursor:grab;background:#000;display:block}
+#crop canvas:active{cursor:grabbing}
+#crop input[type=range]{width:100%;accent-color:var(--green);min-height:36px;padding:0;border:0;background:none}
+.zoomrow{display:flex;align-items:center;gap:12px;color:var(--muted);font-weight:700}
 .filebtn{position:relative;overflow:hidden;align-self:flex-start}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .brand b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:22px;letter-spacing:.02em;text-transform:uppercase;line-height:1}
@@ -290,6 +295,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <nav class="tabs" aria-label="Seções"><div class="tabs-in" id="tabs"></div></nav>
 <div class="overlay" id="onb" hidden role="dialog" aria-label="Boas-vindas"></div>
 <div class="overlay" id="mcard" hidden role="dialog" aria-label="Cartão de membro"></div>
+<div class="overlay" id="crop" hidden role="dialog" aria-label="Ajustar foto de perfil"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -582,7 +588,7 @@ function vPerfil(){
     <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
   <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
-    ${photoField('pf-f','Sua foto',m.foto)}
+    ${photoField('pf-f','Sua foto',m.foto,true)}
     <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
     <div class="grid2"><label for="pf-b">Bairro ou cidade<input type="text" id="pf-b" maxlength="40" placeholder="Ex.: Santo Aleixo" value="${esc(m.bairro||'')}"></label>
     <label for="pf-o">Seu objetivo<select id="pf-o"><option value="">Escolha</option>${OBJETIVOS.map(o=>`<option ${m.objetivo===o?'selected':''}>${o}</option>`).join('')}</select></label></div>
@@ -807,10 +813,10 @@ function vAdmin(){
 /* ---------- Fotos ---------- */
 const okPic=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
 function picHtml(u,cls){return okPic(u)?`<img class="${cls}" src="${u}" alt="" loading="lazy">`:''}
-function photoField(id,label,current){
+function photoField(id,label,current,round){
   const p=S.pending[id];const shown=p!==undefined?p:(current||'');
   return `<div class="photo-in"><span class="small" style="font-weight:600;color:var(--muted)">${label}</span>
-  ${okPic(shown)?`<img class="prev" src="${shown}" alt="Prévia da foto">`:''}
+  ${okPic(shown)?`<img class="prev${round?' round':''}" src="${shown}" alt="Prévia da foto">`:''}
   <div class="row"><span class="btn small filebtn">${S.busyPic===id?'Preparando…':(okPic(shown)?'Trocar foto':'Escolher foto')}<input type="file" id="${id}" accept="image/*" aria-label="${label}"></span>
   ${okPic(shown)?`<button type="button" class="btn small danger" data-action="rmpic" data-id="${id}">Remover</button>`:''}</div></div>`;
 }
@@ -828,10 +834,53 @@ async function compress(file,small){
 }
 document.addEventListener('change',async e=>{
   const el=e.target;if(!(el.matches&&el.matches('input[type=file]'))||!el.files||!el.files[0])return;
-  const id=el.id;S.busyPic=id;render();
+  const id=el.id;
+  if(id==='pf-f'){const f=el.files[0];el.value='';openCrop(f);return}
+  S.busyPic=id;render();
   try{S.pending[id]=await compress(el.files[0],id==='pf-f'||id==='pa-f')}catch(err){toast('Não deu para usar essa foto. Tente outra em JPG ou PNG.')}
   S.busyPic=null;render();
 });
+
+/* ---------- Recorte da foto de perfil ---------- */
+const CROP={img:null,D:680,R:310,z:1,min:1,x:0,y:0,ptrs:new Map(),d0:0,z0:1};
+function cropClamp(){const w=CROP.img.naturalWidth*CROP.min*CROP.z,h=CROP.img.naturalHeight*CROP.min*CROP.z;const mx=Math.max(0,(w-2*CROP.R)/2),my=Math.max(0,(h-2*CROP.R)/2);CROP.x=Math.max(-mx,Math.min(mx,CROP.x));CROP.y=Math.max(-my,Math.min(my,CROP.y))}
+function cropDraw(){
+  const c=document.getElementById('cropc');if(!c||!CROP.img)return;const g=c.getContext('2d');const {D,R}=CROP;
+  cropClamp();const sc=CROP.min*CROP.z;const w=CROP.img.naturalWidth*sc,h=CROP.img.naturalHeight*sc;
+  g.fillStyle='#111';g.fillRect(0,0,D,D);g.drawImage(CROP.img,D/2+CROP.x-w/2,D/2+CROP.y-h/2,w,h);
+  g.save();g.beginPath();g.rect(0,0,D,D);g.arc(D/2,D/2,R,0,Math.PI*2,true);g.fillStyle='rgba(0,0,0,.6)';g.fill('evenodd');g.restore();
+  g.beginPath();g.arc(D/2,D/2,R,0,Math.PI*2);g.strokeStyle='rgba(255,255,255,.9)';g.lineWidth=3;g.stroke();
+  const z=document.getElementById('cropz');if(z&&Number(z.value)!==CROP.z)z.value=CROP.z;
+}
+function cropZoom(z){CROP.z=Math.max(1,Math.min(5,z));cropDraw()}
+async function openCrop(file){
+  let img;try{img=await loadImg(file)}catch(e){toast('Não deu para abrir essa foto. Tente outra em JPG ou PNG.');return}
+  const el=$('#crop');
+  el.innerHTML=`<div class="in"><div><p class="eyebrow">Foto de perfil</p><h2 class="sec">Centralize seu rosto no círculo</h2><p class="small muted" style="margin:6px 0 0">Arraste a foto para posicionar. Use o zoom ou dois dedos para aproximar.</p></div>
+  <canvas id="cropc" width="${CROP.D}" height="${CROP.D}" aria-label="Área de recorte da foto"></canvas>
+  <div class="zoomrow"><span aria-hidden="true">−</span><input type="range" id="cropz" min="1" max="5" step="0.01" value="1" aria-label="Zoom da foto"><span aria-hidden="true">+</span></div>
+  <div class="row"><button class="btn primary" data-action="crop-ok">Usar esta foto</button><button class="btn" data-action="crop-cancel">Cancelar</button></div></div>`;
+  el.hidden=false;
+  CROP.img=img;CROP.R=CROP.D/2-30;CROP.min=Math.max(2*CROP.R/img.naturalWidth,2*CROP.R/img.naturalHeight);CROP.z=1;CROP.x=0;CROP.y=0;CROP.ptrs.clear();
+  const c=document.getElementById('cropc');const k=()=>CROP.D/c.getBoundingClientRect().width;
+  c.addEventListener('pointerdown',e=>{c.setPointerCapture(e.pointerId);CROP.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});if(CROP.ptrs.size===2){const[a,b]=[...CROP.ptrs.values()];CROP.d0=Math.hypot(a.x-b.x,a.y-b.y);CROP.z0=CROP.z}});
+  c.addEventListener('pointermove',e=>{const p=CROP.ptrs.get(e.pointerId);if(!p)return;
+    if(CROP.ptrs.size===1){CROP.x+=(e.clientX-p.x)*k();CROP.y+=(e.clientY-p.y)*k();p.x=e.clientX;p.y=e.clientY;cropDraw();return}
+    p.x=e.clientX;p.y=e.clientY;const[a,b]=[...CROP.ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(CROP.d0>0)cropZoom(CROP.z0*d/CROP.d0)});
+  const up=e=>{CROP.ptrs.delete(e.pointerId);if(CROP.ptrs.size<2)CROP.d0=0};
+  c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+  c.addEventListener('wheel',e=>{e.preventDefault();cropZoom(CROP.z*(1-e.deltaY*0.0015))},{passive:false});
+  document.getElementById('cropz').addEventListener('input',e=>cropZoom(Number(e.target.value)));
+  cropDraw();
+}
+function closeCrop(){const el=$('#crop');el.hidden=true;el.innerHTML='';CROP.img=null}
+function cropExport(){
+  const O=360,{D,R}=CROP;const f=O/(2*R);const sc=CROP.min*CROP.z;const w=CROP.img.naturalWidth*sc,h=CROP.img.naturalHeight*sc;
+  const c=document.createElement('canvas');c.width=O;c.height=O;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,O,O);
+  g.drawImage(CROP.img,(D/2+CROP.x-w/2-(D/2-R))*f,(D/2+CROP.y-h/2-(D/2-R))*f,w*f,h*f);
+  let q=0.86,out=c.toDataURL('image/jpeg',q);while(out.length>70000&&q>0.4){q-=0.08;out=c.toDataURL('image/jpeg',q)}
+  return out;
+}
 
 /* ---------- Nomes ---------- */
 function refreshNames(){}
@@ -942,6 +991,8 @@ document.addEventListener('click',async e=>{
     if(!me().apelido&&n)saveMe(m=>{m.apelido=n});
     S.onbDone=true;try{localStorage.setItem('pv-onb-'+S.uid,'1')}catch(err){}render();
   }
+  else if(a==='crop-ok'){if(CROP.img){S.pending['pf-f']=cropExport();closeCrop();render();toast('Foto ajustada. Toque em Salvar perfil.')}}
+  else if(a==='crop-cancel')closeCrop();
   else if(a==='card'){S.cardOpen=true;renderCard()}
   else if(a==='card-close'){S.cardOpen=false;renderCard()}
   else if(a==='editpar'){S.editPar=id;delete S.pending['pa-f'];clearPar();render();const p=S.parceiros.find(x=>x.id===id);if(p){const set=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v??''};set('pa-n',p.nome);set('pa-b',p.beneficio);set('pa-r',p.regras);set('pa-e',p.endereco);set('pa-i',p.instagram);set('pa-w',p.whatsapp);set('pa-o',p.ordem)}document.getElementById('pa-n')?.scrollIntoView({block:'center'})}
