@@ -251,6 +251,29 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .cform{display:flex;gap:8px;align-items:flex-end}
 .cform textarea{min-height:44px;height:44px;resize:none;flex:1}
 .cform .btn{flex:none}
+.medals{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:10px}
+.medal{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-width:0}
+.medal i{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:20px;background:var(--ipe-soft);color:var(--ipe);border:3px solid var(--ipe);box-shadow:inset 0 0 0 3px var(--surface)}
+.medal.off i{background:var(--sunk);color:var(--muted);border-color:var(--line);opacity:.6}
+.medal b{font-size:12px;line-height:1.2}
+.medal span{font-size:11px;color:var(--muted);line-height:1.25}
+.bday{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.bday::-webkit-scrollbar{display:none}
+.bday button{appearance:none;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:64px;cursor:pointer;color:var(--ink);padding:0}
+.bday b{font-size:12px;max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bday span{font-size:11px;color:var(--muted)}
+.bday .today .avt{box-shadow:0 0 0 3px var(--ipe)}
+[data-action="ver"]{cursor:pointer}
+.rank li[data-action="ver"]:hover{background:var(--sunk);border-radius:8px}
+.install{display:flex;gap:12px;align-items:flex-start;background:var(--green-soft);border-radius:var(--r);padding:14px;position:relative}
+.install img{width:44px;height:44px;border-radius:11px;flex:none}
+.install>div{min-width:0;display:flex;flex-direction:column;gap:6px}
+.install .x{position:absolute;top:6px;right:6px;appearance:none;border:0;background:none;color:var(--muted);font-size:20px;line-height:1;width:32px;height:32px;cursor:pointer;border-radius:50%}
+.legal{max-width:62ch}
+.legal h2{font-size:17px;margin:14px 0 4px}
+.legal p,.legal li{font-size:15px;line-height:1.55;margin:0 0 8px}
+.legal ul{padding-left:20px;margin:0 0 8px}
+.share{display:inline-flex}
 .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 @media (min-width:540px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -329,6 +352,8 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px}
 .adm-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
 .adm-item:first-of-type{border-top:0}
+.adm-item{flex-wrap:wrap}
+.adm-item .row{flex-wrap:wrap!important}
 .adm-item>div{min-width:0}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -357,7 +382,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, reauthenticateWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCumaJKVTwag1FhGoOKFvgm5eLh6PlIi_A",
@@ -376,7 +401,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -407,7 +432,7 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 
 /* ---------- Navegação ---------- */
-const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube'];
+const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube','pessoa','privacidade'];
 const TABS=['inicio','agenda','desafios','loja','galera','admin'];
 const ICON={
  inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
@@ -437,7 +462,7 @@ function render(){
   root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
-  if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
+  if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
   root.innerHTML=h;
   const ob=onbHtml();const oe=$('#onb');if(ob){oe.innerHTML=ob;oe.hidden=false}else{oe.hidden=true;oe.innerHTML=''}
   renderCard();drawMini();
@@ -455,13 +480,14 @@ function loading(c,txt){return !S.loaded[c]&&!S.offline?`<div class="empty">${tx
 
 function vInicio(){
   const m=me();const nm=m.apelido||S.myName||'';
-  let h=bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
+  let h=installHtml()+bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
    <h1 class="h-display">Bora correr junto?</h1>
    <p class="lede">Agenda, desafios, enquetes e notícias da comunidade que corre em Magé.</p></section>`;
   h+=visitante();
   if(S.uid){
     h+=`<section class="section"><div class="bib" data-go="perfil" role="button" tabindex="0" aria-label="Abrir meu perfil"><div class="bib-band">Passos Verdes · Magé/RJ</div><div class="bib-num">${bibNum()}</div><div class="bib-name">${esc(nm||'Seu nome aqui')}</div><span class="pin tl"></span><span class="pin tr"></span><span class="pin bl"></span><span class="pin br"></span></div><span class="bib-hint">Toque no seu número para ver seu perfil</span></section>`;
   }
+  h+=bdayHtml();
   // Próximo evento
   const prox=S.eventos.filter(e=>(e.data||'')>=hoje()).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
   h+=`<section class="section"><div class="sec-head"><h2 class="sec">Próximo encontro</h2><button class="linkbtn" data-go="agenda">Agenda completa</button></div>`;
@@ -499,7 +525,7 @@ function evCard(e){
   ${e.descricao?`<p style="margin:0" class="small">${esc(e.descricao)}</p>`:''}
   ${e.link?`<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Inscrição e detalhes</a>`:''}
   <div class="people">${avs?`<span class="avs">${avs}</span>`:''}<span class="muted small num">${ids.length?ids.length+(ids.length===1?' vai':' vão'):'Ninguém confirmou ainda'}</span></div>
-  ${past?'':`<div><button class="btn ${vou?'on':'primary'}" data-action="rsvp" data-id="${esc(e.id)}" ${S.uid?'':'disabled'}>${vou?'✓ Eu vou':'Eu vou'}</button></div>`}
+  <div class="row">${past?'':`<button class="btn ${vou?'on':'primary'}" data-action="rsvp" data-id="${esc(e.id)}" ${S.uid?'':'disabled'}>${vou?'✓ Eu vou':'Eu vou'}</button>`}<button class="btn share" data-action="share-ev" data-id="${esc(e.id)}" aria-label="Compartilhar no WhatsApp"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M7 10H5v11h14V10h-2"/></svg>Compartilhar</button></div>
   </div></div></article>`;
 }
 
@@ -531,7 +557,7 @@ function desafioCard(d,ativo){
   const by={};for(const l of aprovados(d.id)){by[l.uid]=(by[l.uid]||{uid:l.uid,km:0,l});by[l.uid].km+=Number(l.km)||0}
   const rk=Object.values(by).sort((a,b)=>b.km-a.km);
   const pos=rk.findIndex(r=>r.uid===S.uid);
-  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeL(r.l))}${r.uid===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeL(r.l))}${r.uid===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
   let rh=rk.slice(0,10).map(li).join('');if(pos>=10)rh+=li(rk[pos],pos);
   const meus=S.lancamentos.filter(l=>l.desafio===d.id&&l.uid===S.uid).sort((a,b)=>(b.criado||0)-(a.criado||0));
   const meuOk=meus.filter(l=>l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0);
@@ -598,7 +624,7 @@ function vLoja(){
   h+=ps.length?`<div class="prod-grid">${ps.map(prodCard).join('')}</div>`:`<div class="empty">A loja está sendo montada. Em breve os produtos aparecem aqui.</div>`;
   return h;
 }
-function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>p.status!=='concluido').length:0}
+function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>p.status!=='concluido').length+S.reportes.filter(r=>r.status!=='resolvido').length:0}
 document.addEventListener('input',e=>{const el=e.target;if(!el.id)return;
   if(el.id==='pf-a'){let d=el.value.replace(/\D/g,'').slice(0,4);if(d.length===1&&Number(d)>3)d='0'+d;el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d}
   else if(el.id==='pf-p'){let d=el.value.replace(/\D/g,'').slice(0,4);el.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d}
@@ -625,11 +651,91 @@ const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 function memb(id){return id===S.uid?me():(S.membros[id]||{})}
 function avatar(id,size=32,cls='avt'){
   const m=memb(id);const n=id===S.uid?(m.apelido||S.myName||''):nome(id);
-  if(okPic(m.foto))return `<img class="${cls}" src="${m.foto}" alt="" style="width:${size}px;height:${size}px" loading="lazy">`;
-  return `<span class="${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.38)}px;background:${AVC[hash(id||'x')%AVC.length]}" aria-hidden="true">${esc(ini(n||'PV'))}</span>`;
+  const act=id?` data-action="ver" data-uid="${esc(id)}" title="${esc(n||'Ver perfil')}"`:'';
+  if(okPic(m.foto))return `<img class="${cls}" src="${m.foto}" alt="" style="width:${size}px;height:${size}px" loading="lazy"${act}>`;
+  return `<span class="${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.38)}px;background:${AVC[hash(id||'x')%AVC.length]}" aria-hidden="true"${act}>${esc(ini(n||'PV'))}</span>`;
 }
 const OBJETIVOS=['Começando a correr','5 km','10 km','21 km','42 km','Ultra','Trilha'];
 function desdeTxt(m){const d=m.desde?new Date(m.desde):new Date();return d.toLocaleDateString('pt-BR',{month:'short',year:'numeric'}).replace('.','')}
+function numerosDe(uid){
+  const m=memb(uid);const ap=S.lancamentos.filter(l=>l.uid===uid&&l.status==='aprovado');
+  const km=ap.reduce((t,l)=>t+(Number(l.km)||0),0);const t=hoje();
+  const pres=S.eventos.filter(e=>(e.data||'')<t&&m.presencas&&m.presencas[e.id]).length;
+  const des=new Set(ap.map(l=>l.desafio)).size;return {km,pres,des};
+}
+const PIONEIRO_ATE=new Date(2026,11,1).getTime();
+function conquistas(uid){
+  const m=memb(uid);const n=numerosDe(uid);const camp=S.campeoes.filter(c=>c.uid===uid).length;
+  return [
+    {k:'P',nome:'Pioneiro',desc:'Entrou antes do lançamento',ok:!!m.desde&&m.desde<PIONEIRO_ATE},
+    {k:'✓',nome:'Perfil completo',desc:'Foto e objetivo',ok:okPic(m.foto)&&!!m.objetivo},
+    {k:'1',nome:'Primeiro treino',desc:'1 presença',ok:n.pres>=1},
+    {k:'5×',nome:'Frequente',desc:'5 presenças',ok:n.pres>=5},
+    {k:'15×',nome:'Fiel ao pelotão',desc:'15 presenças',ok:n.pres>=15},
+    {k:'50',nome:'50 km',desc:'aprovados nos desafios',ok:n.km>=50},
+    {k:'100',nome:'100 km',desc:'aprovados nos desafios',ok:n.km>=100},
+    {k:'500',nome:'500 km',desc:'aprovados nos desafios',ok:n.km>=500},
+    {k:'D',nome:'Desafiante',desc:'Correu um desafio',ok:n.des>=1},
+    {k:'★',nome:'Campeão do jogo',desc:camp>1?camp+' semanas':'Venceu uma semana',ok:camp>0}
+  ];
+}
+function medalhasHtml(uid,todas){
+  const cs=conquistas(uid);const ok=cs.filter(c=>c.ok);const lista=todas?cs:ok;
+  if(!lista.length)return `<p class="muted small" style="margin:0">Nenhuma conquista ainda.</p>`;
+  return `<div class="medals">${lista.map(c=>`<div class="medal ${c.ok?'':'off'}"><i aria-hidden="true">${esc(c.k)}</i><b>${esc(c.nome)}</b><span>${esc(c.desc)}</span></div>`).join('')}</div>`;
+}
+function verPessoa(uid){
+  if(!uid)return;S.cardOpen=false;
+  if(uid===S.uid){go('perfil');return}
+  if(view!=='pessoa')S.prevView=view;S.verUid=uid;go('pessoa');
+}
+function vPessoa(){
+  const uid=S.verUid;const voltar=`<button class="linkbtn" data-go="${esc(S.prevView||'inicio')}">‹ Voltar</button>`;
+  if(!S.uid)return `<section class="section">${voltar}</section>`+visitante();
+  if(!uid||!S.membros[uid])return `<section class="section">${voltar}<div class="empty">Não encontramos esse perfil.</div></section>`;
+  const m=S.membros[uid];const nm=nome(uid);const n=numerosDe(uid);const det=!m.detalhesPrivados||S.admin;
+  const ig=m.instagram?String(m.instagram).replace(/^@/,''):'';
+  return `<section class="section">${voltar}<div class="prof-head">${avatar(uid,88).replace('data-action="ver"','')}<div><p class="eyebrow">Nº ${100+hash(uid)%900}${m.desde?' · desde '+esc(desdeTxt(m)):''}</p><h1>${esc(nm)}</h1>
+    ${det?`<div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div>`:''}</div></div>
+    ${det&&(ig||m.strava)?`<div class="row small">${ig?`<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`:''}${/^https?:\/\//.test(m.strava||'')?`<a href="${esc(m.strava)}" target="_blank" rel="noopener">Perfil no Strava</a>`:''}</div>`:''}</section>
+  <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
+  <section class="section"><h2 class="sec">Conquistas</h2>${medalhasHtml(uid,false)}</section>`;
+}
+function aniversariantes(){
+  const now=new Date();now.setHours(0,0,0,0);const out=[];
+  for(const [id,m] of Object.entries(S.membros)){
+    if(!m.aniversario||m.detalhesPrivados)continue;const mm=String(m.aniversario).match(/^(\d{1,2})\/(\d{1,2})$/);if(!mm)continue;
+    let d=new Date(now.getFullYear(),Number(mm[2])-1,Number(mm[1]));if(d<now)d=new Date(now.getFullYear()+1,Number(mm[2])-1,Number(mm[1]));
+    const dias=Math.round((d-now)/86400000);if(dias<=7)out.push({id,dias,d});
+  }
+  return out.sort((a,b)=>a.dias-b.dias);
+}
+const UA=navigator.userAgent;
+const inApp=/Instagram|FBAN|FBAV|WhatsApp|Line\/|; wv\)/.test(UA);
+const isAndroid=/Android/.test(UA);
+function installHtml(){
+  if(standalone()||!(isIOS||isAndroid))return '';
+  try{if(Number(localStorage.getItem('pv-inst-hide')||0)>Date.now())return ''}catch(e){}
+  let txt,btn='';
+  if(isIOS&&(inApp||/CriOS|FxiOS|EdgiOS/.test(UA))){txt='Para instalar, abra este link no <b>Safari</b>.';btn=`<button class="btn small" data-action="copylink">Copiar link</button>`}
+  else if(isIOS)txt='No Safari, toque nos <b>3 pontinhos</b> ou em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.';
+  else if(S.bip){txt='Instale para abrir mais rápido e receber os avisos.';btn=`<button class="btn small primary" data-action="install">Instalar app</button>`}
+  else if(inApp){txt='Para instalar, abra este link no <b>Chrome</b>.';btn=`<button class="btn small" data-action="copylink">Copiar link</button>`}
+  else txt='No Chrome, toque nos <b>3 pontinhos</b> e depois em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.';
+  return `<section class="section"><div class="install"><img src="/icons/icon-192.png" alt=""><div><b>Instale o app Passos Verdes</b><span class="small">${txt}</span>${btn?`<div>${btn}</div>`:''}</div><button class="x" data-action="install-x" aria-label="Fechar">×</button></div></section>`;
+}
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();S.bip=e;schedule()});
+window.addEventListener('appinstalled',()=>{S.bip=null;schedule()});
+async function shareEvento(id){
+  const e=S.eventos.find(x=>x.id===id);if(!e)return;
+  const txt=`${e.tipo||'Treino'} Passos Verdes: ${e.titulo}\n${[fmtLong(e.data),e.hora,e.local].filter(Boolean).join(' · ')}\n\nConfirme presença no app: ${location.origin}/#agenda`;
+  if(navigator.share){try{await navigator.share({title:e.titulo,text:txt});return}catch(err){if(err&&err.name==='AbortError')return}}
+  window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+function bdayHtml(){
+  if(!S.uid)return '';const bs=aniversariantes();if(!bs.length)return '';
+  return `<section class="section"><h2 class="sec">Aniversariantes da semana</h2><div class="bday">${bs.map(b=>`<button class="${b.dias===0?'today':''}" data-action="ver" data-uid="${esc(b.id)}">${avatar(b.id,52).replace(/ data-action="ver"[^>]*?title="[^"]*"/,'')}<b>${esc(b.id===S.uid?'Você':nome(b.id))}</b><span>${b.dias===0?'Hoje! 🎉':b.d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}</span></button>`).join('')}</div></section>`;
+}
 function meusNumeros(){
   const km=S.lancamentos.filter(l=>l.uid===S.uid&&l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0);
   const t=hoje();const pres=S.eventos.filter(e=>(e.data||'')<t&&me().presencas&&me().presencas[e.id]).length;
@@ -644,6 +750,7 @@ function vPerfil(){
     <div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div></div></div>
     <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
+  <section class="section"><h2 class="sec">Suas conquistas</h2>${medalhasHtml(S.uid,true)}</section>
   <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
     ${photoField('pf-f','Sua foto',m.foto,true)}
     <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
@@ -653,6 +760,7 @@ function vPerfil(){
     <label for="pf-a">Aniversário (dia/mês)<input type="text" id="pf-a" maxlength="5" inputmode="numeric" placeholder="Ex.: 15/03" value="${esc(aniv)}"></label></div>
     <div class="grid2"><label for="pf-i">Instagram<input type="text" id="pf-i" maxlength="40" placeholder="@seuperfil" value="${esc(m.instagram||'')}"></label>
     <label for="pf-s">Perfil no Strava<input type="url" id="pf-s" placeholder="https://strava.com/athletes/…" value="${esc(m.strava||'')}"></label></div>
+    <label class="chk" for="pf-v"><input type="checkbox" id="pf-v" ${m.detalhesPrivados?'':'checked'}> Mostrar objetivo, bairro, ritmo, aniversário e redes no meu perfil público</label>
     <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar perfil</button></div></form></section>
   <section class="section"><div class="card" style="padding-block:4px"><button class="linkrow" data-go="clube">Clube de vantagens${CHEV}</button><button class="linkrow" data-go="config">Configurações${CHEV}</button></div></section>`;
 }
@@ -672,10 +780,41 @@ function vConfig(){
   <section class="section"><h2 class="sec">Aparência</h2><div class="seg" role="group" aria-label="Aparência do app">${[['auto','Automático'],['light','Claro'],['dark','Escuro']].map(([k,l])=>`<button data-action="theme" data-v="${k}" aria-pressed="${th===k}">${l}</button>`).join('')}</div><p class="muted small" style="margin:0">Automático segue o modo do seu celular.</p></section>`;
   if(S.uid)h+=`<section class="section"><h2 class="sec">Notificações</h2><div class="card"><div class="row" style="justify-content:space-between"><b>Avisos no celular</b><span class="st ${c}">${t}</span></div>${p?`<p class="small muted" style="margin:0">${p}</p>`:''}
     ${S.push==='default'||S.push==='error'?`<div><button class="btn primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button></div>`:''}</div></section>
-  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-action="logout" style="color:var(--danger)">Sair da conta</button></div>
+  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button><button class="linkrow" data-action="logout">Sair da conta${CHEV}</button><button class="linkrow" data-action="apagar-conta" style="color:var(--danger)">${S.armed==='apagar'?'Toque de novo para apagar sua conta':'Apagar minha conta'}</button></div>
     ${auth.currentUser&&auth.currentUser.email?`<p class="muted small" style="margin:0">Conectado como ${esc(auth.currentUser.email)}</p>`:''}</section>`;
   else h+=visitante();
+  if(S.uid)h+=`<section class="section"><h2 class="sec">Encontrou um problema?</h2><form class="card" data-form="reporte">
+    <p class="small muted" style="margin:0">Conte o que aconteceu. Se puder, mande um print da tela. Isso ajuda muito a melhorar o app.</p>
+    <label for="rp-x">O que aconteceu?<textarea id="rp-x" maxlength="2000" required placeholder="Ex.: Toquei em Salvar perfil e minha foto não apareceu."></textarea></label>
+    ${photoField('rp-f','Print da tela (opcional)')}
+    <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Enviar para a equipe</button></div></form></section>`;
+  else h+=`<section class="section"><div class="card" style="padding-block:4px"><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button></div></section>`;
   return h;
+}
+function vPrivacidade(){
+  const i=S.info||{};const ig=i.instagram?String(i.instagram).replace(/^@/,''):'';
+  return `<section class="section"><button class="linkbtn" data-go="config">‹ Voltar</button><p class="eyebrow">Transparência</p><h1 class="h-display">Política de privacidade</h1><p class="muted small" style="margin:0">Atualizada em ${esc(new Date(2026,9,24).toLocaleDateString('pt-BR'))}</p></section>
+  <section class="section legal">
+  <p>Este é o app da comunidade de corrida <b>Passos Verdes</b>, de Magé/RJ. Aqui explicamos, de forma simples, quais dados o app guarda, para quê, e como você controla isso, conforme a Lei Geral de Proteção de Dados (LGPD, Lei nº 13.709/2018).</p>
+  <h2>Quais dados guardamos</h2>
+  <ul><li><b>Conta Google:</b> usamos o login do Google para te identificar. Guardamos seu nome de exibição e um código interno da conta. Sua senha nunca passa pelo app.</li>
+  <li><b>Perfil:</b> o que você escolher preencher, como apelido, foto, bairro, objetivo, ritmo, aniversário (dia e mês), Instagram e Strava. Tudo é opcional, exceto o apelido.</li>
+  <li><b>Participação:</b> presenças confirmadas, votos em enquetes, respostas do quiz, curtidas, comentários, pontuação no jogo e km lançados nos desafios.</li>
+  <li><b>Prints de corrida:</b> usados só para a organização conferir os km. São apagados assim que a conferência é feita.</li>
+  <li><b>Pedidos da loja:</b> produto, tamanho, quantidade e valor, para a entrega.</li>
+  <li><b>Avisos:</b> se você ativar as notificações, guardamos um código do seu aparelho para enviar os avisos.</li>
+  <li><b>Uso do app:</b> o dia do seu último acesso e estatísticas anônimas de visitas, para entender como o app está sendo usado.</li>
+  <li><b>Problemas reportados:</b> o texto e o print que você enviar.</li></ul>
+  <h2>Para que usamos</h2>
+  <p>Para fazer o app funcionar: mostrar seu perfil, rankings e presenças, enviar avisos de treinos e eventos, conferir desafios, organizar pedidos e melhorar o app. Não vendemos seus dados e não usamos para publicidade de terceiros.</p>
+  <h2>Quem vê</h2>
+  <p>Quem está logado no app vê seu apelido, foto, número, conquistas e participação nos rankings. Objetivo, bairro, ritmo, aniversário e redes só aparecem se você deixar marcada essa opção no seu perfil. A equipe organizadora vê os dados necessários para organizar os eventos, conferir desafios e entregar pedidos.</p>
+  <h2>Onde ficam guardados</h2>
+  <p>Os dados ficam nos serviços do Google Firebase e o app é hospedado pela Vercel, que seguem padrões de segurança e podem armazenar dados fora do Brasil.</p>
+  <h2>Seus direitos</h2>
+  <p>Você pode ver e corrigir seus dados no seu perfil a qualquer momento. Você pode <b>apagar sua conta</b> em Configurações, e o app remove seu perfil e o registro de avisos do seu aparelho. Para pedir a remoção de outros registros (comentários, pedidos, corridas aprovadas) ou tirar dúvidas, fale com a equipe${ig?` pelo Instagram <a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`:''}${i.whatsapp?` ou pelo WhatsApp ${esc(i.whatsapp)}`:''}.</p>
+  <h2>Mudanças</h2>
+  <p>Se esta política mudar, avisaremos pelo app.</p></section>`;
 }
 function parceirosAtivos(){return S.parceiros.filter(p=>p.ativo!==false).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
 function plogo(p,cls='plogo'){return okPic(p.logo)?`<img class="${cls}" src="${p.logo}" alt="" loading="lazy">`:`<span class="${cls}">${esc(ini(p.nome||'?'))}</span>`}
@@ -698,6 +837,7 @@ function vClube(){
   return h;
 }
 function onbHtml(){
+  if(view==='privacidade')return '';
   if(!S.uid||!S.ready||!S.loaded.membros||S.onbDone)return '';
   try{if(localStorage.getItem('pv-onb-'+S.uid)){S.onbDone=true;return ''}}catch(e){}
   const needName=!me().apelido;const needPush=S.push==='default';
@@ -707,7 +847,8 @@ function onbHtml(){
   return `<div class="in"><img class="onb-logo" src="/icons/icon-192.png" alt="Passos Verdes"><div><p class="eyebrow">Boas-vindas</p><h1 class="h-display" style="font-size:44px">Bem-vindo(a) à Passos Verdes!</h1></div>
   ${needName?`<label for="onb-n">Como a galera te chama?<input type="text" id="onb-n" maxlength="28" value="${esc(first)}"></label>`:''}
   ${needPush?`<p class="lede">A gente te avisa quando sair treino novo, corrida, desafio e novidade na loja. Na próxima tela, toque em <b>Permitir</b>.</p>`:''}
-  <button class="btn primary" data-action="onb-go" style="min-height:52px;font-size:17px">Começar</button></div>`;
+  <button class="btn primary" data-action="onb-go" style="min-height:52px;font-size:17px">Começar</button>
+  <p class="small muted" style="margin:0;text-align:center">Ao continuar, você concorda com a <button class="linkbtn" data-action="onb-priv" style="font-size:inherit">política de privacidade</button>.</p></div>`;
 }
 let clockT=null;
 function renderCard(){
@@ -842,9 +983,9 @@ function vGalera(){
   return h;
 }
 
-function admList(col,items,title,sub,toggle){
+function admList(col,items,title,sub,toggle,editable){
   if(!items.length)return `<p class="muted small" style="margin:0">Nada publicado.</p>`;
-  return items.map(x=>{const k=col+x.id;return `<div class="adm-item"><div><b class="small">${esc(title(x))}</b><div class="muted small">${esc(sub(x))}</div></div><div class="row" style="flex-wrap:nowrap">${toggle?`<button class="btn small" data-action="toggle" data-col="${col}" data-id="${esc(x.id)}" data-f="${toggle}">${x[toggle]?'Encerrar':'Reabrir'}</button>`:''}<button class="btn small danger ${S.armed===k?'armed':''}" data-action="del" data-col="${col}" data-id="${esc(x.id)}">${S.armed===k?'Confirmar':'Apagar'}</button></div></div>`}).join('');
+  return items.map(x=>{const k=col+x.id;return `<div class="adm-item"><div><b class="small">${esc(title(x))}</b><div class="muted small">${esc(sub(x))}</div></div><div class="row" style="flex-wrap:nowrap">${editable?`<button class="btn small" data-action="edit-pub" data-col="${col}" data-id="${esc(x.id)}">Editar</button>`:''}${toggle?`<button class="btn small" data-action="toggle" data-col="${col}" data-id="${esc(x.id)}" data-f="${toggle}">${x[toggle]?'Encerrar':'Reabrir'}</button>`:''}<button class="btn small danger ${S.armed===k?'armed':''}" data-action="del" data-col="${col}" data-id="${esc(x.id)}">${S.armed===k?'Confirmar':'Apagar'}</button></div></div>`}).join('');
 }
 function vAdmin(){
   const i=S.info||{};
@@ -853,6 +994,8 @@ function vAdmin(){
   const peds=[...S.pedidos].sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,40);
   const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
   const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
+  const editing=c=>S.edit&&S.edit.col===c?S[c].find(x=>x.id===S.edit.id)||null:null;
+  const ee=editing('eventos'),en=editing('noticias'),ed=editing('desafios');
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
   ${statsHtml()}
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
@@ -869,6 +1012,18 @@ function vAdmin(){
     <div class="row" style="flex-wrap:nowrap">${p.status==='concluido'?`<span class="st ok">Entregue</span>`:`<button class="btn small" data-action="pedok" data-id="${esc(p.id)}">Entregue</button>`}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
   <p class="muted small" style="margin:0">O WhatsApp que recebe os pedidos é o do formulário "Sobre o projeto", mais abaixo.</p></div></section>
+
+  <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
+  ${S.reportes.length?[...S.reportes].sort((a,b)=>(a.status==='resolvido'?1:0)-(b.status==='resolvido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,30).map(r=>`<div class="check">${okPic(r.foto)?`<img class="thumb" src="${r.foto}" alt="Print enviado" data-action="zoom" data-src="${r.foto}">`:`<div class="nothumb">Sem print</div>`}
+    <div class="stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b class="small">${esc(r.nome||'Alguém')}</b><span class="st ${r.status==='resolvido'?'ok':'wait'}">${r.status==='resolvido'?'Resolvido':'Aberto'}</span></div>
+    <p class="small" style="margin:0;white-space:pre-line">${esc(r.texto)}</p><span class="muted small">${r.criado?new Date(r.criado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}${/iPhone|iPad/.test(r.app||'')?' · iPhone':/Android/.test(r.app||'')?' · Android':''}</span>
+    <div class="row"><button class="btn small" data-action="rep-status" data-id="${esc(r.id)}">${r.status==='resolvido'?'Reabrir':'Marcar resolvido'}</button><button class="btn small danger ${S.armed==='reportes'+r.id?'armed':''}" data-action="del" data-col="reportes" data-id="${esc(r.id)}">${S.armed==='reportes'+r.id?'Confirmar':'Apagar'}</button></div></div></div>`).join('')
+  :`<p class="muted small" style="margin:0">Nenhum problema reportado. Quem testa o app pode reportar em Configurações.</p>`}</div></section>
+
+  <section class="section"><h2 class="sec">Avisos automáticos</h2><div class="card">
+    <p class="small" style="margin:0">O app manda sozinho: <b>lembrete na véspera</b> para quem confirmou presença (por volta das 18h), <b>parabéns</b> para os aniversariantes e o <b>campeão do jogo</b> toda segunda (por volta das 8h).</p>
+    <div class="row"><button class="btn small" data-action="cron-teste" data-v="vespera">Testar lembrete da véspera</button><button class="btn small" data-action="cron-teste" data-v="manha">Testar avisos da manhã</button></div>
+    <p class="muted small" style="margin:0">O teste envia só para o seu celular e mostra o que seria enviado.</p></div></section>
 
   <section class="section"><h2 class="sec">Enviar aviso</h2><form class="card" data-form="aviso">
     <label for="aw-t">Título<input type="text" id="aw-t" maxlength="60" required placeholder="Ex.: Treino de amanhã mudou de lugar"></label>
@@ -907,34 +1062,34 @@ function vAdmin(){
     ${ep?'':'<label class="chk" for="pr-av"><input type="checkbox" id="pr-av" checked> Avisar a galera no celular</label>'}
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ep?'Salvar alterações':'Adicionar à loja'}</button>${ep?`<button type="button" class="btn" data-action="cancelprod">Cancelar edição</button>`:''}</div></form>
     <div class="card">${S.produtos.length?S.produtos.map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small">${brl(p.preco)}${p.esgotado?' · esgotado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="editprod" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="produtos" data-id="${esc(p.id)}" data-f="esgotado">${p.esgotado?'Repor':'Esgotou'}</button><button class="btn small danger ${S.armed==='produtos'+p.id?'armed':''}" data-action="del" data-col="produtos" data-id="${esc(p.id)}">${S.armed==='produtos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum produto cadastrado.</p>`}</div></section>
-  <section class="section"><h2 class="sec">Novo encontro</h2><form class="card" data-form="evento">
-    <label for="ev-t">Nome<input type="text" id="ev-t" required placeholder="Ex.: Treino coletivo de sábado"></label>
-    <div class="grid2"><label for="ev-d">Data<input type="date" id="ev-d" required></label><label for="ev-h">Horário<input type="time" id="ev-h"></label></div>
-    <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp"><option>Treino</option><option>Corrida</option><option>Ação</option></select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo"></label></div>
-    <label for="ev-ds">Detalhes<textarea id="ev-ds" placeholder="Distância, ritmo, o que levar"></textarea></label>
-    <label for="ev-lk">Link de inscrição (opcional)<input type="url" id="ev-lk" placeholder="https://"></label>
-    ${photoField('ev-f','Banner do encontro (opcional)')}
-    <label class="chk" for="ev-av"><input type="checkbox" id="ev-av" checked> Avisar a galera no celular</label>
-    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Publicar encontro</button></form>
-    <div class="card">${admList('eventos',[...S.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>fmtLong(x.data)+(x.hora?' · '+x.hora:''))}</div></section>
+  <section class="section"><h2 class="sec">${ee?'Editar encontro':'Novo encontro'}</h2><form class="card" data-form="evento">
+    <label for="ev-t">Nome<input type="text" id="ev-t" required placeholder="Ex.: Treino coletivo de sábado" value="${ee?esc(ee.titulo):''}"></label>
+    <div class="grid2"><label for="ev-d">Data<input type="date" id="ev-d" required value="${ee?esc(ee.data):''}"></label><label for="ev-h">Horário<input type="time" id="ev-h" value="${ee?esc(ee.hora||''):''}"></label></div>
+    <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp">${['Treino','Corrida','Ação'].map(t=>`<option ${ee&&ee.tipo===t?'selected':''}>${t}</option>`).join('')}</select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo" value="${ee?esc(ee.local||''):''}"></label></div>
+    <label for="ev-ds">Detalhes<textarea id="ev-ds" placeholder="Distância, ritmo, o que levar">${ee?esc(ee.descricao||''):''}</textarea></label>
+    <label for="ev-lk">Link de inscrição (opcional)<input type="url" id="ev-lk" placeholder="https://" value="${ee?esc(ee.link||''):''}"></label>
+    ${photoField('ev-f','Banner do encontro (opcional)',ee?ee.foto:'')}
+    ${ee?'':`<label class="chk" for="ev-av"><input type="checkbox" id="ev-av" checked> Avisar a galera no celular</label>`}
+    <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ee?'Salvar alterações':'Publicar encontro'}</button>${ee?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
+    <div class="card">${admList('eventos',[...S.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>fmtLong(x.data)+(x.hora?' · '+x.hora:''),null,true)}</div></section>
 
-  <section class="section"><h2 class="sec">Nova notícia</h2><form class="card" data-form="noticia">
-    <label for="nt-t">Título<input type="text" id="nt-t" required></label>
-    <label for="nt-x">Texto<textarea id="nt-x" required></textarea></label>
-    <div class="grid2"><label for="nt-g">Etiqueta<input type="text" id="nt-g" placeholder="Ex.: Assessoria"></label><label for="nt-d">Data<input type="date" id="nt-d"></label></div>
-    ${photoField('nt-f','Foto da notícia (opcional)')}
-    <label class="chk" for="nt-av"><input type="checkbox" id="nt-av" checked> Avisar a galera no celular</label>
-    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Publicar notícia</button></form>
-    <div class="card">${admList('noticias',[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>x.data?fmtLong(x.data):'')}</div></section>
+  <section class="section"><h2 class="sec">${en?'Editar notícia':'Nova notícia'}</h2><form class="card" data-form="noticia">
+    <label for="nt-t">Título<input type="text" id="nt-t" required value="${en?esc(en.titulo):''}"></label>
+    <label for="nt-x">Texto<textarea id="nt-x" required>${en?esc(en.texto||''):''}</textarea></label>
+    <div class="grid2"><label for="nt-g">Etiqueta<input type="text" id="nt-g" placeholder="Ex.: Assessoria" value="${en?esc(en.tag||''):''}"></label><label for="nt-d">Data<input type="date" id="nt-d" value="${en?esc(en.data||''):''}"></label></div>
+    ${photoField('nt-f','Foto da notícia (opcional)',en?en.foto:'')}
+    ${en?'':`<label class="chk" for="nt-av"><input type="checkbox" id="nt-av" checked> Avisar a galera no celular</label>`}
+    <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${en?'Salvar alterações':'Publicar notícia'}</button>${en?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
+    <div class="card">${admList('noticias',[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>x.data?fmtLong(x.data):'',null,true)}</div></section>
 
-  <section class="section"><h2 class="sec">Novo desafio</h2><form class="card" data-form="desafio">
-    <label for="ds-t">Nome<input type="text" id="ds-t" required placeholder="Ex.: 500 km da galera em novembro"></label>
-    <label for="ds-x">Regras<textarea id="ds-x" placeholder="O que vale, como lançar"></textarea></label>
-    <div class="grid2"><label for="ds-m">Meta da galera (km)<input type="number" id="ds-m" min="1" step="1"></label><label for="ds-i">Começa<input type="date" id="ds-i"></label></div>
-    <label for="ds-f">Termina<input type="date" id="ds-f"></label>
-    <label class="chk" for="ds-av"><input type="checkbox" id="ds-av" checked> Avisar a galera no celular</label>
-    <button class="btn primary" type="submit">Lançar desafio</button></form>
-    <div class="card">${admList('desafios',S.desafios,x=>x.titulo,x=>kmf(sumKm(x.id))+' km lançados','ativo')}</div></section>
+  <section class="section"><h2 class="sec">${ed?'Editar desafio':'Novo desafio'}</h2><form class="card" data-form="desafio">
+    <label for="ds-t">Nome<input type="text" id="ds-t" required placeholder="Ex.: 500 km da galera em novembro" value="${ed?esc(ed.titulo):''}"></label>
+    <label for="ds-x">Regras<textarea id="ds-x" placeholder="O que vale, como lançar">${ed?esc(ed.descricao||''):''}</textarea></label>
+    <div class="grid2"><label for="ds-m">Meta da galera (km)<input type="number" id="ds-m" min="1" step="1" value="${ed&&ed.meta?esc(ed.meta):''}"></label><label for="ds-i">Começa<input type="date" id="ds-i" value="${ed?esc(ed.inicio||''):''}"></label></div>
+    <label for="ds-f">Termina<input type="date" id="ds-f" value="${ed?esc(ed.fim||''):''}"></label>
+    ${ed?'':`<label class="chk" for="ds-av"><input type="checkbox" id="ds-av" checked> Avisar a galera no celular</label>`}
+    <div class="row"><button class="btn primary" type="submit">${ed?'Salvar alterações':'Lançar desafio'}</button>${ed?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
+    <div class="card">${admList('desafios',S.desafios,x=>x.titulo,x=>kmf(sumKm(x.id))+' km lançados','ativo',true)}</div></section>
 
   <section class="section"><h2 class="sec">Nova enquete</h2><form class="card" data-form="enquete">
     <label for="en-p">Pergunta<input type="text" id="en-p" required placeholder="Ex.: Qual percurso no próximo longão?"></label>
@@ -1202,7 +1357,7 @@ function runner(c,x,y,ph,air,down){
 function jogoCard(){
   const pl=(S.placar||[]).slice().sort((a,b)=>(b.pontos||0)-(a.pontos||0));const pos=pl.findIndex(p=>p.uid===S.uid);
   const pr=S.info&&S.info.premioJogo;const camp=S.campeao;
-  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(r.uid===S.uid?(me().apelido||S.myName||r.nome):(nome(r.uid)!=='Corredor(a)'?nome(r.uid):(r.nome||'Corredor(a)')))}${r.uid===S.uid?' (você)':''}</span><span class="num">${(r.pontos||0).toLocaleString('pt-BR')}</span></li>`;
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(r.uid===S.uid?(me().apelido||S.myName||r.nome):(nome(r.uid)!=='Corredor(a)'?nome(r.uid):(r.nome||'Corredor(a)')))}${r.uid===S.uid?' (você)':''}</span><span class="num">${(r.pontos||0).toLocaleString('pt-BR')}</span></li>`;
   let rows=pl.slice(0,S.rankAll?50:5).map(li).join('');if(!S.rankAll&&pos>=5)rows+=li(pl[pos],pos);
   return `<section class="section"><div class="card gamecard"><div class="gbanner"><canvas id="gmini" width="640" height="220" aria-hidden="true"></canvas><div class="gtitle"><span>Jogo da semana</span><b>Corre, Verde!</b></div></div><div class="gbody">
   <p class="small" style="margin:0">Pule os obstáculos das ruas de Magé e junte folhas. Ranking zera toda segunda.${pr?` <b>Prêmio da semana:</b> ${esc(pr)}`:''}</p>
@@ -1274,6 +1429,14 @@ async function addTo(col,data,form){
   try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');form.querySelectorAll('input[type=file]').forEach(el=>delete S.pending[el.id]);render();toast('Publicado.');return true}
   catch(e){toast('Não foi possível publicar. '+(e&&e.code==='permission-denied'?'Só quem edita o app pode publicar.':'Tente de novo.'));return false}
 }
+const EDIT_IDS={eventos:'#ev-t,#ev-d,#ev-h,#ev-l,#ev-ds,#ev-lk',noticias:'#nt-t,#nt-x,#nt-g,#nt-d',desafios:'#ds-t,#ds-x,#ds-m,#ds-i,#ds-f'};
+const EDIT_PIC={eventos:'ev-f',noticias:'nt-f'};
+function limparEdicao(col){document.querySelectorAll(EDIT_IDS[col]||'#x').forEach(el=>el.value='');if(EDIT_PIC[col])delete S.pending[EDIT_PIC[col]]}
+async function salvarEdicao(col,data,pic){
+  const id=S.edit.id;
+  try{await S.db.doc(col+'/'+id).update(data);limparEdicao(col);S.edit=null;render();toast('Alterações salvas.')}
+  catch(e){toast('Não foi possível salvar.')}
+}
 function clearPar(){document.querySelectorAll('#pa-n,#pa-b,#pa-r,#pa-e,#pa-i,#pa-w,#pa-o').forEach(el=>el.value='')}
 const checked=id=>!!document.getElementById(id)?.checked;
 function resumo(t,n=150){t=String(t||'').replace(/\s+/g,' ').trim();return t.length>n?t.slice(0,n-1)+'…':t}
@@ -1289,19 +1452,29 @@ document.addEventListener('submit',e=>{
     if(!S.uid){toast('Entre com sua conta para participar.');return}
     enviarLanc(id,Math.round(n*100)/100,val('lk-'+id),foto,f);return}
   if(!S.db)return;
-  if(k==='evento'){const av=checked('ev-av');const d={titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),foto:S.pending['ev-f']||''};
+  if(k==='evento'&&S.edit&&S.edit.col==='eventos'){const o=S.eventos.find(x=>x.id===S.edit.id)||{};salvarEdicao('eventos',{titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),foto:S.pending['ev-f']!==undefined?S.pending['ev-f']:(o.foto||'')},'ev-f')}
+  else if(k==='noticia'&&S.edit&&S.edit.col==='noticias'){const o=S.noticias.find(x=>x.id===S.edit.id)||{};salvarEdicao('noticias',{titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||o.data||hoje(),foto:S.pending['nt-f']!==undefined?S.pending['nt-f']:(o.foto||'')},'nt-f')}
+  else if(k==='desafio'&&S.edit&&S.edit.col==='desafios'){salvarEdicao('desafios',{titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f')})}
+  else if(k==='evento'){const av=checked('ev-av');const d={titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),foto:S.pending['ev-f']||''};
     addTo('eventos',d,f).then(ok=>{if(ok&&av){const pre={Treino:'Novo treino',Corrida:'Nova corrida','Ação':'Nova ação'}[d.tipo]||'Novo encontro';
       notificar({tipo:'eventos',titulo:`${pre}: ${d.titulo}`,texto:[fmtLong(d.data),d.hora,d.local].filter(Boolean).join(' · ')+'. Toque para confirmar presença.',url:'/#agenda'})}})}
   else if(k==='noticia'){const av=checked('nt-av');const d={titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''};
     addTo('noticias',d,f).then(ok=>{if(ok&&av)notificar({tipo:'noticias',titulo:d.titulo,texto:resumo(d.texto),url:'/#inicio'})})}
   else if(k==='aviso'){notificar({tipo:'geral',titulo:val('aw-t'),texto:val('aw-x'),url:'/#'+(val('aw-u')||'inicio')}).then(ok=>{if(ok){['aw-t','aw-x'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''})}})}
   else if(k==='comentario'){enviarCom(f.dataset.id,f);return}
+  else if(k==='reporte'){
+    const t=val('rp-x');if(!t){toast('Conte o que aconteceu.');return}
+    addDoc(collection(fs,'reportes'),{uid:S.uid,nome:me().apelido||S.myName||'',texto:t.slice(0,2000),foto:S.pending['rp-f']||'',status:'aberto',app:(navigator.userAgent||'').slice(0,200),criado:Date.now()})
+      .then(()=>{const el=document.getElementById('rp-x');if(el)el.value='';delete S.pending['rp-f'];render();toast('Recebido! Obrigado por ajudar a melhorar o app.')})
+      .catch(()=>toast('Não deu para enviar agora. Tente de novo.'));
+    return;
+  }
   else if(k==='perfil'){
     const n=val('pf-n');if(!n){toast('Coloque como a galera te chama.');return}
     const pace=val('pf-p');if(pace&&!/^\d{1,2}:[0-5]\d$/.test(pace)){toast('Escreva o ritmo assim: 5:30');return}
     const an=val('pf-a');if(an&&!/^(0?[1-9]|[12]\d|3[01])\/(0?[1-9]|1[0-2])$/.test(an)){toast('Escreva o aniversário assim: 15/03');return}
     const foto=S.pending['pf-f'];const ig=val('pf-i').replace(/^@?/,'');const st=val('pf-s');
-    saveMe(m=>{m.apelido=n;m.bairro=val('pf-b');m.objetivo=val('pf-o');m.pace=pace;m.aniversario=an;m.instagram=ig?'@'+ig:'';m.strava=/^https?:\/\//.test(st)?st:'';if(foto!==undefined)m.foto=foto});
+    saveMe(m=>{m.apelido=n;m.bairro=val('pf-b');m.objetivo=val('pf-o');m.pace=pace;m.aniversario=an;m.instagram=ig?'@'+ig:'';m.strava=/^https?:\/\//.test(st)?st:'';m.detalhesPrivados=!checked('pf-v');if(foto!==undefined)m.foto=foto});
     delete S.pending['pf-f'];toast('Perfil salvo.');
   }
   else if(k==='parceiro'){
@@ -1349,6 +1522,17 @@ document.addEventListener('click',async e=>{
   else if(a==='game-close')closeGame();
   else if(a==='game-again')gameReset();
   else if(a==='rankall'){S.rankAll=!S.rankAll;render()}
+  else if(a==='ver')verPessoa(b.dataset.uid);
+  else if(a==='share-ev')shareEvento(id);
+  else if(a==='install'){if(S.bip){S.bip.prompt();try{await S.bip.userChoice}catch(err){}S.bip=null;render()}}
+  else if(a==='install-x'){try{localStorage.setItem('pv-inst-hide',String(Date.now()+7*86400000))}catch(err){}render()}
+  else if(a==='copylink'){try{await navigator.clipboard.writeText(location.origin);toast('Link copiado. Cole no navegador.')}catch(err){toast(location.origin)}}
+  else if(a==='onb-priv')go('privacidade');
+  else if(a==='apagar-conta'){if(S.armed!=='apagar'){arm('apagar');return}S.armed=null;apagarConta()}
+  else if(a==='edit-pub'){const col=b.dataset.col;if(S.edit)limparEdicao(S.edit.col);limparEdicao(col);S.edit={col,id};render();const first={eventos:'ev-t',noticias:'nt-t',desafios:'ds-t'}[col];document.getElementById(first)?.scrollIntoView({block:'center'})}
+  else if(a==='cancel-edit'){if(S.edit)limparEdicao(S.edit.col);S.edit=null;render()}
+  else if(a==='rep-status'){const r=S.reportes.find(x=>x.id===id);try{await updateDoc(doc(fs,'reportes',id),{status:r&&r.status==='resolvido'?'aberto':'resolvido'})}catch(err){toast('Não foi possível alterar.')}}
+  else if(a==='cron-teste')testarCron(b.dataset.v);
   else if(a==='like')toggleLike(id);
   else if(a==='coms')toggleComs(id);
   else if(a==='delcom'){const k='dc'+id;if(S.armed!==k){arm(k);return}S.armed=null;apagarCom(b.dataset.n,id)}
@@ -1429,6 +1613,25 @@ async function pushForget(){
   try{const t=localStorage.getItem('pv-push');if(t){await deleteDoc(doc(fs,'dispositivos',t));localStorage.removeItem('pv-push')}}catch(e){}
   try{if(messaging)await deleteToken(messaging)}catch(e){}
 }
+async function testarCron(tarefa){
+  try{const tok=await auth.currentUser.getIdToken();
+    const r=await fetch('/api/cron-'+tarefa+'?teste=1',{method:'POST',headers:{Authorization:'Bearer '+tok}});
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.erro||('HTTP '+r.status));
+    const linhas=(j.resumo||[]);toast(linhas.length?linhas.join(' · '):'Nada para enviar hoje.');
+  }catch(e){toast('Teste não rodou: '+(e.message||'tente de novo.'))}
+}
+async function apagarConta(){
+  if(!S.uid)return;const uid=S.uid;
+  try{
+    await pushForget();
+    try{await deleteDoc(doc(fs,'jogo',semanaKey(),'placar',uid))}catch(e){}
+    await deleteDoc(doc(fs,'membros',uid));
+    try{await auth.currentUser.delete()}
+    catch(e){if(e&&e.code==='auth/requires-recent-login'){await reauthenticateWithPopup(auth.currentUser,new GoogleAuthProvider());await auth.currentUser.delete()}else throw e}
+    try{Object.keys(localStorage).filter(k=>k.startsWith('pv-')&&k!=='pv-theme').forEach(k=>localStorage.removeItem(k))}catch(e){}
+    toast('Sua conta foi apagada.');
+  }catch(e){toast('Não deu para apagar a conta agora. Fale com a equipe.');console.warn(e)}
+}
 async function notificar(msg){
   try{
     const tok=await auth.currentUser.getIdToken();
@@ -1450,9 +1653,9 @@ async function login(){
 }
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null;
+let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null;
 onAuthStateChanged(auth,async u=>{
-  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
+  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=null;S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
   if(u){
@@ -1463,11 +1666,13 @@ onAuthStateChanged(auth,async u=>{
       if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first)marcarVisto();schedule()},()=>{});
     unsubJ=onSnapshot(query(collection(fs,'jogo',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placar=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubJ2=onSnapshot(query(collection(fs,'jogo',semanaKey(-1),'placar'),orderBy('pontos','desc'),limit(1)),s=>{S.campeao=s.docs[0]?s.docs[0].data():null;schedule()},()=>{});
+    unsubK=DB.collection('campeoes').onSnapshot(s=>{S.campeoes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubC=DB.collection('parceiros').onSnapshot(s=>{S.parceiros=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubL=DB.collection('lancamentos').onSnapshot(s=>{S.lancamentos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     if(S.admin){
       unsubP=onSnapshot(collection(fs,'provas'),s=>{const p={};s.docs.forEach(d=>{p[d.id]=d.data()});
         for(const l of S.lancamentos)if(l.status==='pendente'&&!(l.id in p))p[l.id]=null;S.provas=p;schedule()},()=>{});
+      unsubR=DB.collection('reportes').onSnapshot(s=>{S.reportes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     }
   }

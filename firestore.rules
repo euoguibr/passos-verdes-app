@@ -51,7 +51,8 @@ service cloud.firestore {
     // Cada corredor: quem está logado vê todos (presença, enquetes), mas só altera o próprio.
     match /membros/{uid} {
       allow read: if logado();
-      allow write: if eu(uid) && request.resource.data.size() < 30;
+      allow create, update: if eu(uid) && request.resource.data.size() < 30;
+      allow delete: if eu(uid);
     }
 
     // Km lançados nos desafios: entram como "pendente"; só a organização aprova ou recusa.
@@ -94,6 +95,18 @@ service cloud.firestore {
       allow read: if logado();
       allow create: if eu(uid) && placarValido(uid);
       allow update: if eu(uid) && placarValido(uid) && request.resource.data.pontos > resource.data.pontos;
+      allow delete: if eu(uid);
+    }
+
+    // Campeões do jogo: gravados pelo servidor toda segunda.
+    match /campeoes/{semana} { allow read: if logado(); allow write: if false; }
+
+    // Problemas reportados pelos testadores: cada um envia o seu; só a organização lê.
+    match /reportes/{id} {
+      allow create: if eu(request.resource.data.uid)
+        && request.resource.data.texto is string && request.resource.data.texto.size() <= 2000
+        && request.resource.data.keys().hasOnly(['uid','nome','texto','foto','status','app','criado']);
+      allow read, update, delete: if organizador();
     }
     match /admins/{email} {
       allow read: if logado() && request.auth.token.email.lower() == email;
