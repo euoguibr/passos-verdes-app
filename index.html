@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#EDF1E8" id="tc">
 <script>try{var t=localStorage.getItem('pv-theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <link rel="manifest" href="/manifest.webmanifest">
+<script>window.va=window.va||function(){(window.vaq=window.vaq||[]).push(arguments)};</script>
+<script defer src="/_vercel/insights/script.js"></script>
 <link rel="icon" type="image/png" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -249,6 +251,21 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .cform{display:flex;gap:8px;align-items:flex-end}
 .cform textarea{min-height:44px;height:44px;resize:none;flex:1}
 .cform .btn{flex:none}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:540px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.kpi .k{font-size:12px;font-weight:600;color:var(--muted)}
+.kpi b{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:30px;line-height:1.05;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.kpi .s.up{color:var(--green);font-weight:600}
+.wchart{display:block;width:100%;height:auto;overflow:visible}
+.wchart .bar{fill:var(--green)}
+.wchart .bar.last{fill:var(--green)}
+.wchart .hit{fill:transparent;cursor:default}
+.wchart .hit:hover+.bar,.wchart g:hover .bar{opacity:.8}
+.wchart text{fill:var(--muted);font:600 10px var(--body);font-variant-numeric:tabular-nums}
+.wchart .val{fill:var(--ink);font-size:11px}
+.wchart .grid{stroke:var(--line);stroke-width:1}
 .gameov{position:fixed;inset:0;z-index:35;background:#000;display:flex;justify-content:center}
 .gwrap{width:100%;max-width:560px;height:100%;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));gap:10px;color:#fff}
 .ghead{display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -338,7 +355,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -359,7 +376,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -444,7 +461,6 @@ function vInicio(){
   h+=visitante();
   if(S.uid){
     h+=`<section class="section"><div class="bib" data-go="perfil" role="button" tabindex="0" aria-label="Abrir meu perfil"><div class="bib-band">Passos Verdes · Magé/RJ</div><div class="bib-num">${bibNum()}</div><div class="bib-name">${esc(nm||'Seu nome aqui')}</div><span class="pin tl"></span><span class="pin tr"></span><span class="pin bl"></span><span class="pin br"></span></div><span class="bib-hint">Toque no seu número para ver seu perfil</span></section>`;
-    h+=clubeTeaser();
   }
   // Próximo evento
   const prox=S.eventos.filter(e=>(e.data||'')>=hoje()).sort((a,b)=>(a.data+(a.hora||'')).localeCompare(b.data+(b.hora||'')))[0];
@@ -748,6 +764,54 @@ async function apagarCom(nid,cid){
   try{await deleteDoc(doc(fs,'noticias',nid,'comentarios',cid));updateDoc(doc(fs,'noticias',nid),{nComentarios:increment(-1)}).catch(()=>{});toast('Comentário apagado.')}
   catch(e){toast('Não deu para apagar.')}
 }
+/* ---------- Números do app ---------- */
+const DIA=86400000;
+function marcarVisto(){
+  if(!S.uid)return;const k='pv-visto-'+S.uid+'-'+hoje();
+  try{if(localStorage.getItem(k))return}catch(e){}
+  const p={visto:Date.now(),nome:S.myName||me().nome||''};if(!me().desde)p.desde=Date.now();
+  S.db.doc('membros/'+S.uid).merge(p).then(()=>{try{localStorage.setItem(k,'1')}catch(e){}}).catch(()=>{});
+}
+function contarDisp(){
+  if(!S.admin||Date.now()-S.nDispAt<60000)return;S.nDispAt=Date.now();
+  getCountFromServer(collection(fs,'dispositivos')).then(r=>{S.nDisp=r.data().count;schedule()}).catch(()=>{S.nDisp=null});
+}
+function statsHtml(){
+  contarDisp();
+  const now=Date.now(),ms=Object.entries(S.membros).map(([id,m])=>({id,...m}));
+  const tot=ms.length,novos7=ms.filter(m=>m.desde&&now-m.desde<7*DIA).length;
+  const hojeIni=new Date();hojeIni.setHours(0,0,0,0);
+  const at1=ms.filter(m=>m.visto&&m.visto>=hojeIni.getTime()).length,at7=ms.filter(m=>m.visto&&now-m.visto<7*DIA).length,at30=ms.filter(m=>m.visto&&now-m.visto<30*DIA).length;
+  const foto=ms.filter(m=>okPic(m.foto)).length;
+  const aprov=S.lancamentos.filter(l=>l.status==='aprovado');const kmTot=aprov.reduce((t,l)=>t+(Number(l.km)||0),0);
+  const pedNovos=S.pedidos.filter(p=>p.status!=='concluido').length,pedVal=S.pedidos.reduce((t,p)=>t+(Number(p.total)||0),0);
+  const t=hoje();const prox=S.eventos.filter(e=>(e.data||'')>=t).map(e=>e.id);
+  const pres=ms.reduce((n,m)=>n+prox.filter(id=>m.presencas&&m.presencas[id]).length,0);
+  const curt=S.noticias.reduce((n,x)=>n+Object.keys(x.curtidas||{}).length,0),coms=S.noticias.reduce((n,x)=>n+(Number(x.nComentarios)||0),0);
+  const n=v=>Number(v).toLocaleString('pt-BR');
+  const kpi=(k,v,sub,up)=>`<div class="kpi"><span class="k">${k}</span><b>${v}</b>${sub?`<span class="s ${up?'up':''}">${sub}</span>`:''}</div>`;
+  // novos cadastros por semana (8 semanas, segunda a domingo)
+  const seg=pd(semanaKey()).getTime();const weeks=Array.from({length:8},(_,i)=>{const a=seg-(7-i)*7*DIA;return {a,b:a+7*DIA,n:0}});
+  for(const m of ms){if(!m.desde)continue;const w=weeks.find(w=>m.desde>=w.a&&m.desde<w.b);if(w)w.n++}
+  const W=320,H=150,top=18,bot=22,L=4,bw=(W-L*2)/8,max=Math.max(1,...weeks.map(w=>w.n));
+  const bars=weeks.map((w,i)=>{const h=w.n?Math.max(3,(H-top-bot)*w.n/max):0;const x=L+i*bw+5,y=H-bot-h,wd=bw-10;const lab=new Date(w.a).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    const tip=`Semana de ${lab}: ${w.n} ${w.n===1?'cadastro':'cadastros'}`;
+    const path=h?`M${x},${H-bot} V${y+4} Q${x},${y} ${x+4},${y} H${x+wd-4} Q${x+wd},${y} ${x+wd},${y+4} V${H-bot} Z`:'';
+    return `<g><title>${tip}</title><rect class="hit" x="${L+i*bw}" y="0" width="${bw}" height="${H}"></rect>${path?`<path class="bar${i===7?' last':''}" d="${path}"></path>`:''}
+      ${(i===7||w.n===max)&&w.n?`<text class="val" x="${x+wd/2}" y="${y-5}" text-anchor="middle">${w.n}</text>`:''}${i%2===1||i===7?`<text x="${x+wd/2}" y="${H-6}" text-anchor="middle">${lab}</text>`:''}</g>`}).join('');
+  return `<section class="section"><div class="sec-head"><h2 class="sec">Números do app</h2><span class="muted small">ao vivo</span></div>
+  <div class="kpis">${kpi('Cadastros',n(tot),novos7?`+${n(novos7)} nos últimos 7 dias · ${n(foto)} com foto`:`${n(foto)} com foto`,novos7>0)}
+  ${kpi('Ativos hoje',n(at1),`${n(at7)} na semana · ${n(at30)} no mês`)}
+  ${kpi('Avisos ativados',S.nDisp==null?'–':n(S.nDisp),'celulares que recebem')}
+  ${kpi('Jogaram na semana',n((S.placar||[]).length),'Corre, Verde!')}
+  ${kpi('Corridas aprovadas',n(aprov.length),`${kmf(kmTot)} km no total`)}
+  ${kpi('Presenças confirmadas',n(pres),'nos próximos encontros')}
+  ${kpi('Pedidos da loja',n(S.pedidos.length),pedNovos?`${n(pedNovos)} para entregar · ${brl(pedVal)}`:brl(pedVal)+' em pedidos')}
+  ${kpi('Curtidas e comentários',n(curt+coms),`${n(curt)} curtidas · ${n(coms)} comentários`)}
+</div>
+  <div class="card"><b class="small">Novos cadastros por semana</b><svg class="wchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Novos cadastros nas últimas 8 semanas: ${weeks.map(w=>w.n).join(', ')}"><line class="grid" x1="0" x2="${W}" y1="${H-bot}" y2="${H-bot}"></line>${bars}</svg>
+  <p class="muted small" style="margin:0">Conta quem abriu o app a partir desta versão. A lista completa de contas Google fica no Firebase, em Authentication &gt; Usuários.</p></div></section>`;
+}
 function bannerList(){return S.banners.filter(b=>okPic(b.foto)).sort((a,b)=>(a.ordem??a.criado??0)-(b.ordem??b.criado??0))}
 function bannersHtml(){
   const bs=bannerList();if(!bs.length)return '';
@@ -790,6 +854,7 @@ function vAdmin(){
   const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
   const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
+  ${statsHtml()}
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
   ${pend.length?pend.map(l=>{const pv=S.provas[l.id];return `<div class="check">${pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
     <div class="stack" style="gap:6px"><b>${esc(nomeL(l))}</b><span class="num"><b>${kmf(l.km)} km</b> · ${esc(dtit(l.desafio))}</span>
@@ -1395,7 +1460,7 @@ onAuthStateChanged(auth,async u=>{
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
       if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
       if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
-      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;S.loaded.membros=true;schedule()},()=>{});
+      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first)marcarVisto();schedule()},()=>{});
     unsubJ=onSnapshot(query(collection(fs,'jogo',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placar=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubJ2=onSnapshot(query(collection(fs,'jogo',semanaKey(-1),'placar'),orderBy('pontos','desc'),limit(1)),s=>{S.campeao=s.docs[0]?s.docs[0].data():null;schedule()},()=>{});
     unsubC=DB.collection('parceiros').onSnapshot(s=>{S.parceiros=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});

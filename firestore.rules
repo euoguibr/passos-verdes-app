@@ -51,7 +51,7 @@ service cloud.firestore {
     // Cada corredor: quem está logado vê todos (presença, enquetes), mas só altera o próprio.
     match /membros/{uid} {
       allow read: if logado();
-      allow write: if eu(uid) && request.resource.data.size() < 20;
+      allow write: if eu(uid) && request.resource.data.size() < 30;
     }
 
     // Km lançados nos desafios: entram como "pendente"; só a organização aprova ou recusa.
@@ -85,7 +85,7 @@ service cloud.firestore {
       allow create, update: if eu(request.resource.data.uid)
         && request.resource.data.keys().hasOnly(['uid','criado','atualizado','plataforma']);
       allow delete: if logado() && resource.data.uid == request.auth.uid;
-      allow read: if false;
+      allow read: if organizador();
     }
 
     // Lista de organizadores: só se gerencia pelo console do Firebase.
