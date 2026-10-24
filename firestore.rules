@@ -99,6 +99,27 @@ service cloud.firestore {
     }
 
     // Campeões do jogo: gravados pelo servidor toda segunda.
+    // Fotos de perfil, separadas do cadastro para o app ficar leve.
+    match /avatares/{uid} {
+      allow read: if logado();
+      allow create, update: if eu(uid) && request.resource.data.keys().hasOnly(['foto','atualizado']);
+      allow delete: if eu(uid);
+    }
+
+    // Curtidas e contagem de comentários das notícias, separadas da notícia (que tem foto).
+    match /reacoes/{id} {
+      function antes() { return resource == null ? {} : resource.data; }
+      function mudou() { return request.resource.data.diff(antes()).affectedKeys(); }
+      allow read: if true;
+      allow create, update: if logado() && (
+        (mudou().hasOnly(['curtidas'])
+          && request.resource.data.get('curtidas', {}).diff(antes().get('curtidas', {})).affectedKeys().hasOnly([request.auth.uid]))
+        || (mudou().hasOnly(['nComentarios'])
+          && (request.resource.data.nComentarios == antes().get('nComentarios', 0) + 1
+              || request.resource.data.nComentarios == antes().get('nComentarios', 0) - 1))
+      );
+    }
+
     match /campeoes/{semana} { allow read: if logado(); allow write: if false; }
 
     // Problemas reportados pelos testadores: cada um envia o seu; só a organização lê.

@@ -380,7 +380,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, reauthenticateWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -401,7 +401,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],avatares:{},reacoes:{},campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='dark'?t:'auto'}catch(e){return 'auto'}}
 function applyTheme(t){
   try{if(t==='auto')localStorage.removeItem('pv-theme');else localStorage.setItem('pv-theme',t)}catch(e){}
@@ -649,10 +649,11 @@ const BELL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 const GEAR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>';
 const CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 function memb(id){return id===S.uid?me():(S.membros[id]||{})}
+function fotoDe(id){const a=S.avatares[id];if(okPic(a))return a;const m=id===S.uid?me():(S.membros[id]||{});return okPic(m.foto)?m.foto:''}
 function avatar(id,size=32,cls='avt'){
   const m=memb(id);const n=id===S.uid?(m.apelido||S.myName||''):nome(id);
   const act=id?` data-action="ver" data-uid="${esc(id)}" title="${esc(n||'Ver perfil')}"`:'';
-  if(okPic(m.foto))return `<img class="${cls}" src="${m.foto}" alt="" style="width:${size}px;height:${size}px" loading="lazy"${act}>`;
+  const ft=fotoDe(id);if(ft)return `<img class="${cls}" src="${ft}" alt="" style="width:${size}px;height:${size}px" loading="lazy"${act}>`;
   return `<span class="${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size*.38)}px;background:${AVC[hash(id||'x')%AVC.length]}" aria-hidden="true"${act}>${esc(ini(n||'PV'))}</span>`;
 }
 const OBJETIVOS=['Começando a correr','5 km','10 km','21 km','42 km','Ultra','Trilha'];
@@ -668,7 +669,7 @@ function conquistas(uid){
   const m=memb(uid);const n=numerosDe(uid);const camp=S.campeoes.filter(c=>c.uid===uid).length;
   return [
     {k:'P',nome:'Pioneiro',desc:'Entrou antes do lançamento',ok:!!m.desde&&m.desde<PIONEIRO_ATE},
-    {k:'✓',nome:'Perfil completo',desc:'Foto e objetivo',ok:okPic(m.foto)&&!!m.objetivo},
+    {k:'✓',nome:'Perfil completo',desc:'Foto e objetivo',ok:!!fotoDe(uid)&&!!m.objetivo},
     {k:'1',nome:'Primeiro treino',desc:'1 presença',ok:n.pres>=1},
     {k:'5×',nome:'Frequente',desc:'5 presenças',ok:n.pres>=5},
     {k:'15×',nome:'Fiel ao pelotão',desc:'15 presenças',ok:n.pres>=15},
@@ -752,7 +753,7 @@ function vPerfil(){
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
   <section class="section"><h2 class="sec">Suas conquistas</h2>${medalhasHtml(S.uid,true)}</section>
   <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
-    ${photoField('pf-f','Sua foto',m.foto,true)}
+    ${photoField('pf-f','Sua foto',fotoDe(S.uid),true)}
     <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
     <div class="grid2"><label for="pf-b">Bairro ou cidade<input type="text" id="pf-b" maxlength="40" placeholder="Ex.: Santo Aleixo" value="${esc(m.bairro||'')}"></label>
     <label for="pf-o">Seu objetivo<select id="pf-o"><option value="">Escolha</option>${OBJETIVOS.map(o=>`<option ${m.objetivo===o?'selected':''}>${o}</option>`).join('')}</select></label></div>
@@ -870,8 +871,8 @@ const HEART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-w
 const BUBBLE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 function quando(ms){if(!ms)return '';const d=(Date.now()-ms)/1000;if(d<60)return 'agora';if(d<3600)return Math.floor(d/60)+' min';if(d<86400)return Math.floor(d/3600)+' h';if(d<86400*7)return Math.floor(d/86400)+' d';return new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
 function newsCard(n){
-  const cur=n.curtidas&&typeof n.curtidas==='object'?n.curtidas:{};const nl=Object.keys(cur).length;const liked=!!(S.uid&&cur[S.uid]);
-  const nc=Math.max(0,Number(n.nComentarios)||0);const open=!!S.openCom[n.id];const cs=S.coms[n.id];
+  const cur=curtidasDe(n);const nl=Object.keys(cur).length;const liked=!!(S.uid&&cur[S.uid]);
+  const nc=Math.max(0,(Number(n.nComentarios)||0)+(Number((S.reacoes[n.id]||{}).nComentarios)||0));const open=!!S.openCom[n.id];const cs=S.coms[n.id];
   let com='';
   if(open){
     com=`<div class="coms">${cs===undefined?`<p class="small muted" style="margin:0">Carregando comentários…</p>`:(cs.length?cs.map(c=>`<div class="com">${avatar(c.uid,32)}<div><div class="meta2"><b>${esc(c.uid===S.uid?(me().apelido||S.myName||c.nome):(nome(c.uid)!=='Corredor(a)'?nome(c.uid):(c.nome||'Corredor(a)')))}</b><span class="muted small">${esc(quando(c.criado))}${c.uid===S.uid||S.admin?` <button class="del" data-action="delcom" data-n="${esc(n.id)}" data-id="${esc(c.id)}">${S.armed==='dc'+c.id?'confirmar':'apagar'}</button>`:''}</span></div><p>${esc(c.texto)}</p></div></div>`).join(''):`<p class="small muted" style="margin:0">Ninguém comentou ainda. Comece a conversa.</p>`)}
@@ -888,25 +889,32 @@ function toggleComs(id){
   comSubs[id]=onSnapshot(query(collection(fs,'noticias',id,'comentarios'),orderBy('criado','asc'),limit(200)),s=>{S.coms[id]=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{S.coms[id]=[];schedule()});
   setTimeout(()=>document.getElementById('cm-'+id)?.focus({preventScroll:true}),50);
 }
+function curtidasDe(n){const a=n.curtidas&&typeof n.curtidas==='object'?n.curtidas:{};const b=(S.reacoes[n.id]||{}).curtidas||{};return {...a,...b}}
 async function toggleLike(id){
   if(!S.uid){toast('Entre com sua conta para curtir.');return}
-  const n=S.noticias.find(x=>x.id===id);if(!n)return;const liked=!!(n.curtidas&&n.curtidas[S.uid]);
-  const cur={...(n.curtidas||{})};if(liked)delete cur[S.uid];else cur[S.uid]=true;n.curtidas=cur;S.popLike=liked?null:id;render();setTimeout(()=>{S.popLike=null},400);
-  try{await updateDoc(doc(fs,'noticias',id),{['curtidas.'+S.uid]:liked?deleteField():true})}catch(e){toast('Não deu para curtir agora.')}
+  const n=S.noticias.find(x=>x.id===id);if(!n)return;const liked=!!curtidasDe(n)[S.uid];
+  const r={...(S.reacoes[id]||{})};r.curtidas={...(r.curtidas||{})};if(liked)delete r.curtidas[S.uid];else r.curtidas[S.uid]=true;
+  if(liked&&n.curtidas&&n.curtidas[S.uid]){n.curtidas={...n.curtidas};delete n.curtidas[S.uid];updateDoc(doc(fs,'noticias',id),{['curtidas.'+S.uid]:deleteField()}).catch(()=>{})}
+  S.reacoes={...S.reacoes,[id]:r};S.popLike=liked?null:id;render();setTimeout(()=>{S.popLike=null},400);
+  try{await setDoc(doc(fs,'reacoes',id),{curtidas:{[S.uid]:liked?deleteField():true}},{merge:true})}catch(e){toast('Não deu para curtir agora.')}
 }
 async function enviarCom(id,form){
   const el=document.getElementById('cm-'+id);const t=(el&&el.value||'').trim();if(!t)return;if(t.length>500){toast('O comentário pode ter até 500 caracteres.');return}
   el.value='';
   try{await addDoc(collection(fs,'noticias',id,'comentarios'),{uid:S.uid,nome:me().apelido||S.myName||'',texto:t,criado:Date.now()});
-    updateDoc(doc(fs,'noticias',id),{nComentarios:increment(1)}).catch(()=>{});}
+    setDoc(doc(fs,'reacoes',id),{nComentarios:increment(1)},{merge:true}).catch(()=>{});}
   catch(e){el.value=t;toast('Não deu para comentar agora.')}
 }
 async function apagarCom(nid,cid){
-  try{await deleteDoc(doc(fs,'noticias',nid,'comentarios',cid));updateDoc(doc(fs,'noticias',nid),{nComentarios:increment(-1)}).catch(()=>{});toast('Comentário apagado.')}
+  try{await deleteDoc(doc(fs,'noticias',nid,'comentarios',cid));setDoc(doc(fs,'reacoes',nid),{nComentarios:increment(-1)},{merge:true}).catch(()=>{});toast('Comentário apagado.')}
   catch(e){toast('Não deu para apagar.')}
 }
 /* ---------- Números do app ---------- */
 const DIA=86400000;
+function migrarFoto(){
+  const f=me().foto;if(!S.uid||!okPic(f))return;
+  setDoc(doc(fs,'avatares',S.uid),{foto:f,atualizado:Date.now()}).then(()=>saveMe(m=>{delete m.foto})).catch(()=>{});
+}
 function marcarVisto(){
   if(!S.uid)return;const k='pv-visto-'+S.uid+'-'+hoje();
   try{if(localStorage.getItem(k))return}catch(e){}
@@ -923,12 +931,12 @@ function statsHtml(){
   const tot=ms.length,novos7=ms.filter(m=>m.desde&&now-m.desde<7*DIA).length;
   const hojeIni=new Date();hojeIni.setHours(0,0,0,0);
   const at1=ms.filter(m=>m.visto&&m.visto>=hojeIni.getTime()).length,at7=ms.filter(m=>m.visto&&now-m.visto<7*DIA).length,at30=ms.filter(m=>m.visto&&now-m.visto<30*DIA).length;
-  const foto=ms.filter(m=>okPic(m.foto)).length;
+  const foto=ms.filter(m=>fotoDe(m.id)).length;
   const aprov=S.lancamentos.filter(l=>l.status==='aprovado');const kmTot=aprov.reduce((t,l)=>t+(Number(l.km)||0),0);
   const pedNovos=S.pedidos.filter(p=>p.status!=='concluido').length,pedVal=S.pedidos.reduce((t,p)=>t+(Number(p.total)||0),0);
   const t=hoje();const prox=S.eventos.filter(e=>(e.data||'')>=t).map(e=>e.id);
   const pres=ms.reduce((n,m)=>n+prox.filter(id=>m.presencas&&m.presencas[id]).length,0);
-  const curt=S.noticias.reduce((n,x)=>n+Object.keys(x.curtidas||{}).length,0),coms=S.noticias.reduce((n,x)=>n+(Number(x.nComentarios)||0),0);
+  const curt=S.noticias.reduce((n,x)=>n+Object.keys(curtidasDe(x)).length,0),coms=S.noticias.reduce((n,x)=>n+(Number(x.nComentarios)||0)+(Number((S.reacoes[x.id]||{}).nComentarios)||0),0);
   const n=v=>Number(v).toLocaleString('pt-BR');
   const kpi=(k,v,sub,up)=>`<div class="kpi"><span class="k">${k}</span><b>${v}</b>${sub?`<span class="s ${up?'up':''}">${sub}</span>`:''}</div>`;
   // novos cadastros por semana (8 semanas, segunda a domingo)
@@ -1123,7 +1131,7 @@ function photoField(id,label,current,round){
 }
 function loadImg(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file);const i=new Image();i.onload=()=>{URL.revokeObjectURL(u);res(i)};i.onerror=()=>{URL.revokeObjectURL(u);rej()};i.src=u})}
 async function compress(file,small){
-  const img=await loadImg(file);let max=small?360:1280,q=small?0.8:0.75,out='';const lim=small?70000:450000;
+  const img=await loadImg(file);let max=small?320:1080,q=small?0.78:0.72,out='';const lim=small?30000:200000;
   for(let t=0;t<6;t++){
     const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));
     const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*sc);c.height=Math.round(img.naturalHeight*sc);
@@ -1176,10 +1184,10 @@ async function openCrop(file){
 }
 function closeCrop(){const el=$('#crop');el.hidden=true;el.innerHTML='';CROP.img=null}
 function cropExport(){
-  const O=360,{D,R}=CROP;const f=O/(2*R);const sc=CROP.min*CROP.z;const w=CROP.img.naturalWidth*sc,h=CROP.img.naturalHeight*sc;
+  const O=240,{D,R}=CROP;const f=O/(2*R);const sc=CROP.min*CROP.z;const w=CROP.img.naturalWidth*sc,h=CROP.img.naturalHeight*sc;
   const c=document.createElement('canvas');c.width=O;c.height=O;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,O,O);
   g.drawImage(CROP.img,(D/2+CROP.x-w/2-(D/2-R))*f,(D/2+CROP.y-h/2-(D/2-R))*f,w*f,h*f);
-  let q=0.86,out=c.toDataURL('image/jpeg',q);while(out.length>70000&&q>0.4){q-=0.08;out=c.toDataURL('image/jpeg',q)}
+  let q=0.82,out=c.toDataURL('image/jpeg',q);while(out.length>24000&&q>0.4){q-=0.08;out=c.toDataURL('image/jpeg',q)}
   return out;
 }
 
@@ -1474,7 +1482,8 @@ document.addEventListener('submit',e=>{
     const pace=val('pf-p');if(pace&&!/^\d{1,2}:[0-5]\d$/.test(pace)){toast('Escreva o ritmo assim: 5:30');return}
     const an=val('pf-a');if(an&&!/^(0?[1-9]|[12]\d|3[01])\/(0?[1-9]|1[0-2])$/.test(an)){toast('Escreva o aniversário assim: 15/03');return}
     const foto=S.pending['pf-f'];const ig=val('pf-i').replace(/^@?/,'');const st=val('pf-s');
-    saveMe(m=>{m.apelido=n;m.bairro=val('pf-b');m.objetivo=val('pf-o');m.pace=pace;m.aniversario=an;m.instagram=ig?'@'+ig:'';m.strava=/^https?:\/\//.test(st)?st:'';m.detalhesPrivados=!checked('pf-v');if(foto!==undefined)m.foto=foto});
+    saveMe(m=>{m.apelido=n;m.bairro=val('pf-b');m.objetivo=val('pf-o');m.pace=pace;m.aniversario=an;m.instagram=ig?'@'+ig:'';m.strava=/^https?:\/\//.test(st)?st:'';m.detalhesPrivados=!checked('pf-v');if(foto!==undefined)delete m.foto});
+    if(foto!==undefined){S.avatares={...S.avatares,[S.uid]:foto};(foto?setDoc(doc(fs,'avatares',S.uid),{foto,atualizado:Date.now()}):deleteDoc(doc(fs,'avatares',S.uid))).catch(()=>toast('Não deu para salvar a foto. Tente de novo.'))}
     delete S.pending['pf-f'];toast('Perfil salvo.');
   }
   else if(k==='parceiro'){
@@ -1567,7 +1576,10 @@ let armT;function arm(k){S.armed=k;render();clearTimeout(armT);armT=setTimeout((
 
 /* ---------- Firebase ---------- */
 const app=initializeApp(firebaseConfig);
-const fs=getFirestore(app);const auth=getAuth(app);
+let fs;
+try{fs=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()}),experimentalAutoDetectLongPolling:true})}
+catch(e){console.warn('cache local indisponível',e);fs=getFirestore(app)}
+const auth=getAuth(app);
 const DB={
   doc:p=>{const r=doc(fs,p);return{
     set:d=>setDoc(r,d),merge:d=>setDoc(r,d,{merge:true}),update:d=>updateDoc(r,d),delete:()=>deleteDoc(r),
@@ -1625,6 +1637,7 @@ async function apagarConta(){
   try{
     await pushForget();
     try{await deleteDoc(doc(fs,'jogo',semanaKey(),'placar',uid))}catch(e){}
+    try{await deleteDoc(doc(fs,'avatares',uid))}catch(e){}
     await deleteDoc(doc(fs,'membros',uid));
     try{await auth.currentUser.delete()}
     catch(e){if(e&&e.code==='auth/requires-recent-login'){await reauthenticateWithPopup(auth.currentUser,new GoogleAuthProvider());await auth.currentUser.delete()}else throw e}
@@ -1653,32 +1666,37 @@ async function login(){
 }
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null;
+let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
 onAuthStateChanged(auth,async u=>{
-  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=null;S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
+  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
   if(u){
-    try{const a=await getDoc(doc(fs,'admins',(u.email||'').toLowerCase()));S.admin=a.exists()}catch(e){}
+    getDoc(doc(fs,'admins',(u.email||'').toLowerCase())).then(a=>{if(S.uid!==u.uid)return;S.admin=a.exists();if(S.admin)ligarAdmin();render()}).catch(()=>{});
+    pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
+    unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
+    unsubX=onSnapshot(collection(fs,'reacoes'),s=>{const r={};s.docs.forEach(d=>{r[d.id]=d.data()});S.reacoes=r;schedule()},()=>{});
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
       if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
       if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
-      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first)marcarVisto();schedule()},()=>{});
+      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first){marcarVisto();migrarFoto()}schedule()},()=>{});
     unsubJ=onSnapshot(query(collection(fs,'jogo',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placar=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubJ2=onSnapshot(query(collection(fs,'jogo',semanaKey(-1),'placar'),orderBy('pontos','desc'),limit(1)),s=>{S.campeao=s.docs[0]?s.docs[0].data():null;schedule()},()=>{});
     unsubK=DB.collection('campeoes').onSnapshot(s=>{S.campeoes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubC=DB.collection('parceiros').onSnapshot(s=>{S.parceiros=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubL=DB.collection('lancamentos').onSnapshot(s=>{S.lancamentos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
-    if(S.admin){
+  }
+  S.ready=true;render();syncThemeColor();
+});
+function ligarAdmin(){
+  if(unsubP)return;
+  {
       unsubP=onSnapshot(collection(fs,'provas'),s=>{const p={};s.docs.forEach(d=>{p[d.id]=d.data()});
         for(const l of S.lancamentos)if(l.status==='pendente'&&!(l.id in p))p[l.id]=null;S.provas=p;schedule()},()=>{});
       unsubR=DB.collection('reportes').onSnapshot(s=>{S.reportes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
-    }
   }
-  S.ready=true;render();syncThemeColor();
-  if(u){await pushCheck();render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))}
-});
+}
 render();
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
 </script>
