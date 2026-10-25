@@ -257,7 +257,7 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .recado{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--green);color:var(--on-green);border-radius:14px;padding:9px 14px;font-weight:700;font-size:13px;letter-spacing:.02em;text-decoration:none;text-align:center}
 .recado svg{width:16px;height:16px;flex:none}
 .bn-slide{position:relative}
-.bn-selo{position:absolute;left:12px;top:12px;background:var(--green);color:var(--on-green);font-weight:800;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:6px 10px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.bn-selo{position:absolute;right:10px;bottom:10px;background:var(--green);color:var(--on-green);font-weight:800;font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:5px 9px;border-radius:7px;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 .manifesto{position:relative;overflow:hidden;border-radius:var(--r);padding:26px 20px;background:radial-gradient(130% 120% at 0% 0%,var(--glow) 0%,transparent 55%),var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:14px}
 .manifesto q{font-family:var(--display);font-weight:850;font-stretch:72%;font-variation-settings:"wdth" 72;text-transform:uppercase;font-size:clamp(26px,7.5vw,36px);line-height:1.02;quotes:none;text-wrap:balance}
 .manifesto q::before,.manifesto q::after{content:none}
@@ -602,9 +602,8 @@ function vInicio(){
   h+=`</section>`;
   // Sobre
   const i=S.info;
-  if(i){h+=`<section class="section"><div class="row small muted" style="justify-content:center">Fale com a gente: <span style="user-select:all">${esc(infoV('email'))}</span><button class="btn small" data-action="copy" data-v="${esc(infoV('email'))}">Copiar</button></div></section>`;}
   if(i){h+=`<section class="section"><h2 class="sec">Sobre o projeto</h2><div class="card">${i.sobre?`<p style="margin:0;white-space:pre-line">${esc(i.sobre)}</p>`:''}
-    ${i.instagram||i.whatsapp?`<div class="stack small">${i.instagram?`<div>Instagram: <a href="https://instagram.com/${esc(i.instagram.replace(/^@/,''))}" target="_blank" rel="noopener">@${esc(i.instagram.replace(/^@/,''))}</a></div>`:''}${i.whatsapp?`<div class="row">WhatsApp: <span class="num" style="user-select:all">${esc(i.whatsapp)}</span><button class="btn small" data-action="copy" data-v="${esc(i.whatsapp)}">Copiar</button></div>`:''}</div>`:''}</div></section>`}
+    ${`<div class="stack small">${i.instagram?`<div>Instagram: <a href="https://instagram.com/${esc(i.instagram.replace(/^@/,''))}" target="_blank" rel="noopener">@${esc(i.instagram.replace(/^@/,''))}</a></div>`:''}${i.whatsapp?`<div class="row">WhatsApp: <span class="num" style="user-select:all">${esc(i.whatsapp)}</span><button class="btn small" data-action="copy" data-v="${esc(i.whatsapp)}">Copiar</button></div>`:''}<div class="row">E-mail: <span style="user-select:all">${esc(infoV('email'))}</span><button class="btn small" data-action="copy" data-v="${esc(infoV('email'))}">Copiar</button></div></div>`}</div></section>`}
   return h;
 }
 
