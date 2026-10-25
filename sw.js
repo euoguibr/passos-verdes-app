@@ -1,5 +1,5 @@
 // Service worker: deixa o app instalável, abre com internet ruim e mostra os avisos.
-const CACHE = 'pv-v18';
+const CACHE = 'pv-v19';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/logo.png', '/icons/icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
