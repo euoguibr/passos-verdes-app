@@ -465,6 +465,14 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .adm-item .row{flex-wrap:wrap!important}
 .adm-item>div{min-width:0}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+.shsheet{z-index:60;justify-content:flex-start}
+.shsheet .in{gap:14px}
+.shsheet .shx{font-size:30px;line-height:1}
+.shprev{align-self:center;width:min(100%,calc(58vh * 9 / 16));aspect-ratio:9/16;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#050505;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.shprev img{width:100%;height:100%;display:block}
+.medal.can{cursor:pointer;position:relative}
+.medal.can::after{content:"";position:absolute;top:2px;right:calc(50% - 34px);width:20px;height:20px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1200' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M8 8l4-4 4 4'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 3px var(--bg)}
+.btn.story svg{width:18px;height:18px}
 </style>
 </head>
 <body>
@@ -484,6 +492,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <div class="overlay" id="mcard" hidden role="dialog" aria-label="Cartão de membro"></div>
 <div class="overlay" id="crop" hidden role="dialog" aria-label="Ajustar foto de perfil"></div>
 <div class="gameov" id="game" hidden role="dialog" aria-label="Jogo Corre, Verde!"></div>
+<div class="overlay shsheet" id="shsheet" hidden role="dialog" aria-label="Postar no story"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -642,7 +651,7 @@ function evCard(e){
   ${e.link&&!(temIngresso(e)&&e.link===e.ingresso)?`<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Inscrição e detalhes</a>`:''}
   <div class="people">${avs?`<span class="avs">${avs}</span>`:''}<span class="muted small num">${ids.length?ids.length+(ids.length===1?' vai':' vão'):(S.uid?'Ninguém confirmou ainda':'')}</span></div>
   ${!past&&temIngresso(e)?`<a class="btn primary ticket" href="${esc(e.ingresso)}" target="_blank" rel="noopener">${TICKET}Comprar ingresso</a>`:''}
-  <div class="row">${past?'':`<button class="btn ${vou?'on':(temIngresso(e)?'':'primary')}" data-action="rsvp" data-id="${esc(e.id)}">${vou?'✓ Tô dentro':'Tô dentro'}</button>`}<button class="btn share ico" data-action="share-ev" data-id="${esc(e.id)}" aria-label="Compartilhar no WhatsApp" title="Compartilhar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M7 10H5v11h14V10h-2"/></svg></button></div>
+  <div class="row">${past?'':`<button class="btn ${vou?'on':(temIngresso(e)?'':'primary')}" data-action="rsvp" data-id="${esc(e.id)}">${vou?'✓ Tô dentro':'Tô dentro'}</button>`}${vou&&!past&&S.uid?`<button class="btn story" data-action="sh-ev" data-id="${esc(e.id)}">${STORYI}Story</button>`:''}<button class="btn share ico" data-action="share-ev" data-id="${esc(e.id)}" aria-label="Compartilhar no WhatsApp" title="Compartilhar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M8 7l4-4 4 4"/><path d="M7 10H5v11h14V10h-2"/></svg></button></div>
   </div></div></article>`;
 }
 
@@ -694,7 +703,7 @@ function desafioCard(d,ativo){
   ${S.uid?`<div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">${Math.round(pct)}% de ${kmf(meta)} km</span>`:''}</div>
   ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}`:(meta?`<p class="muted small" style="margin:0">Meta da galera: ${kmf(meta)} km</p>`:'')}
   ${form}${mine}
-  ${S.uid?`<div><p class="eyebrow" style="margin-bottom:4px">Ranking</p>${rk.length?`<ol class="rank">${rh}</ol>`:`<p class="muted small" style="margin:0">Nenhuma corrida aprovada ainda. Que tal ser o primeiro?</p>`}</div>`:''}</article>`;
+  ${S.uid?`<div><p class="eyebrow" style="margin-bottom:4px">Ranking</p>${rk.length?`<ol class="rank">${rh}</ol>${pos>=0?`<button class="btn story" style="margin-top:10px" data-action="sh-rank" data-id="${esc(d.id)}">${STORYI}Postar minha posição no story</button>`:''}`:`<p class="muted small" style="margin:0">Nenhuma corrida aprovada ainda. Que tal ser o primeiro?</p>`}</div>`:''}</article>`;
 }
 
 function pollCard(p){
@@ -810,7 +819,8 @@ function conquistas(uid){
 function medalhasHtml(uid,todas){
   const cs=conquistas(uid);const ok=cs.filter(c=>c.ok);const lista=todas?cs:ok;
   if(!lista.length)return `<p class="muted small" style="margin:0">Nenhuma conquista ainda.</p>`;
-  return `<div class="medals">${lista.map(c=>`<div class="medal ${c.ok?'':'off'}"><i aria-hidden="true">${esc(c.k)}</i><b>${esc(c.nome)}</b><span>${esc(c.desc)}</span></div>`).join('')}</div>`;
+  const meu=uid===S.uid;
+  return `<div class="medals">${lista.map(c=>{const i=cs.indexOf(c);const can=meu&&c.ok;return `<div class="medal ${c.ok?'':'off'} ${can?'can':''}"${can?` data-action="sh-conq" data-i="${i}" role="button" tabindex="0" aria-label="Postar a conquista ${esc(c.nome)} no story"`:''}><i aria-hidden="true">${esc(c.k)}</i><b>${esc(c.nome)}</b><span>${esc(c.desc)}</span></div>`}).join('')}</div>${meu&&ok.length?`<p class="small muted" style="margin:0">Toque numa conquista para postar no story.</p>`:''}`;
 }
 function verPessoa(uid){
   if(!uid)return;S.cardOpen=false;
@@ -1069,6 +1079,7 @@ function renderCard(){
     <div class="body">${avatar(S.uid,84)}<div><span class="eyebrow num">Nº ${bibNum()}</span><span class="nm">${esc(nm)}</span><span class="small muted">Membro desde ${esc(desdeTxt(m))}${m.objetivo?' · '+esc(m.objetivo):''}</span></div></div>
     <div class="live"><span><i class="dot-live"></i>Válido agora</span><span id="mclock" class="num"></span></div></div>
     <p class="small muted" style="margin:0;text-align:center">O relógio e a faixa em movimento mostram que o cartão está aberto no app, e não é um print.</p>
+    <button class="btn primary story" data-action="sh-membro">${STORYI}Postar no story</button>
     <button class="btn" data-action="card-close">Fechar</button></div>`;
   }
   el.hidden=false;
@@ -1523,7 +1534,7 @@ function gameOver(){
   o.innerHTML=`<div class="gcard"><p class="eyebrow" style="margin:0">${G.newBest?'Novo recorde!':'Fim de corrida'}</p><div class="gscore num">${sc.toLocaleString('pt-BR')}</div>
   <p class="small muted" style="margin:0"><span class="num">${Math.floor(G.dist/20).toLocaleString('pt-BR')} m</span> corridos · <span class="num">${G.folhas}</span> ${G.folhas===1?'folha':'folhas'}</p>
   ${S.uid?`<p class="small" style="margin:0">Seu melhor da semana: <b class="num">${Math.max(wb,sc).toLocaleString('pt-BR')}</b></p>`:`<p class="small" style="margin:0">Entre com sua conta para entrar no ranking.</p>`}
-  <div class="row" style="justify-content:center"><button class="btn primary" data-action="game-again">Correr de novo</button><button class="btn" data-action="game-close">Ver ranking</button></div></div>`;
+  <div class="row" style="justify-content:center"><button class="btn primary" data-action="game-again">Correr de novo</button><button class="btn" data-action="game-close">Ver ranking</button></div>${S.uid&&sc>0?`<button class="btn story" data-action="sh-jogo">${STORYI}Postar no story</button>`:''}</div>`;
   setTimeout(()=>{o.hidden=false},450);
 }
 async function saveScore(sc){
@@ -1970,6 +1981,151 @@ async function notificar(msg){
   }catch(e){toast('O aviso não saiu: '+(e.message||'tente de novo.'));return false}
 }
 
+/* ---------- Compartilhar no story ---------- */
+const SH={W:1080,H:1920,file:null,url:null,busy:false};
+const NEON='#C8F560',INK='#F5F7F2',MUT='#8E968C';
+function shImg(src){return new Promise(r=>{if(!src)return r(null);const i=new Image();i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src})}
+function shFont(w,px){return `${w} ${px}px Archivo, "Arial Narrow", Arial, sans-serif`}
+function shBody(w,px){return `${w} ${px}px Figtree, Arial, sans-serif`}
+function shFit(c,txt,max,size,w,min){let s=size;c.font=shFont(w,s);while(c.measureText(txt).width>max&&s>(min||20)){s-=4;c.font=shFont(w,s)}return s}
+function shWrap(c,txt,max,size,w,lines){
+  let s=size;for(;;){c.font=shFont(w,s);const ws=String(txt).split(/\s+/);const out=[];let cur='';
+    for(const x of ws){const t=cur?cur+' '+x:x;if(c.measureText(t).width>max&&cur){out.push(cur);cur=x}else cur=t}if(cur)out.push(cur);
+    if(out.length<=lines&&out.every(l=>c.measureText(l).width<=max)||s<=40)return {lines:out.slice(0,lines),size:s};s-=6}
+}
+function shBase(c){
+  const W=SH.W,H=SH.H;c.fillStyle='#050505';c.fillRect(0,0,W,H);
+  let g=c.createRadialGradient(W*.95,0,0,W*.95,0,W*1.1);g.addColorStop(0,'rgba(200,245,96,.30)');g.addColorStop(1,'rgba(200,245,96,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  g=c.createRadialGradient(0,H,0,0,H,W*.9);g.addColorStop(0,'rgba(200,245,96,.14)');g.addColorStop(1,'rgba(200,245,96,0)');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.save();c.globalAlpha=.05;c.strokeStyle=NEON;c.lineWidth=2;for(let x=-H;x<W;x+=46){c.beginPath();c.moveTo(x,H);c.lineTo(x+H,0);c.stroke()}c.restore();
+}
+async function shBrand(c){
+  const logo=await shImg('/icons/logo.png');const y=150;
+  if(logo){c.save();c.beginPath();c.arc(118,y,58,0,7);c.closePath();c.fillStyle='#000';c.fill();c.clip();c.drawImage(logo,60,y-58,116,116);c.restore();c.strokeStyle='#232723';c.lineWidth=3;c.beginPath();c.arc(118,y,58,0,7);c.stroke()}
+  c.fillStyle=INK;c.font=shFont(900,64);c.textBaseline='middle';c.fillText('PASSOS VERDES',200,y-14);
+  c.fillStyle=MUT;c.font=shBody(600,26);c.fillText('CORRIDA EM COMUNIDADE · MAGÉ',202,y+34);
+}
+async function shUser(c,y){
+  const uid=S.uid;const m=me();const nm=m.apelido||S.myName||'Corredor(a)';const f=fotoDe(uid);const img=await shImg(f);
+  const x=80,r=56;c.save();c.beginPath();c.arc(x+r,y,r,0,7);c.closePath();
+  if(img){c.clip();const s=Math.max(2*r/img.width,2*r/img.height);c.drawImage(img,x+r-img.width*s/2,y-img.height*s/2,img.width*s,img.height*s)}
+  else{c.fillStyle=AVC[hash(uid||'x')%AVC.length];c.fill();c.fillStyle='#fff';c.font=shBody(800,44);c.textAlign='center';c.textBaseline='middle';c.fillText(ini(nm),x+r,y+2);c.textAlign='left'}
+  c.restore();c.strokeStyle=NEON;c.lineWidth=5;c.beginPath();c.arc(x+r,y,r+5,0,7);c.stroke();
+  c.textBaseline='middle';c.fillStyle=INK;let fs=48;c.font=shBody(800,fs);while(c.measureText(nm).width>760&&fs>28){fs-=2;c.font=shBody(800,fs)}c.fillText(nm,x+2*r+30,y-18);
+  c.fillStyle=MUT;c.font=shBody(600,28);c.fillText('Nº '+bibNum()+' · Passos Verdes',x+2*r+30,y+28);
+}
+function shFoot(c){c.fillStyle=MUT;c.font=shBody(600,28);c.textAlign='center';c.textBaseline='middle';c.fillText('Corre com a gente · passos-verdes-app.vercel.app',SH.W/2,SH.H-90);c.textAlign='left'}
+function shEyebrow(c,t,y){c.fillStyle=NEON;c.font=shBody(800,34);c.textBaseline='alphabetic';const sp=6;let x=80;for(const ch of t){c.fillText(ch,x,y);x+=c.measureText(ch).width+sp}}
+function shBar(c,x,y,w,h,p){c.fillStyle='#1A1D1A';rr(c,x,y,w,h,h/2);c.fill();if(p>0){c.fillStyle=NEON;rr(c,x,y,Math.max(h,w*Math.min(1,p)),h,h/2);c.fill()}}
+const SHT={
+ async conquista(c,d){
+  shEyebrow(c,'CONQUISTA DESBLOQUEADA',420);
+  const cx=SH.W/2,cy=760,R=250;
+  const g=c.createRadialGradient(cx,cy,R*.2,cx,cy,R*1.6);g.addColorStop(0,'rgba(245,200,75,.35)');g.addColorStop(1,'rgba(245,200,75,0)');c.fillStyle=g;c.fillRect(0,cy-R*1.6,SH.W,R*3.2);
+  c.fillStyle='#2a2410';c.beginPath();c.arc(cx,cy,R,0,7);c.fill();
+  c.strokeStyle='#F2C230';c.lineWidth=22;c.beginPath();c.arc(cx,cy,R-11,0,7);c.stroke();
+  c.strokeStyle='rgba(242,194,48,.35)';c.lineWidth=4;c.beginPath();c.arc(cx,cy,R-44,0,7);c.stroke();
+  c.fillStyle='#F2C230';c.textAlign='center';c.textBaseline='middle';const k=String(d.k);shFit(c,k,R*1.3,k.length>2?190:260,900,80);c.fillText(k,cx,cy+10);
+  c.fillStyle=INK;const w=shWrap(c,d.nome.toUpperCase(),920,150,900,2);w.lines.forEach((l,i)=>{c.font=shFont(900,w.size);c.fillText(l,cx,1160+i*w.size*.95)});
+  c.fillStyle=MUT;c.font=shBody(600,40);c.fillText(d.desc,cx,1160+w.lines.length*w.size*.95+20);c.textAlign='left';
+  await shUser(c,1600);
+ },
+ async rank(c,d){
+  shEyebrow(c,'DESAFIO PASSOS VERDES',400);
+  c.fillStyle=INK;const w=shWrap(c,d.titulo.toUpperCase(),920,100,900,2);c.textBaseline='alphabetic';w.lines.forEach((l,i)=>{c.font=shFont(900,w.size);c.fillText(l,80,400+w.size*1.05*(i+1))});
+  const y0=400+w.size*1.05*w.lines.length+60;
+  c.fillStyle=NEON;c.font=shFont(900,430);c.textBaseline='alphabetic';const pos=d.pos+'º';c.fillText(pos,64,y0+380);
+  const pw=c.measureText(pos).width;c.fillStyle=INK;c.font=shFont(900,72);c.fillText('NO',100+pw,y0+250);c.fillText('RANKING',100+pw,y0+330);
+  c.fillStyle=INK;c.font=shFont(900,150);c.fillText(kmf(d.km)+' km',80,y0+570);c.fillStyle=MUT;c.font=shBody(600,36);c.fillText('aprovados pela organização',84,y0+625);
+  if(d.meta){c.fillStyle=INK;c.font=shBody(700,34);c.fillText('Meta da galera: '+kmf(d.tot)+' de '+kmf(d.meta)+' km',84,y0+720);shBar(c,80,y0+750,920,26,d.tot/d.meta)}
+  await shUser(c,1600);
+ },
+ async jogo(c,d){
+  shEyebrow(c,'JOGO CORRE, VERDE!',400);
+  c.fillStyle=d.recorde?NEON:INK;c.font=shBody(800,44);c.textBaseline='alphabetic';c.fillText(d.recorde?'NOVO RECORDE!':'MINHA CORRIDA',80,480);
+  c.fillStyle=INK;const s=d.score.toLocaleString('pt-BR');shFit(c,s,920,300,900,120);c.fillText(s,72,760);
+  c.fillStyle=MUT;c.font=shBody(700,40);c.fillText('pontos · '+d.metros.toLocaleString('pt-BR')+' m · '+d.folhas+(d.folhas===1?' folha':' folhas'),84,830);
+  // cena
+  const gy=1330;const sky=c.createLinearGradient(0,940,0,gy);sky.addColorStop(0,'rgba(18,48,31,0)');sky.addColorStop(1,'#12301f');c.fillStyle=sky;c.fillRect(0,940,SH.W,gy-940);
+  c.fillStyle='#1d4630';c.beginPath();c.moveTo(0,gy);c.quadraticCurveTo(270,gy-200,540,gy-60);c.quadraticCurveTo(810,gy-230,1080,gy);c.fill();
+  c.fillStyle='#1e2420';c.fillRect(0,gy,SH.W,120);c.fillStyle='#2f5a3c';c.fillRect(0,gy-8,SH.W,12);c.fillStyle='rgba(255,255,255,.35)';for(let x=20;x<SH.W;x+=150)c.fillRect(x,gy+60,80,10);
+  drawObs(c,{k:'cone',x:740,w:24*3,h:32*3},gy,true);
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(430,gy+6,90,14,0,0,7);c.fill();
+  c.save();c.translate(430,gy-150);c.scale(4.6,4.6);runner(c,-19,0,.9,true,false);c.restore();
+  c.fillStyle=INK;c.font=shBody(800,46);c.textAlign='center';c.fillText('Bate meu recorde?',SH.W/2,1540);c.textAlign='left';
+  await shUser(c,1680);
+ },
+ async evento(c,d){
+  const e=d.e;const img=await shImg(okPic(e.foto)?e.foto:null);
+  if(img){const h=640,s=Math.max(SH.W/img.width,h/img.height);c.save();c.beginPath();c.rect(0,250,SH.W,h);c.clip();c.drawImage(img,(SH.W-img.width*s)/2,250+(h-img.height*s)/2,img.width*s,img.height*s);c.restore();
+    const g=c.createLinearGradient(0,250,0,890);g.addColorStop(0,'rgba(5,5,5,.6)');g.addColorStop(.35,'rgba(5,5,5,0)');g.addColorStop(1,'rgba(5,5,5,1)');c.fillStyle=g;c.fillRect(0,250,SH.W,640)}
+  const top=img?820:430;
+  c.fillStyle=NEON;c.font=shFont(900,120);c.textBaseline='alphabetic';c.fillText('EU VOU!',76,top);
+  c.fillStyle=INK;const w=shWrap(c,String(e.titulo).toUpperCase(),920,img?96:140,900,3);w.lines.forEach((l,i)=>{c.font=shFont(900,w.size);c.fillText(l,80,top+30+w.size*1.0*(i+1))});
+  let y=top+30+w.size*w.lines.length+70;
+  const dt=pd(e.data);
+  c.fillStyle='#111311';rr(c,80,y-10,200,200,28);c.fill();c.strokeStyle='#232723';c.lineWidth=3;rr(c,80,y-10,200,200,28);c.stroke();
+  c.fillStyle=NEON;c.textAlign='center';c.font=shFont(900,110);c.fillText(dt?String(dt.getDate()):'–',180,y+115);c.fillStyle=MUT;c.font=shBody(800,34);c.fillText(dt?MES[dt.getMonth()]:'',180,y+165);c.textAlign='left';
+  c.fillStyle=INK;c.font=shBody(700,40);const info=[dt?dt.toLocaleDateString('pt-BR',{weekday:'long'}):'',e.hora].filter(Boolean).join(' · ');c.fillText(info,320,y+50);
+  if(e.local){c.fillStyle=MUT;c.font=shBody(600,36);let t=e.local;while(c.measureText(t).width>680&&t.length>4)t=t.slice(0,-2);c.fillText(t===e.local?t:t+'…',320,y+105)}
+  if(e.pago||e.pago===false){c.fillStyle=e.pago?INK:NEON;c.font=shBody(800,32);c.fillText(e.pago?('Ingresso '+(e.preco||'')).trim():'Entrada gratuita',320,y+160)}
+  c.fillStyle=INK;c.font=shBody(800,46);c.fillText('Bora junto? Confirma no app.',80,Math.min(y+300,1540));
+  await shUser(c,1640);
+ },
+ async membro(c,d){
+  const m=me();shEyebrow(c,'MEMBRO OFICIAL',420);
+  c.fillStyle=INK;c.font=shFont(900,150);c.textBaseline='alphabetic';c.fillText('Nº',80,620);
+  c.strokeStyle=NEON;c.lineWidth=8;const n=String(bibNum());shFit(c,n,900,520,900,200);c.strokeText(n,74,1080);
+  c.fillStyle=INK;const nm=(m.apelido||S.myName||'Corredor(a)').toUpperCase();shFit(c,nm,920,140,900,60);c.fillText(nm,80,1260);
+  c.fillStyle=MUT;c.font=shBody(700,40);c.fillText('Desde '+desdeTxt(m)+(m.objetivo?' · '+m.objetivo:''),84,1330);
+  c.fillStyle=NEON;c.font=shFont(900,64);c.fillText('AQUI NINGUÉM',80,1500);c.fillText('CORRE SOZINHO.',80,1570);
+  await shUser(c,1700);
+ }
+};
+async function abrirStory(tipo,d){
+  if(!S.uid){toast('Entre com sua conta para compartilhar.');return}
+  if(SH.busy)return;SH.busy=true;
+  const el=$('#shsheet');el.innerHTML=`<div class="in"><p class="eyebrow" style="margin:0">Postar no story</p><div class="shprev"><div class="skel" style="height:100%"><i></i><i></i></div></div></div>`;el.hidden=false;
+  try{
+    try{await Promise.all([document.fonts.load(shFont(900,100)),document.fonts.load(shBody(800,40)),document.fonts.load(shBody(600,30))])}catch(e){}
+    const cv=document.createElement('canvas');cv.width=SH.W;cv.height=SH.H;const c=cv.getContext('2d');try{c.fontStretch='condensed'}catch(e){}
+    shBase(c);await shBrand(c);await SHT[tipo](c,d||{});shFoot(c);
+    const blob=await new Promise(r=>cv.toBlob(r,'image/png'));
+    if(SH.url)URL.revokeObjectURL(SH.url);SH.url=URL.createObjectURL(blob);
+    SH.file=new File([blob],'passos-verdes-'+tipo+'.png',{type:'image/png'});
+    const pode=!!(navigator.canShare&&navigator.canShare({files:[SH.file]}));
+    el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><p class="eyebrow" style="margin:0">Postar no story</p><h2 class="sec">Sua arte está pronta</h2></div><button class="hbtn shx" data-action="sh-close" aria-label="Fechar">×</button></div>
+      <div class="shprev"><img src="${SH.url}" alt="Prévia da arte para o story"></div>
+      ${pode?`<button class="btn primary" data-action="sh-go">${STORYI}Compartilhar no Instagram</button><button class="btn" data-action="sh-save">Salvar imagem</button>`:`<button class="btn primary" data-action="sh-save">${STORYI}Salvar imagem</button>`}
+      <p class="small muted" style="margin:0;text-align:center">${pode?'Na lista, escolha Instagram e depois Story.':'Depois abra o Instagram, crie um story e escolha a imagem salva.'} Dica: coloque a figurinha de link com o endereço do app.</p></div>`;
+  }catch(e){console.warn(e);el.hidden=true;toast('Não deu para criar a arte agora.')}
+  SH.busy=false;
+}
+const STORYI='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>';
+async function shGo(){
+  if(!SH.file)return;
+  try{await navigator.share({files:[SH.file]})}catch(e){if(e&&e.name==='AbortError')return;shSave()}
+}
+function shSave(){if(!SH.url)return;const a=document.createElement('a');a.href=SH.url;a.download=SH.file?SH.file.name:'passos-verdes.png';document.body.appendChild(a);a.click();a.remove();toast('Imagem salva. Agora é só postar no story.')}
+function shClose(){const el=$('#shsheet');el.hidden=true;el.innerHTML=''}
+function rankDe(did){
+  const by={};for(const l of aprovados(did)){by[l.uid]=(by[l.uid]||0)+(Number(l.km)||0)}
+  const rk=Object.entries(by).sort((a,b)=>b[1]-a[1]);const i=rk.findIndex(r=>r[0]===S.uid);return i<0?null:{pos:i+1,km:rk[i][1]};
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
+  if(!a.startsWith('sh-'))return;e.stopImmediatePropagation();
+  if(a==='sh-close')shClose();
+  else if(a==='sh-go')shGo();
+  else if(a==='sh-save')shSave();
+  else if(a==='sh-conq'){const c=conquistas(S.uid)[Number(b.dataset.i)];if(c&&c.ok)abrirStory('conquista',c)}
+  else if(a==='sh-rank'){const d=S.desafios.find(x=>x.id===b.dataset.id);const r=rankDe(b.dataset.id);if(d&&r)abrirStory('rank',{titulo:d.titulo,pos:r.pos,km:r.km,meta:Number(d.meta)||0,tot:sumKm(d.id)})}
+  else if(a==='sh-jogo')abrirStory('jogo',{score:G.score||0,metros:Math.floor(G.dist/20),folhas:G.folhas||0,recorde:!!G.newBest});
+  else if(a==='sh-ev'){const ev=S.eventos.find(x=>x.id===b.dataset.id);if(ev)abrirStory('evento',{e:ev})}
+  else if(a==='sh-membro')abrirStory('membro',{});
+},true);
+
+document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[role=button][data-action]')){e.preventDefault();e.target.click()}});
 async function login(){
   const p=new GoogleAuthProvider();
   try{await signInWithPopup(auth,p)}
