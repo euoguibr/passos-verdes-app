@@ -241,6 +241,33 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
 .vgrid .zero input{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
 .encrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center}
 @media (max-width:760px){.vk{grid-template-columns:repeat(2,minmax(0,1fr))}.prodgrid{grid-template-columns:1fr}}
+
+/* Planejamento */
+.plsec{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.plsec h2{font-size:22px}
+.kpis4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:6px}
+.stat.alert{background:var(--bad-bg);border-color:transparent}.stat.alert .v{color:var(--bad)}
+.stat .d{font-size:12.5px;color:var(--muted)}
+.plbar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--sunk)}.plbar i{display:block;height:100%}
+.plbig{display:flex;justify-content:space-between;align-items:baseline;gap:10px;background:var(--sunk);border-radius:10px;padding:12px 14px}
+.plbig b{font-family:var(--display);font-size:26px;font-weight:800}
+.callout{border-radius:10px;padding:12px 14px;font-size:13.5px;display:flex;flex-direction:column;gap:4px}
+.callout.bad{background:var(--bad-bg)}.callout.warn{background:var(--warn-bg)}.callout.ok{background:var(--ok-bg)}
+.tblw{overflow-x:auto}
+.pltbl{border-collapse:collapse;width:100%;font-size:13.5px;min-width:600px}
+.pltbl th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+.pltbl td{padding:8px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.pltbl th:first-child,.pltbl td:first-child{text-align:left}.pltbl tr:last-child td{border-bottom:0}
+.pltbl input{width:90px;text-align:right}
+.plov{color:var(--warn);font-weight:600}
+.panel .line{padding:5px 0}
+.panel .line b{white-space:nowrap}
+.orows{display:flex;flex-direction:column;gap:6px}
+.orow{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;gap:6px;align-items:center}
+.orow input{min-width:0}
+.stack16{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sticky{position:sticky;top:12px;align-self:start}
+@media (max-width:760px){.kpis4{grid-template-columns:repeat(2,minmax(0,1fr))}.sticky{position:static}.orow{grid-template-columns:minmax(0,1fr) 96px auto}}
 </style>
 </head>
 <body>
@@ -262,6 +289,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
     <a href="#lancamentos" data-tab="lancamentos">Lançamentos</a>
     <a href="#vendas" data-tab="vendas">Vendas</a>
     <a href="#estoque" data-tab="estoque">Estoque</a>
+    <a href="#planejamento" data-tab="planejamento">Planejamento</a>
   </nav>
   <div id="banner" class="banner" hidden></div>
 
@@ -357,6 +385,9 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
 
   <!-- ESTOQUE -->
   <main id="v-estoque" data-view="estoque" hidden><div id="estBody"></div></main>
+
+  <!-- PLANEJAMENTO -->
+  <main id="v-planejamento" data-view="planejamento" hidden><div id="planBody"></div></main>
 </div>
 </div>
 <div id="modalRoot"></div>
@@ -364,7 +395,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, runTransaction, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, onSnapshot, addDoc, setDoc, updateDoc, deleteDoc, runTransaction, writeBatch, deleteField } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const TREINADORES=["Stefany Magalhães","Thiago Souza","Theo Gouveia"];
@@ -488,7 +519,7 @@ function render(){
   $("mLabel").textContent=ymLabel(S.ym);
   document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===S.tab?"page":"false"));
   document.querySelectorAll("main[data-view]").forEach(m=>m.hidden=m.dataset.view!==S.tab);
-  renderPainel();renderEventos();renderAlunos();renderMov();renderVendas();renderEstoque();syncImp();
+  renderPainel();renderEventos();renderAlunos();renderMov();renderVendas();renderEstoque();renderPlan();syncImp();
 }
 
 function renderPainel(){
@@ -973,7 +1004,7 @@ $("mNext").onclick=()=>{S.ym=ymShift(S.ym,1);render()};
 $("q").oninput=e=>{S.q=e.target.value;renderAlunos()};
 $("fTrein").innerHTML+=TREINADORES.map(t=>`<option>${t}</option>`).join("");
 $("fTrein").onchange=e=>{S.trein=e.target.value;renderAlunos()};
-function route(){const h=location.hash.slice(1);S.tab=["painel","eventos","alunos","lancamentos","vendas","estoque"].includes(h)?h:"painel";if(S.tab!=="eventos")S.ev=null;render()}
+function route(){const h=location.hash.slice(1);S.tab=["painel","eventos","alunos","lancamentos","vendas","estoque","planejamento"].includes(h)?h:"painel";if(S.tab!=="eventos")S.ev=null;render()}
 window.addEventListener("hashchange",route);
 
 
@@ -1213,6 +1244,208 @@ function importModal(){
     try{const n=await importarCaixa(f);close();toast(`${n} registros importados`)}catch(err){console.error(err);b.disabled=false;b.textContent="Importar";toast(err.message||"Não deu para importar.")}});
 }
 
+
+/* =========================================================
+   PLANEJAMENTO: cenário do mês + orçamentos de eventos
+   valores editados ficam em caixa_config/cenario e caixa_config/orcamentos
+   ========================================================= */
+S.cen=S.cen||null;S.orcs=S.orcs||{};S.plan=S.plan||"cenario";S.orc=null;
+const up5=x=>Math.ceil(x/5)*5;
+const pct=x=>String(Math.round(x*100)/100).replace(".",",")+"%";
+const PL_LABEL={a_alunos:"Alunos pagando no mês",a_mens:"Mensalidade",a_treinus:"Treinus por mês",a_contador:"Contador num mês sem evento",a_gastos:"Outros gastos fixos por mês",a_parcela:"Parcela de empréstimo",a_aliq:"Imposto da assessoria (%)",a_res:"Guardar no caixa (% do lucro)",a_meta:"Meta por sócio (R$)",
+  c_saldo:"Saldo hoje no Inter",c_das:"DAS atrasado",c_mes:"DAS e contador do mês",c_meses:"Meses de custo fixo guardados",c_giro:"Dinheiro para adiantar evento",c_ev:"Eventos por ano",p_margem:"Margem nos produtos (%)"};
+
+/* números ao vivo do caixa — viram o padrão de cada campo */
+function planLive(){
+  const F=fisc(),hoje=todayISO().slice(0,7);
+  const ativos=S.alunos.filter(a=>{const k=statusOf(a).k;return k!=="pausado"&&k!=="cortesia"});
+  const ult=[1,2,3,4,5,6].map(k=>ymShift(hoje,-k));
+  const recAss=ult.map(ym=>S.pags.filter(p=>ymOf(p.data)===ym).reduce((s,p)=>s+(+p.valor||0),0));
+  const pagM=ult.map(ym=>S.pags.filter(p=>ymOf(p.data)===ym).length);
+  const tre=ult.map(ym=>S.lancs.filter(l=>real(l)&&ymOf(l.data)===ym&&l.cat==="Treinus").reduce((s,l)=>s+(+l.valor||0),0));
+  const avg=a=>a.length?a.reduce((s,x)=>s+x,0)/a.length:0;
+  // parcela de empréstimo em aberto
+  let parcela=0,parcInfo="";
+  S.lancs.filter(l=>l.emprestimo&&real(l)).forEach(e=>{const pago=S.lancs.filter(l=>real(l)&&l.tipo==="saida"&&l.cat==="Empréstimo de sócio"&&(l.desc||"").includes(e.emprestimo.socio)).reduce((t,l)=>t+(+l.valor||0),0);
+    const tot=+e.emprestimo.total||0,parc=tot/(+e.emprestimo.parcelas||1),falta=tot-pago;if(falta>0.01){parcela+=parc;parcInfo=`${e.emprestimo.socio}: faltam ${Math.round(falta/parc)} parcelas`}});
+  // DAS atrasado estimado: meses anteriores ao atual, menos o que já foi lançado como DAS
+  const meses=new Set([...S.pags.map(p=>ymOf(p.data)),...S.lancs.filter(real).map(l=>ymOf(l.data))]);
+  let dasDevido=0;[...meses].filter(ym=>ym&&ym<hoje).forEach(ym=>dasDevido+=receitaMes(ym).imp.total);
+  const dasPago=S.lancs.filter(l=>real(l)&&l.tipo==="saida"&&l.cat==="Impostos (DAS)").reduce((s,l)=>s+(+l.valor||0),0);
+  const ctbPago=S.lancs.filter(l=>real(l)&&ymOf(l.data)===hoje&&l.cat==="Contador (mensalidade)").reduce((s,l)=>s+(+l.valor||0),0);
+  const se=saldoEst();
+  return{
+    a_alunos:ativos.length,a_mens:80,a_treinus:Math.round(avg(tre.filter(x=>x>0))||0),a_contador:+F.contador.semEvento||0,a_gastos:100,a_parcela:Math.round(parcela*100)/100,a_aliq:+F.aliq.assessoria||0,a_res:20,a_meta:400,
+    c_saldo:se?Math.round(se.v*100)/100:0,c_das:Math.max(0,Math.round((dasDevido-dasPago)*100)/100),c_mes:Math.round((receitaMes(hoje).imp.total+Math.max(0,contadorMes(hoje)-ctbPago))*100)/100,c_meses:3,c_giro:5000,c_ev:3,p_margem:30,
+    _info:{recMed:avg(recAss),pagMed:avg(pagM),ativos:ativos.length,mensMed:ativos.length?ativos.reduce((s,a)=>s+(+a.valor||0),0)/ativos.length:0,parcInfo,treMed:avg(tre.filter(x=>x>0))}
+  };
+}
+const planV=(L,k)=>{const o=S.cen&&S.cen.v;return o&&o[k]!==undefined&&o[k]!==null&&o[k]!==""?+o[k]:L[k]};
+let planTmr=null,planPend={};
+function planSet(k,v){planPend[k]=v;S.cen={...(S.cen||{}),v:{...((S.cen&&S.cen.v)||{}),[k]:v}};clearTimeout(planTmr);
+  planTmr=setTimeout(()=>{const p=planPend;planPend={};if(!S.db)return;setDoc(doc(fs,"caixa_config","cenario"),{v:p},{merge:true}).catch(e=>{console.error(e);toast("Não deu para salvar o cenário.")})},700)}
+
+function renderPlan(force){
+  const body=$("planBody");if(!body||S.tab!=="planejamento")return;
+  const ae=document.activeElement;if(!force&&ae&&body.contains(ae)&&(ae.tagName==="INPUT"||ae.tagName==="SELECT"||ae.tagName==="TEXTAREA")){planCalc();return}
+  const chips=`<div class="toolbar"><div class="chips"><button class="chip" data-plan="cenario" aria-pressed="${S.plan==="cenario"}">Cenário do mês</button><button class="chip" data-plan="orcamentos" aria-pressed="${S.plan==="orcamentos"}">Orçamentos de eventos</button></div></div>`;
+  if(S.plan==="orcamentos"){body.innerHTML=chips+(S.orc?orcEditorHtml():orcListHtml());if(S.orc)orcCalc();return}
+  const L=planLive(),I=L._info,v=k=>planV(L,k);
+  const fld=(k,step,hint)=>{const ov=S.cen&&S.cen.v&&S.cen.v[k]!==undefined&&S.cen.v[k]!==null&&S.cen.v[k]!=="";return `<label class="field">${PL_LABEL[k]}<input type="number" step="${step||1}" data-pl="${k}" value="${v(k)}">${hint||ov?`<small class="${ov?"plov":""}">${ov?`Editado · real: ${String(L[k]).replace(".",",")}`:hint}</small>`:""}</label>`};
+  const prods=[...S.produtos].sort((a,b)=>(a.ordem??0)-(b.ordem??0));
+  body.innerHTML=chips+`
+  <div class="note" style="margin-bottom:14px">Os números já vêm do caixa: alunos ativos, Treinus, saldo, imposto e contador. Mude qualquer um para testar um cenário; o campo editado fica marcado. <button class="btn sm ghost" data-planreset="1">Voltar aos números reais</button></div>
+  <div class="kpis4" id="plKpis"></div>
+  <section class="plsec"><h2>Assessoria</h2><div class="cols2">
+    <div class="panel"><div class="grid2">
+      ${fld("a_alunos",1,`${I.ativos} ativos; em média ${Math.round(I.pagMed)} pagam por mês`)}${fld("a_mens",5,`Média dos ativos: ${brl(I.mensMed)}`)}
+      ${fld("a_treinus",1,"Média dos últimos meses")}${fld("a_contador",10,"Configurado em Impostos e contador")}
+      ${fld("a_gastos",10,"Taxas, marketing, materiais")}${fld("a_parcela",0.01,I.parcInfo||"Nenhum empréstimo em aberto")}
+      ${fld("a_aliq",0.5)}${fld("a_res",5)}</div>
+      <div class="note num">Recebido de mensalidades, média dos últimos 6 meses: <b>${brl(I.recMed)}</b></div></div>
+    <div class="panel"><div class="plbar" id="plABar"></div><div id="plA"></div><div class="plbig"><span>Para cada sócio</span><b class="num" id="plASoc">—</b></div>
+      <div class="rbox">${fld("a_meta",50)}<div class="note" id="plAMeta"></div></div></div></div></section>
+  <section class="plsec"><h2>Eventos de 2026 com o imposto</h2><div class="panel"><div class="tblw"><table class="pltbl"><thead><tr><th>Evento</th><th>Receita</th><th>Custos</th><th>Imposto</th><th>Lucro real</th><th>Retirado</th><th></th></tr></thead><tbody>
+    ${[...S.eventos].sort((a,b)=>(a.data||"").localeCompare(b.data||"")).map(e=>{const c=eventCalc(e),d=c.rep-c.luc;return `<tr><td>${esc(e.nome)}</td><td>${brl0(c.rec)}</td><td>${brl0(c.cus)}</td><td class="neg">${brl0(c.imp)}</td><td><b>${brl0(c.luc)}</b></td><td>${brl0(c.rep)}</td><td>${c.rep?`<span class="pill ${d>0.5?"s-atrasado":"s-emdia"}">${d>0.5?brl0(d)+" a mais":"ok"}</span>`:""}</td></tr>`}).join("")||`<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>`}
+  </tbody></table></div><div class="note">Para planejar o próximo, use <b>Orçamentos de eventos</b>.</div></div></section>
+  <section class="plsec"><h2>Produtos da loja</h2><div class="panel">
+    <div class="grid2" style="max-width:460px"><label class="field">Imposto sobre venda (%)<input type="number" value="${+fisc().aliq.produtos||0}" disabled><small>Muda em Impostos e contador</small></label>${fld("p_margem",5,"Quanto do preço vira lucro")}</div>
+    <div class="tblw"><table class="pltbl"><thead><tr><th>Produto</th><th>Custo</th><th>Preço na loja</th><th>Sobra hoje</th><th>Preço mínimo</th><th>Sugerido</th><th></th></tr></thead><tbody id="plProd">
+    ${prods.map(p=>`<tr data-prow="${p.id}"><td>${esc(p.nome)}</td><td><input type="number" step="0.5" min="0" data-pcusto="${p.id}" value="${(S.cen&&S.cen.custos&&S.cen.custos[p.id])||""}" placeholder="custo"></td><td>${brl(+p.preco||0)}</td><td class="pc-sobra">—</td><td class="pc-min">—</td><td class="pc-sug">—</td><td class="pc-act"></td></tr>`).join("")||`<tr><td colspan="7">Cadastre produtos na loja do app.</td></tr>`}
+    </tbody></table></div><div class="note">O custo fica só aqui na Gestão; a galera do app não vê. "Usar na loja" troca o preço do produto no app.</div></div></section>
+  <section class="plsec"><h2>Caixa da empresa</h2><div class="cols2">
+    <div class="panel"><div class="grid2">${fld("c_saldo",0.01,"Saldo estimado agora")}${fld("c_das",1,"Estimativa: imposto de todos os meses anteriores menos o DAS já lançado")}${fld("c_mes",0.01,"Imposto e contador deste mês")}${fld("c_meses",1)}${fld("c_giro",500,"Medalhas e camisas antes das inscrições")}${fld("c_ev",1)}</div></div>
+    <div class="panel"><div id="plC"></div><div id="plCMsg"></div></div></div></section>`;
+  planCalc();
+}
+function planCalc(){
+  if(S.plan!=="cenario"||!$("plA"))return;
+  const L=planLive(),v=k=>{const el=document.querySelector(`[data-pl="${k}"]`);return el&&el.value!==""?+el.value:planV(L,k)};
+  const rec=v("a_alunos")*v("a_mens"),imp=rec*v("a_aliq")/100,cus=v("a_treinus")+v("a_contador")+v("a_gastos")+v("a_parcela");
+  const luc=rec-imp-cus,res=Math.max(0,luc)*v("a_res")/100,soc=luc-res,por=soc/4;
+  const ln=(k,x,c,cls)=>`<div class="line ${cls||""}"><span class="k">${c?`<i class="dot" style="background:${c}"></i>`:""}${k}</span><b class="num ${x<0?"neg":""}">${brl(x)}</b></div>`;
+  const bar=ps=>{const t=ps.reduce((s,p)=>s+Math.max(0,p[0]),0)||1;return ps.map(([x,c])=>`<i style="width:${Math.max(0,x)/t*100}%;background:${c}"></i>`).join("")};
+  $("plABar").innerHTML=bar([[imp,"var(--f-imp)"],[cus,"var(--f-ger)"],[res,"var(--f-ev)"],[soc,"var(--f-ass)"]]);
+  $("plA").innerHTML=ln("Mensalidades",rec)+ln(`Imposto (${pct(v("a_aliq"))})`,-imp,"var(--f-imp)")+ln("Treinus, contador, gastos e parcela",-cus,"var(--f-ger)")+ln("Lucro da assessoria",luc,null,"total")+ln(`Guardar no caixa (${pct(v("a_res"))})`,-res,"var(--f-ev)")+ln("Para dividir entre 4",soc,"var(--f-ass)");
+  $("plASoc").textContent=brl(por);$("plASoc").className="num "+(por<0?"neg":"");
+  const M=v("a_meta"),need=(M*4/(1-v("a_res")/100)+cus)/(1-v("a_aliq")/100),mensN=v("a_alunos")?need/v("a_alunos"):0,aluN=v("a_mens")?Math.ceil(need/v("a_mens")):0;
+  $("plAMeta").innerHTML=`Para cada sócio tirar <b>${brl0(M)}</b>, a assessoria precisa faturar <b>${brl0(need)}</b>: mensalidade de <b>${brl(mensN)}</b> com ${v("a_alunos")} alunos, ou <b>${aluN} alunos</b> pagando ${brl0(v("a_mens"))}.`;
+  // produtos
+  const pa=(+fisc().aliq.produtos||0)/100,pm=v("p_margem")/100;
+  document.querySelectorAll("[data-prow]").forEach(tr=>{const p=prodById(tr.dataset.prow);if(!p)return;const c=+(tr.querySelector("[data-pcusto]").value)||0,pr=+p.preco||0;
+    const q=s=>tr.querySelector(s);if(!c){q(".pc-sobra").innerHTML=`<span class="pill s-vence">preencha o custo</span>`;q(".pc-min").textContent="—";q(".pc-sug").textContent="—";q(".pc-act").innerHTML="";return}
+    const sob=pr*(1-pa)-c,min=c/(1-pa),sug=pm<1-pa?up5(c/(1-pa-pm)):null;
+    q(".pc-sobra").innerHTML=`<span class="${sob<0?"neg":"pos"}">${brl(sob)}</span>`;q(".pc-min").textContent=brl(min);q(".pc-sug").innerHTML=sug?`<b>${brl0(sug)}</b>`:"—";
+    q(".pc-act").innerHTML=sug&&Math.abs(sug-pr)>0.009?`<button class="btn sm" data-usepreco="${p.id}" data-v="${sug}">Usar na loja</button>`:"";});
+  // caixa
+  const fixo=v("a_treinus")+v("a_contador")+v("a_gastos"),livre=v("c_saldo")-v("c_das")-v("c_mes"),meta=fixo*v("c_meses")+v("c_giro");
+  const evRes=(()=>{const ps=Object.values(S.orcs||{});if(!ps.length)return 0;return ps.reduce((s,o)=>s+orcCalcData(o).res,0)/ps.length})();
+  const porMes=res+evRes*v("c_ev")/12,falta=meta-livre;
+  $("plC").innerHTML=ln("Saldo no Inter",v("c_saldo"))+ln("DAS atrasado",-v("c_das"),"var(--f-imp)")+ln("Imposto e contador deste mês",-v("c_mes"),"var(--f-imp)")+ln("Dinheiro livre de verdade",livre,null,"total")+ln(`Meta de reserva (${v("c_meses")} meses de custo fixo + adiantamento)`,meta,"var(--f-ev)")+ln(`Guardando por mês${evRes?" (assessoria + média dos orçamentos)":" (assessoria)"}`,porMes,"var(--f-ev)");
+  $("plCMsg").innerHTML=livre<0?`<div class="callout bad"><b>O caixa livre está negativo em ${brl(-livre)}.</b> O imposto que falta pagar é maior que o saldo. Guardando ${brl0(porMes)} por mês, leva ${porMes>0?Math.ceil(-livre/porMes)+" meses":"tempo indefinido"} só para zerar.</div>`
+    :`<div class="callout ${falta>0?"warn":"ok"}">${falta>0?`Faltam <b>${brl(falta)}</b> para a meta, uns <b>${porMes>0?Math.ceil(falta/porMes):"∞"} meses</b> no ritmo atual.`:"<b>Meta de reserva atingida.</b>"}</div>`;
+  $("plKpis").innerHTML=[["Assessoria por sócio",brl(por),por<M],["Mensalidade para a meta",brl(mensN),false],["Caixa livre de verdade",brl(livre),livre<0],["Meta de reserva",brl0(meta),false]].map(([l,x,a])=>`<div class="stat ${a?"alert":""}"><div class="eyebrow">${l}</div><div class="v num">${x}</div></div>`).join("");
+}
+
+/* ---------- orçamentos de eventos ---------- */
+const ORC_NOVO=()=>({nome:"Nova etapa",projeto:"",data:"",local:"",inscritos:300,preco:100,taxa:0,res:20,meta:1000,socios:4,
+  receitas:[{d:"Patrocínios",v:0},{d:"Apoio da Prefeitura",v:0}],
+  atleta:[{d:"Camisa",v:35},{d:"Medalha",v:30},{d:"Kit, água e frutas",v:5}],
+  fixos:[{d:"Cronometragem",v:7020},{d:"Locutor e atrações",v:300},{d:"Estrutura",v:420},{d:"Divulgação",v:840},{d:"Equipe e staff",v:1260}],criado:Date.now()});
+function orcCalcData(o){
+  const F=fisc(),a=(+F.aliq.eventos||0)/100,t=(+o.taxa||0)/100,N=Math.max(0,+o.inscritos||0),P=+o.preco||0,soc=Math.max(1,+o.socios||4);
+  const extra=(o.receitas||[]).reduce((s,r)=>s+(+r.v||0),0),cpa=(o.atleta||[]).reduce((s,r)=>s+(+r.v||0),0);
+  const ctb=Math.max(0,(+F.contador.comEvento||0)-(+F.contador.semEvento||0)),fix=(o.fixos||[]).reduce((s,r)=>s+(+r.v||0),0)+ctb;
+  const insc=N*P*(1-t),rec=insc+extra,imp=rec*a,cus=N*cpa+fix,luc=rec-imp-cus,res=Math.max(0,luc)*(+o.res||0)/100,dist=luc-res,por=dist/soc;
+  const Lmeta=(+o.meta||0)*soc/(1-(+o.res||0)/100);
+  const precoPara=L=>N>0?((N*cpa+fix+L)/(1-a)-extra)/(N*(1-t)):null;
+  const mg=P*(1-t)*(1-a)-cpa,equil=mg>0?Math.ceil(Math.max(0,fix-extra*(1-a))/mg):null;
+  const apoioPara=L=>Math.max(0,(cus+L)/(1-a)-insc-extra);
+  return{a,N,P,extra,cpa,ctb,fix,insc,rec,imp,cus,luc,res,dist,por,soc,Lmeta,p0:precoPara(0),pM:precoPara(Lmeta),equil,apoio0:apoioPara(0),apoioM:apoioPara(Lmeta)};
+}
+function orcListHtml(){
+  const all=Object.entries(S.orcs||{}).map(([id,o])=>({id,...o}));
+  const g={};all.forEach(o=>{const k=(o.projeto||"").trim()||"Sem projeto";(g[k]=g[k]||[]).push(o)});
+  const keys=Object.keys(g).sort((a,b)=>a==="Sem projeto"?1:b==="Sem projeto"?-1:a.localeCompare(b));
+  let h=`<div class="toolbar"><div class="note" style="flex:1 1 280px">Monte o orçamento de cada evento antes de abrir inscrição: quantos inscritos, preço, custos por atleta e custos fixos. O imposto e o extra do contador já entram. Dê o mesmo nome de projeto às etapas de um circuito para ver o total.</div><button class="btn primary" data-orcnew="1">+ Novo orçamento</button></div>`;
+  if(!all.length)return h+`<div class="list"><div class="empty"><b>Nenhum orçamento ainda</b>Crie o primeiro em “+ Novo orçamento”. Ele já vem com os custos fixos da 2ª Corrida de Santo Aleixo como ponto de partida.</div></div>`;
+  for(const k of keys){const os=g[k].sort((a,b)=>(a.data||"").localeCompare(b.data||"")||(a.criado||0)-(b.criado||0));const cs=os.map(orcCalcData);
+    const T=cs.reduce((s,c)=>({rec:s.rec+c.rec,cus:s.cus+c.cus+c.imp,luc:s.luc+c.luc,ap0:s.ap0+c.apoio0,apM:s.apM+c.apoioM,N:s.N+c.N,ext:s.ext+c.extra}),{rec:0,cus:0,luc:0,ap0:0,apM:0,N:0,ext:0});
+    h+=`<section class="plsec"><div class="colhead"><h2>${esc(k)}</h2><span class="note num">${os.length} ${os.length===1?"etapa":"etapas"} · ${T.N.toLocaleString("pt-BR")} inscritos previstos</span></div>
+      ${os.length>1&&k!=="Sem projeto"?`<div class="kpis4"><div class="stat"><div class="eyebrow">Receita total</div><div class="v num">${brl0(T.rec)}</div><div class="d num">${brl0(T.ext)} de apoio e patrocínio</div></div><div class="stat"><div class="eyebrow">Custos + imposto</div><div class="v num">${brl0(T.cus)}</div></div><div class="stat ${T.luc<0?"alert":""}"><div class="eyebrow">Lucro do projeto</div><div class="v num">${brl0(T.luc)}</div></div><div class="stat"><div class="eyebrow">Apoio que ainda falta</div><div class="v num">${brl0(T.ap0)}</div><div class="d num">para empatar · ${brl0(T.apM)} para a meta</div></div></div>`:""}
+      <div class="evgrid">${os.map((o,i)=>{const c=cs[i];return `<button class="evcard" data-orc="${o.id}"><div><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><h3>${esc(o.nome||"Sem nome")}</h3><span class="pill ${c.luc<0?"s-atrasado":"s-emdia"}">${c.luc<0?"Prejuízo":"Lucro"}</span></div><div class="when">${o.data?fmtDY(o.data):"Sem data"}${o.local?" · "+esc(o.local):""}</div></div>
+        <div class="nums num"><div>Receita<b>${brl0(c.rec)}</b></div><div>Custos + imp.<b>${brl0(c.cus+c.imp)}</b></div><div>Lucro<b class="${c.luc<0?"neg":"pos"}">${brl0(c.luc)}</b></div></div>
+        <div class="note num">${c.N} inscritos × ${brl0(c.P)} · mínimo ${c.p0!==null?brl(c.p0):"—"} · ${brl(c.por)} por sócio</div></button>`}).join("")}</div></section>`}
+  return h;
+}
+function orcRows(key,arr){return (arr||[]).map((r,i)=>`<div class="orow"><input data-ok="${key}" data-oi="${i}" data-of="d" value="${esc(r.d)}" aria-label="Descrição"><input type="number" step="0.01" min="0" data-ok="${key}" data-oi="${i}" data-of="v" value="${r.v}" aria-label="Valor"><button class="btn sm ghost" data-orcdel="${key}:${i}" aria-label="Remover">×</button></div>`).join("")}
+function orcEditorHtml(){
+  const o=S.orcDraft;if(!o)return"";
+  const f=(k,l,type,step,extra)=>`<label class="field">${l}<input ${type?`type="${type}"`:""} ${step?`step="${step}"`:""} data-of="${k}" value="${esc(o[k]??"")}" ${extra||""}></label>`;
+  const evs=[...S.eventos].sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+  return `<button class="back" data-orcback="1">← Todos os orçamentos</button>
+  <div class="evhead"><div><h2>${esc(o.nome||"Orçamento")}</h2><div class="when">Salva sozinho enquanto você edita · <span id="orcSave">salvo</span></div></div>
+    <div class="toolbar" style="margin:0"><select id="orcFrom" aria-label="Puxar custos de um evento"><option value="">Puxar custos de um evento real…</option>${evs.map(e=>`<option value="${e.id}">${esc(e.nome)}</option>`).join("")}</select><button class="btn" data-orcdup="1">Duplicar</button><button class="btn danger" data-orcrm="1">Excluir</button></div></div>
+  <div class="cols2">
+    <div class="stack16">
+      <div class="panel"><div class="grid2">${f("nome","Nome")}${f("projeto","Projeto (ex.: Circuito 2027)",null,null,'list="orcProj"')}${f("data","Data","date")}${f("local","Local")}${f("inscritos","Inscritos esperados","number","1")}${f("preco","Preço da inscrição (R$)","number","1")}${f("taxa","Taxa do site que sai do valor (%)","number","0.5")}${f("socios","Sócios","number","1")}${f("res","Guardar no caixa (% do lucro)","number","5")}${f("meta","Meta por sócio (R$)","number","50")}</div>
+        <datalist id="orcProj">${[...new Set(Object.values(S.orcs||{}).map(x=>x.projeto).filter(Boolean))].map(p=>`<option value="${esc(p)}">`).join("")}</datalist></div>
+      <div class="panel"><div class="colhead"><h3>Receitas além das inscrições</h3><button class="btn sm" data-orcadd="receitas">+ Linha</button></div><div class="orows">${orcRows("receitas",o.receitas)}</div></div>
+      <div class="panel"><div class="colhead"><h3>Custo por atleta</h3><button class="btn sm" data-orcadd="atleta">+ Linha</button></div><div class="orows">${orcRows("atleta",o.atleta)}</div><div class="note">Multiplica pelo número de inscritos.</div></div>
+      <div class="panel"><div class="colhead"><h3>Custos fixos</h3><button class="btn sm" data-orcadd="fixos">+ Linha</button></div><div class="orows">${orcRows("fixos",o.fixos)}</div></div>
+    </div>
+    <div class="panel sticky"><h3>Resultado</h3><div class="plbar" id="oBar"></div><div id="oLines"></div><div class="plbig"><span>Para cada sócio</span><b class="num" id="oSoc">—</b></div><div id="oPrecos"></div></div>
+  </div>`;
+}
+function orcCalc(){
+  const o=S.orcDraft;if(!o||!$("oLines"))return;const c=orcCalcData(o);
+  const ln=(k,x,col,cls)=>`<div class="line ${cls||""}"><span class="k">${col?`<i class="dot" style="background:${col}"></i>`:""}${k}</span><b class="num ${x<0?"neg":""}">${brl(x)}</b></div>`;
+  const t=Math.max(1,c.imp+c.cus+Math.max(0,c.res)+Math.max(0,c.dist));
+  $("oBar").innerHTML=[[c.imp,"var(--f-imp)"],[c.cus,"var(--f-ger)"],[c.res,"var(--f-ev)"],[c.dist,"var(--f-ass)"]].map(([x,col])=>`<i style="width:${Math.max(0,x)/t*100}%;background:${col}"></i>`).join("");
+  $("oLines").innerHTML=ln(`Inscrições (${c.N} × ${brl(c.P)}${+o.taxa?` − ${pct(+o.taxa)}`:""})`,c.insc)+ln("Patrocínios e apoios",c.extra)+ln(`Imposto (${pct(c.a*100)})`,-c.imp,"var(--f-imp)")+ln(`Custo por atleta (${brl(c.cpa)} × ${c.N})`,-c.N*c.cpa,"var(--f-ger)")+ln(`Custos fixos${c.ctb?` + contador extra ${brl0(c.ctb)}`:""}`,-c.fix,"var(--f-ger)")+ln("Lucro do evento",c.luc,null,"total")+ln(`Guardar no caixa (${pct(+o.res||0)})`,-c.res,"var(--f-ev)")+ln(`Para dividir entre ${c.soc}`,c.dist,"var(--f-ass)");
+  $("oSoc").textContent=brl(c.por);$("oSoc").className="num "+(c.por<0?"neg":"");
+  $("oPrecos").innerHTML=`<div class="callout ${c.luc<0?"bad":"ok"}"><span>Inscrição mínima para empatar: <b>${c.p0!==null?brl(c.p0):"—"}</b></span><span>Inscrição para a meta de ${brl0(+o.meta||0)} por sócio: <b>${c.pM!==null?brl(c.pM):"—"}</b></span><span>${c.equil===null?"Nesse preço cada inscrito custa mais do que paga.":c.equil===0?"Os apoios já cobrem os custos fixos.":`Nesse preço, empata a partir de <b>${c.equil} inscritos</b>.`}</span>
+    <span>Apoio que ainda falta para empatar: <b>${brl(c.apoio0)}</b> · para a meta: <b>${brl(c.apoioM)}</b></span></div>`;
+}
+let orcTmr=null;
+function orcSave(){if(!S.orc||!S.orcDraft)return;const s=$("orcSave");if(s)s.textContent="salvando…";clearTimeout(orcTmr);
+  orcTmr=setTimeout(async()=>{const id=S.orc,d=JSON.parse(JSON.stringify(S.orcDraft));try{await setDoc(doc(fs,"caixa_config","orcamentos"),{lista:{[id]:d}},{merge:true});const s2=$("orcSave");if(s2)s2.textContent="salvo"}catch(e){console.error(e);toast("Não deu para salvar o orçamento.")}},600)}
+function orcOpen(id){S.orc=id;S.orcDraft=JSON.parse(JSON.stringify(S.orcs[id]||ORC_NOVO()));renderPlan();window.scrollTo(0,0)}
+function orcStructSave(){orcSave();const y=window.scrollY;renderPlan(true);window.scrollTo(0,y)}
+
+document.addEventListener("input",e=>{const t=e.target;if(!t.dataset)return;
+  if(t.dataset.pl){planSet(t.dataset.pl,t.value===""?null:+t.value);planCalc();return}
+  if(t.dataset.pcusto){const id=t.dataset.pcusto,val=t.value===""?null:+t.value;S.cen={...(S.cen||{}),custos:{...((S.cen&&S.cen.custos)||{}),[id]:val}};planCalc();
+    clearTimeout(t._tm);t._tm=setTimeout(()=>setDoc(doc(fs,"caixa_config","cenario"),{custos:{[id]:val}},{merge:true}).catch(()=>toast("Não deu para salvar o custo.")),700);return}
+  if(S.orcDraft&&t.dataset.of&&t.closest("#planBody")){const k=t.dataset.of,isNum=t.type==="number";
+    if(t.dataset.ok){const arr=S.orcDraft[t.dataset.ok];const r=arr&&arr[+t.dataset.oi];if(r)r[k]=k==="v"?(t.value===""?0:+t.value):t.value}
+    else S.orcDraft[k]=isNum?(t.value===""?0:+t.value):t.value;
+    orcCalc();orcSave()}
+});
+document.addEventListener("change",e=>{if(e.target.id!=="orcFrom"||!e.target.value||!S.orcDraft)return;const ev=S.eventos.find(x=>x.id===e.target.value);if(!ev)return;
+  const by={};S.lancs.filter(l=>l.eventoId===ev.id&&l.tipo==="saida"&&frenteOf(l)!=="retirada").forEach(l=>{const k=l.cat||"Outros";by[k]=(by[k]||0)+(+l.valor||0)});
+  const rec={};S.lancs.filter(l=>l.eventoId===ev.id&&l.tipo==="entrada"&&l.cat!=="Inscrições").forEach(l=>{const k=l.cat||"Outros";rec[k]=(rec[k]||0)+(+l.valor||0)});
+  S.orcDraft.fixos=Object.entries(by).sort((a,b)=>b[1]-a[1]).map(([d,v])=>({d,v:Math.round(v*100)/100}));
+  S.orcDraft.atleta=[];S.orcDraft.receitas=[...Object.entries(rec).map(([d,v])=>({d,v:Math.round(v*100)/100})),{d:"Apoio da Prefeitura",v:0}];
+  toast(`Custos da ${ev.nome} puxados como custos fixos. Separe o que é por atleta (camisa, medalha) se souber o número de inscritos.`);orcStructSave()});
+document.addEventListener("click",async e=>{const t=e.target.closest("button");if(!t||t.closest(".modal"))return;const d=t.dataset;
+  if(d.plan){S.plan=d.plan;S.orc=null;renderPlan()}
+  else if(d.planreset){if(!needDb())return;const custos=(S.cen&&S.cen.custos)||{};S.cen={v:{},custos};clearTimeout(planTmr);planPend={};
+    guard(()=>setDoc(doc(fs,"caixa_config","cenario"),{v:{},custos}),"Cenário voltou aos números reais",true);renderPlan()}
+  else if(d.usepreco){if(!needDb())return;const p=prodById(d.usepreco);if(!p)return;if(!t.dataset.armed){t.dataset.armed=1;t.textContent=`Confirmar ${brl0(+d.v)}`;return}
+    guard(()=>updateDoc(doc(fs,"produtos",p.id),{preco:+d.v}),`${p.nome} agora custa ${brl0(+d.v)} na loja`,true)}
+  else if(d.orcnew){if(!needDb())return;const id="orc"+Date.now().toString(36);S.orcs={...S.orcs,[id]:ORC_NOVO()};orcOpen(id);orcSave()}
+  else if(d.orc)orcOpen(d.orc);
+  else if(d.orcback!==undefined){S.orc=null;S.orcDraft=null;renderPlan()}
+  else if(d.orcadd){S.orcDraft[d.orcadd]=[...(S.orcDraft[d.orcadd]||[]),{d:"",v:0}];orcStructSave();const ins=document.querySelectorAll(`[data-ok="${d.orcadd}"][data-of="d"]`);ins.length&&ins[ins.length-1].focus()}
+  else if(d.orcdel){const[k,i]=d.orcdel.split(":");S.orcDraft[k].splice(+i,1);orcStructSave()}
+  else if(d.orcdup){if(!needDb())return;const id="orc"+Date.now().toString(36);const c={...JSON.parse(JSON.stringify(S.orcDraft)),nome:(S.orcDraft.nome||"Orçamento")+" (cópia)",criado:Date.now()};
+    S.orcs={...S.orcs,[id]:c};guard(()=>setDoc(doc(fs,"caixa_config","orcamentos"),{lista:{[id]:c}},{merge:true}),"Orçamento duplicado",true);orcOpen(id)}
+  else if(d.orcrm){if(!needDb())return;if(!t.dataset.armed){t.dataset.armed=1;t.textContent="Confirmar exclusão";return}
+    const id=S.orc;clearTimeout(orcTmr);S.orc=null;S.orcDraft=null;const o={...S.orcs};delete o[id];S.orcs=o;
+    guard(()=>updateDoc(doc(fs,"caixa_config","orcamentos"),{["lista."+id]:deleteField()}),"Orçamento excluído",true);renderPlan()}
+});
+
 /* ---------- conexão com o Firebase do app ---------- */
 const firebaseConfig={apiKey:"AIzaSyCumaJKVTwag1FhGoOKFvgm5eLh6PlIi_A",authDomain:"passos-verdes-app.firebaseapp.com",projectId:"passos-verdes-app",storageBucket:"passos-verdes-app.firebasestorage.app",messagingSenderId:"237395782308",appId:"1:237395782308:web:74d48a7edf0e378bf4d431"};
 const fbApp=initializeApp(firebaseConfig),fs=getFirestore(fbApp),auth=getAuth(fbApp);
@@ -1249,6 +1482,8 @@ onAuthStateChanged(auth,async u=>{
   col("eventos",s=>{S.eventos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.e=true;render()});
   unsubs.push(DBA.doc("config/banco").onSnapshot(s=>{S.banco=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/fiscal").onSnapshot(s=>{S.fiscal=s.exists?s.data():null;render()},fail));
+  unsubs.push(DBA.doc("config/cenario").onSnapshot(s=>{if(!Object.keys(planPend).length)S.cen=s.exists?s.data():null;render()},fail));
+  unsubs.push(DBA.doc("config/orcamentos").onSnapshot(s=>{S.orcs=(s.exists&&s.data().lista)||{};render()},fail));
   unsubs.push(onSnapshot(collection(fs,"produtos"),s=>{S.produtos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.prod=true;render()},fail));
   unsubs.push(onSnapshot(collection(fs,"pedidos"),s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.ped=true;render()},fail));
 });
