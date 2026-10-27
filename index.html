@@ -473,6 +473,18 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .medal.can{cursor:pointer;position:relative}
 .medal.can::after{content:"";position:absolute;top:2px;right:calc(50% - 34px);width:20px;height:20px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1200' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M8 8l4-4 4 4'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 3px var(--bg)}
 .btn.story svg{width:18px;height:18px}
+.stsheet{z-index:60;justify-content:flex-start}
+.strava-btn{background:#FC5200;border-color:#FC5200;color:#fff;font-weight:700}
+.strava-link{color:#FC5200!important;font-weight:700}
+.nothumb.stv-ok{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#FC5200;font-weight:700;text-align:center}
+.nothumb.stv-ok b{font-size:26px}
+.stv-item{appearance:none;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink)}
+.stv-item:disabled{opacity:.55;cursor:default}
+.stv-item .km{font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:30px;min-width:84px}
+.stv-item .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.stv-item .t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stv-item .go{color:var(--green);font-weight:700;font-size:13px;white-space:nowrap}
+.pw-strava{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#FC5200;font-weight:800;text-align:center}
 </style>
 </head>
 <body>
@@ -493,6 +505,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <div class="overlay" id="crop" hidden role="dialog" aria-label="Ajustar foto de perfil"></div>
 <div class="gameov" id="game" hidden role="dialog" aria-label="Jogo Corre, Verde!"></div>
 <div class="overlay shsheet" id="shsheet" hidden role="dialog" aria-label="Postar no story"></div>
+<div class="overlay stsheet" id="stsheet" hidden role="dialog" aria-label="Importar do Strava"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -691,6 +704,8 @@ function desafioCard(d,ativo){
   const stl={aprovado:['ok','Aprovado'],pendente:['wait','Aguardando'],recusado:['no','Recusado']};
   const form=ativo&&S.uid?`<form class="stack" data-form="km" data-id="${esc(d.id)}" style="border-top:1px solid var(--line);padding-top:12px">
     <p class="eyebrow" style="margin:0">Lançar corrida</p>
+    <button type="button" class="btn strava-btn" data-action="strava" data-id="${esc(d.id)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M10 2 4 14h4l2-4 2 4h4z"/><path d="m15 14-2 4-2-4H9l4 8 4-8z" opacity=".65"/></svg>Importar do Strava</button>
+    <p class="small muted" style="margin:-4px 0 0;text-align:center">ou lance à mão com o print</p>
     <div class="grid2"><label for="km-${esc(d.id)}">Km corridos<input type="text" id="km-${esc(d.id)}" maxlength="6" inputmode="decimal" pattern="[0-9]+([,.][0-9]{1,2})?" title="Use número, ex.: 5,2" placeholder="Ex.: 5,2" required></label>
     <label for="lk-${esc(d.id)}">Link no Strava (opcional)<input type="url" id="lk-${esc(d.id)}" placeholder="https://strava.app.link/…"></label></div>
     ${photoField(fid,'Print da corrida (obrigatório)')}
@@ -998,7 +1013,7 @@ function vConfig(){
   <section class="section"><h2 class="sec">Aparência</h2><div class="seg" role="group" aria-label="Aparência do app">${[['dark','Escuro'],['light','Claro'],['auto','Automático']].map(([k,l])=>`<button data-action="theme" data-v="${k}" aria-pressed="${th===k}">${l}</button>`).join('')}</div><p class="muted small" style="margin:0">Automático segue o modo do seu celular.</p></section>`;
   if(S.uid)h+=`<section class="section"><h2 class="sec">Notificações</h2><div class="card"><div class="row" style="justify-content:space-between"><b>Avisos no celular</b><span class="st ${c}">${t}</span></div>${p?`<p class="small muted" style="margin:0">${p}</p>`:''}
     ${S.push==='default'||S.push==='error'?`<div><button class="btn primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button></div>`:''}</div></section>
-  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button><button class="linkrow" data-action="logout">Sair da conta${CHEV}</button><button class="linkrow" data-action="apagar-conta" style="color:var(--danger)">${S.armed==='apagar'?'Toque de novo para apagar sua conta':'Apagar minha conta'}</button></div>
+  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button>${me().stravaConectado?`<button class="linkrow" data-action="strava-off">${S.armed==='stoff'?'Toque de novo para desconectar o Strava':'Desconectar Strava'}${CHEV}</button>`:''}<button class="linkrow" data-action="logout">Sair da conta${CHEV}</button><button class="linkrow" data-action="apagar-conta" style="color:var(--danger)">${S.armed==='apagar'?'Toque de novo para apagar sua conta':'Apagar minha conta'}</button></div>
     ${auth.currentUser&&auth.currentUser.email?`<p class="muted small" style="margin:0">Conectado como ${esc(auth.currentUser.email)}</p>`:''}</section>`;
   else h+=visitante();
   if(S.uid)h+=`<section class="section"><h2 class="sec">Encontrou um problema?</h2><form class="card" data-form="reporte">
@@ -1023,6 +1038,7 @@ function vPrivacidade(){
   <li><b>Localização (opcional):</b> se você tocar em "Usar minha localização", ela é usada só no seu celular para buscar a previsão do tempo. Não é guardada nem enviada para a equipe.</li>
   <li><b>Avisos:</b> se você ativar as notificações, guardamos um código do seu aparelho para enviar os avisos.</li>
   <li><b>Uso do app:</b> o dia do seu último acesso e estatísticas anônimas de visitas, para entender como o app está sendo usado.</li>
+  <li><b>Strava (opcional):</b> se você conectar, o app lê só as suas corridas do período do desafio quando você toca em Importar. Só a corrida que você escolher vira lançamento (distância, data, tempo e link). A chave de acesso fica guardada no servidor e some quando você desconecta em Configurações.</li>
   <li><b>Problemas reportados:</b> o texto e o print que você enviar.</li></ul>
   <h2>Para que usamos</h2>
   <p>Para fazer o app funcionar: mostrar seu perfil, rankings e presenças, enviar avisos de treinos e eventos, conferir desafios, organizar pedidos e melhorar o app. Não vendemos seus dados e não usamos para publicidade de terceiros.</p>
@@ -1246,10 +1262,11 @@ function vAdmin(){
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
   ${statsHtml()}
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
-  ${pend.length?pend.map(l=>{const pv=S.provas[l.id];return `<div class="check">${pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
+  ${pend.length?pend.map(l=>{const pv=S.provas[l.id];const sv=l.origem==='strava';return `<div class="check">${sv?`<div class="nothumb stv-ok"><b>✓</b>Dados do Strava</div>`:pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
     <div class="stack" style="gap:6px"><b>${esc(nomeL(l))}</b><span class="num"><b>${kmf(l.km)} km</b> · ${esc(dtit(l.desafio))}</span>
     <span class="muted small">Enviado em ${l.criado?new Date(l.criado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
-    ${l.link?`<a class="small" href="${esc(l.link)}" target="_blank" rel="noopener">Abrir no Strava</a>`:''}
+    ${sv?`<span class="small"><span class="st ok">Importado do Strava</span> no período do desafio${l.manual?' · <b style="color:var(--danger)">lançada à mão no Strava</b>':''}</span>`:''}
+    ${l.link?`<a class="small strava-link" href="${esc(l.link)}" target="_blank" rel="noopener">Ver no Strava</a>`:''}
     <div class="row"><button class="btn small primary" data-action="aprovar" data-id="${esc(l.id)}">Aprovar</button><button class="btn small danger ${S.armed==='rc'+l.id?'armed':''}" data-action="recusar" data-id="${esc(l.id)}">${S.armed==='rc'+l.id?'Confirmar':'Recusar'}</button></div></div></div>`}).join('')
   :`<p class="muted small" style="margin:0">Nada para conferir agora.</p>`}</div></section>
 
@@ -2126,6 +2143,54 @@ document.addEventListener('click',e=>{
 },true);
 
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[role=button][data-action]')){e.preventDefault();e.target.click()}});
+
+/* ---------- Importar do Strava ---------- */
+const STV={did:null,lista:null,busy:false,erro:''};
+async function stvApi(acao,body){
+  const tok=await auth.currentUser.getIdToken();
+  const r=await fetch('/api/strava?acao='+acao,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body||{})});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.erro||('Erro '+r.status)),{conectar:!!j.conectar,status:r.status});return j;
+}
+function stvRender(){
+  const el=$('#stsheet');if(!STV.did){el.hidden=true;el.innerHTML='';return}
+  const d=S.desafios.find(x=>x.id===STV.did)||{};const con=!!me().stravaConectado;
+  let body;
+  if(!con||STV.erro==='conectar')body=`<div class="card" style="gap:12px"><p style="margin:0">Conecte sua conta do Strava uma vez. Depois é só escolher a corrida e ela vai direto para a conferência, sem print.</p>
+    <ul class="small muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px"><li>O app só lê as suas corridas quando você toca em Importar.</li><li>Ninguém da galera vê seus dados do Strava. Só o lançamento que você escolher.</li><li>Dá para desconectar quando quiser em Configurações.</li></ul>
+    <button class="btn strava-btn" data-action="strava-con" ${STV.busy?'disabled':''}>${STV.busy?'Abrindo o Strava…':'Conectar com o Strava'}</button></div>`;
+  else if(STV.lista===null)body=`<div class="skel" role="status" aria-label="Buscando suas corridas"><i></i><i></i><i></i></div>`;
+  else if(STV.erro)body=`<div class="notice">${esc(STV.erro)}</div><button class="btn" data-action="strava-reload">Tentar de novo</button>`;
+  else if(!STV.lista.length)body=`<div class="empty">Nenhuma corrida no Strava no período do desafio${d.inicio?` (${esc(fmtShort(d.inicio))}${d.fim?' a '+esc(fmtShort(d.fim)):''})`:''}.</div>`;
+  else body=`<div class="stack" style="gap:8px">${STV.lista.map(c=>`<button class="stv-item" data-action="strava-pick" data-a="${esc(c.id)}" ${c.enviado||STV.busy?'disabled':''}><span class="km num">${kmf(c.km)}<small style="font-size:14px"> km</small></span><span class="t"><b>${esc(c.nome)}</b><span class="small muted">${esc(fmtShort(c.data))} · ${esc(c.tempo)}${c.ritmo?' · '+esc(c.ritmo)+'/km':''}${c.manual?' · lançada à mão':''}</span></span><span class="go">${c.enviado?'Já enviada':(STV.busy===c.id?'Enviando…':'Enviar')}</span></button>`).join('')}</div>
+    <p class="small muted" style="margin:0">A corrida vai para a conferência da organização e, aprovada, entra no ranking.</p>`;
+  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">${esc(d.titulo||'Desafio')}</p><h2 class="sec">Importar do Strava</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="strava-x" aria-label="Fechar">×</button></div>${body}<p class="pw-strava">Compatível com Strava</p></div>`;
+  el.hidden=false;
+}
+async function stvCarregar(){
+  STV.lista=null;STV.erro='';stvRender();
+  try{const j=await stvApi('lista',{desafio:STV.did});STV.lista=j.corridas||[]}
+  catch(e){if(e.conectar){STV.erro='conectar';STV.lista=[]}else{STV.erro=e.message||'Não deu para buscar suas corridas.';STV.lista=[]}}
+  stvRender();
+}
+function stvAbrir(did){if(!S.uid){toast('Entre com sua conta para importar.');return}STV.did=did;STV.busy=false;if(me().stravaConectado)stvCarregar();else{STV.erro='';stvRender()}}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
+  if(!a.startsWith('strava'))return;e.stopImmediatePropagation();
+  if(a==='strava')stvAbrir(b.dataset.id);
+  else if(a==='strava-x'){STV.did=null;stvRender()}
+  else if(a==='strava-reload')stvCarregar();
+  else if(a==='strava-con'){STV.busy=true;stvRender();
+    try{const j=await stvApi('link');try{sessionStorage.setItem('pv-stv-did',STV.did)}catch(err){}location.href=j.url}
+    catch(err){STV.busy=false;stvRender();toast(err.message||'Não deu para abrir o Strava.')}}
+  else if(a==='strava-pick'){const id=b.dataset.a;STV.busy=id;stvRender();
+    try{const j=await stvApi('importar',{desafio:STV.did,id});toast(`${kmf(j.km)} km enviados para conferência.`);STV.did=null;STV.busy=false;stvRender()}
+    catch(err){STV.busy=false;if(err.conectar){STV.erro='conectar'}stvRender();toast(err.message||'Não deu para enviar.')}}
+  else if(a==='strava-off'){if(S.armed!=='stoff'){arm('stoff');return}S.armed=null;
+    try{await stvApi('desconectar');toast('Strava desconectado.')}catch(err){toast('Não deu para desconectar agora.')}}
+},true);
+// voltando da autorização: reabre a lista do desafio
+function stvRetomar(){let did=null;try{did=sessionStorage.getItem('pv-stv-did');sessionStorage.removeItem('pv-stv-did')}catch(e){}if(did&&S.uid&&me().stravaConectado){go('desafios');stvAbrir(did)}}
+
 async function login(){
   const p=new GoogleAuthProvider();
   try{await signInWithPopup(auth,p)}
@@ -2149,7 +2214,7 @@ onAuthStateChanged(auth,async u=>{
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
       if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
       if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
-      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first){marcarVisto();migrarFoto()}schedule()},()=>{});
+      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first){marcarVisto();migrarFoto();setTimeout(stvRetomar,300)}schedule()},()=>{});
     unsubJ=onSnapshot(query(collection(fs,'jogo',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placar=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubJ2=onSnapshot(query(collection(fs,'jogo',semanaKey(-1),'placar'),orderBy('pontos','desc'),limit(1)),s=>{S.campeao=s.docs[0]?s.docs[0].data():null;schedule()},()=>{});
     unsubK=DB.collection('campeoes').onSnapshot(s=>{S.campeoes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
