@@ -484,6 +484,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .stv-item .t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .stv-item .t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .stv-item .go{color:var(--green);font-weight:700;font-size:13px;white-space:nowrap}
+.stv-card{gap:12px}
+.stv-card .strava-btn{align-self:flex-start}
 .pw-strava{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#FC5200;font-weight:800;text-align:center}
 </style>
 </head>
@@ -984,6 +986,8 @@ function vPerfil(){
     <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
   <section class="section"><h2 class="sec">Suas conquistas</h2>${medalhasHtml(S.uid,true)}</section>
+  <section class="section"><h2 class="sec">Strava</h2><div class="card stv-card">${m.stravaConectado?`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><b>Strava conectado ✓</b><div class="small muted">Importe suas corridas direto em Desafios.</div></div><button class="btn small ${S.armed==='stoff'?'danger armed':''}" data-action="strava-off">${S.armed==='stoff'?'Confirmar':'Desconectar'}</button></div>`
+    :`<p style="margin:0">Conecte seu Strava para lançar corridas nos desafios sem print: é só escolher a corrida e enviar.</p><button class="btn strava-btn" data-action="strava-con-perfil" ${STV.busy?'disabled':''}>${STV.busy?'Abrindo o Strava…':'Conectar com o Strava'}</button><span class="small muted">Só você vê seus dados do Strava. Dá para desconectar quando quiser.</span>`}<p class="pw-strava" style="margin:0">Compatível com Strava</p></div></section>
   <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
     ${photoField('pf-f','Sua foto',fotoDe(S.uid),true)}
     <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
@@ -2180,6 +2184,9 @@ document.addEventListener('click',async e=>{
   if(a==='strava')stvAbrir(b.dataset.id);
   else if(a==='strava-x'){STV.did=null;stvRender()}
   else if(a==='strava-reload')stvCarregar();
+  else if(a==='strava-con-perfil'){STV.busy=true;render();
+    try{const j=await stvApi('link');try{sessionStorage.setItem('pv-stv-volta','perfil')}catch(err){}location.href=j.url}
+    catch(err){STV.busy=false;render();toast(err.message||'Não deu para abrir o Strava.')}}
   else if(a==='strava-con'){STV.busy=true;stvRender();
     try{const j=await stvApi('link');try{sessionStorage.setItem('pv-stv-did',STV.did)}catch(err){}location.href=j.url}
     catch(err){STV.busy=false;stvRender();toast(err.message||'Não deu para abrir o Strava.')}}
@@ -2190,7 +2197,7 @@ document.addEventListener('click',async e=>{
     try{await stvApi('desconectar');toast('Strava desconectado.')}catch(err){toast('Não deu para desconectar agora.')}}
 },true);
 // voltando da autorização: reabre a lista do desafio
-function stvRetomar(){let did=null;try{did=sessionStorage.getItem('pv-stv-did');sessionStorage.removeItem('pv-stv-did')}catch(e){}if(did&&S.uid&&me().stravaConectado){go('desafios');stvAbrir(did)}}
+function stvRetomar(){let did=null,volta=null;try{did=sessionStorage.getItem('pv-stv-did');volta=sessionStorage.getItem('pv-stv-volta');sessionStorage.removeItem('pv-stv-did');sessionStorage.removeItem('pv-stv-volta')}catch(e){}if(!S.uid||!me().stravaConectado)return;if(did){go('desafios');stvAbrir(did)}else if(volta==='perfil'){go('perfil');toast('Strava conectado! Agora é só importar suas corridas em Desafios.')}}
 
 async function login(){
   const p=new GoogleAuthProvider();
