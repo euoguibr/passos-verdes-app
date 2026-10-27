@@ -2160,6 +2160,7 @@ function stvRender(){
     <button class="btn strava-btn" data-action="strava-con" ${STV.busy?'disabled':''}>${STV.busy?'Abrindo o Strava…':'Conectar com o Strava'}</button></div>`;
   else if(STV.lista===null)body=`<div class="skel" role="status" aria-label="Buscando suas corridas"><i></i><i></i><i></i></div>`;
   else if(STV.erro)body=`<div class="notice">${esc(STV.erro)}</div><button class="btn" data-action="strava-reload">Tentar de novo</button>`;
+  else if(!STV.lista.length&&STV.aviso)body=`<div class="card"><p style="margin:0"><b>Strava conectado ✓</b></p><p class="small muted" style="margin:0">${esc(STV.aviso)}</p></div>`;
   else if(!STV.lista.length)body=`<div class="empty">Nenhuma corrida no Strava no período do desafio${d.inicio?` (${esc(fmtShort(d.inicio))}${d.fim?' a '+esc(fmtShort(d.fim)):''})`:''}.</div>`;
   else body=`<div class="stack" style="gap:8px">${STV.lista.map(c=>`<button class="stv-item" data-action="strava-pick" data-a="${esc(c.id)}" ${c.enviado||STV.busy?'disabled':''}><span class="km num">${kmf(c.km)}<small style="font-size:14px"> km</small></span><span class="t"><b>${esc(c.nome)}</b><span class="small muted">${esc(fmtShort(c.data))} · ${esc(c.tempo)}${c.ritmo?' · '+esc(c.ritmo)+'/km':''}${c.manual?' · lançada à mão':''}</span></span><span class="go">${c.enviado?'Já enviada':(STV.busy===c.id?'Enviando…':'Enviar')}</span></button>`).join('')}</div>
     <p class="small muted" style="margin:0">A corrida vai para a conferência da organização e, aprovada, entra no ranking.</p>`;
@@ -2168,7 +2169,7 @@ function stvRender(){
 }
 async function stvCarregar(){
   STV.lista=null;STV.erro='';stvRender();
-  try{const j=await stvApi('lista',{desafio:STV.did});STV.lista=j.corridas||[]}
+  try{const j=await stvApi('lista',{desafio:STV.did});STV.lista=j.corridas||[];STV.aviso=j.aviso||''}
   catch(e){if(e.conectar){STV.erro='conectar';STV.lista=[]}else{STV.erro=e.message||'Não deu para buscar suas corridas.';STV.lista=[]}}
   stvRender();
 }

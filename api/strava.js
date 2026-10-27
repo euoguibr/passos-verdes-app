@@ -86,7 +86,11 @@ async function stravaGet(db, uid, path) {
     throw Object.assign(new Error('O acesso ao Strava foi removido. Conecte de novo.'), { status: 409, conectar: true });
   }
   if (r.status === 429) throw Object.assign(new Error('O Strava está recebendo muitos pedidos agora. Tente em alguns minutos.'), { status: 429 });
-  if (!r.ok) throw Object.assign(new Error('Não deu para falar com o Strava agora.'), { status: 502 });
+  if (!r.ok) {
+    const txt = await r.text().catch(() => '');
+    console.error('strava api', r.status, path.split('?')[0], txt.slice(0, 300));
+    throw Object.assign(new Error(`O Strava respondeu com erro ${r.status}. Tente de novo em instantes.`), { status: 502, detalhe: txt.slice(0, 300) });
+  }
   return r.json();
 }
 
@@ -94,7 +98,7 @@ async function stravaGet(db, uid, path) {
 function periodo(d) {
   const ini = d.inicio ? Date.parse(d.inicio + 'T00:00:00-03:00') : Date.now() - 30 * 864e5;
   const fim = d.fim ? Date.parse(d.fim + 'T23:59:59-03:00') : Date.now();
-  return { depois: Math.floor(Math.max(ini, Date.now() - 120 * 864e5) / 1000), antes: Math.floor(fim / 1000) };
+  return { depois: Math.floor(Math.max(ini, Date.now() - 120 * 864e5) / 1000), antes: Math.floor(Math.min(fim, Date.now() + 60000) / 1000), inicio: d.inicio || '' };
 }
 function tempo(s) { s = Math.round(s || 0); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(x).padStart(2, '0'); }
 function resumo(at) {
@@ -171,6 +175,10 @@ module.exports = async (req, res) => {
     const p = periodo(des);
 
     if (acao === 'lista') {
+      if (p.depois >= p.antes) {
+        const [y, m, dd] = String(p.inicio).split('-');
+        return res.status(200).json({ corridas: [], aviso: p.inicio ? `O desafio começa em ${dd}/${m}. A partir desse dia, suas corridas aparecem aqui.` : 'O desafio ainda não começou.' });
+      }
       const lista = await stravaGet(db, u.uid, `/athlete/activities?after=${p.depois}&before=${p.antes}&per_page=50`);
       const ja = new Set();
       (await db.collection('lancamentos').where('uid', '==', u.uid).get()).forEach(d => { if (d.id.startsWith('strava-')) ja.add(d.id.slice(7)); });
