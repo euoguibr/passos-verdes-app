@@ -407,7 +407,7 @@ function frenteOf(l){
 }
 const real=l=>!l.previsto;
 /* impostos e contador: alíquotas e honorários ficam em config/fiscal (editáveis no Painel) */
-const FISC_DEF={aliq:{assessoria:6,eventos:6,produtos:4},contador:{comEvento:480,semEvento:280,inicio:"2026-11"}};
+const FISC_DEF={aliq:{assessoria:6,eventos:6,produtos:4},contador:{comEvento:480,semEvento:280,inicio:"2026-10"}};
 const fisc=()=>{const f=S.fiscal||{};return{aliq:{...FISC_DEF.aliq,...(f.aliq||{})},contador:{...FISC_DEF.contador,...(f.contador||{})}}};
 const PROV_CATS=["Impostos (DAS)","Contador (mensalidade)"];
 const isProv=l=>PROV_CATS.includes(l.cat);
