@@ -77,7 +77,8 @@ service cloud.firestore {
 
     // Pedidos da loja: o corredor cria o próprio; só a organização vê a lista e atualiza.
     match /pedidos/{id} {
-      allow create: if eu(request.resource.data.uid) && request.resource.data.status == 'novo';
+      allow create: if eu(request.resource.data.uid) && request.resource.data.status == 'novo'
+        && request.resource.data.keys().hasOnly(['uid','nome','produtoId','produto','tamanho','cor','qtd','total','status','criado','canal','pix']);
       allow read: if organizador() || eu(resource.data.uid);
       allow update, delete: if organizador();
     }
@@ -130,6 +131,13 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly(['uid','nome','texto','foto','status','app','criado']);
       allow read, update, delete: if organizador();
     }
+    // Gestão financeira (caixa, mensalidades, eventos): só a organização vê e mexe.
+    match /caixa_alunos/{id}      { allow read, write: if organizador(); }
+    match /caixa_pagamentos/{id}  { allow read, write: if organizador(); }
+    match /caixa_lancamentos/{id} { allow read, write: if organizador(); }
+    match /caixa_eventos/{id}     { allow read, write: if organizador(); }
+    match /caixa_config/{id}      { allow read, write: if organizador(); }
+
     match /admins/{email} {
       allow read: if logado() && request.auth.token.email.lower() == email;
       allow write: if false;
