@@ -1308,11 +1308,15 @@ function renderPlan(force){
   <section class="plsec"><h2>Eventos de 2026 com o imposto</h2><div class="panel"><div class="tblw"><table class="pltbl"><thead><tr><th>Evento</th><th>Receita</th><th>Custos</th><th>Imposto</th><th>Lucro real</th><th>Retirado</th><th></th></tr></thead><tbody>
     ${[...S.eventos].sort((a,b)=>(a.data||"").localeCompare(b.data||"")).map(e=>{const c=eventCalc(e),d=c.rep-c.luc;return `<tr><td>${esc(e.nome)}</td><td>${brl0(c.rec)}</td><td>${brl0(c.cus)}</td><td class="neg">${brl0(c.imp)}</td><td><b>${brl0(c.luc)}</b></td><td>${brl0(c.rep)}</td><td>${c.rep?`<span class="pill ${d>0.5?"s-atrasado":"s-emdia"}">${d>0.5?brl0(d)+" a mais":"ok"}</span>`:""}</td></tr>`}).join("")||`<tr><td colspan="7">Nenhum evento cadastrado.</td></tr>`}
   </tbody></table></div><div class="note">Para planejar o próximo, use <b>Orçamentos de eventos</b>.</div></div></section>
-  <section class="plsec"><h2>Produtos da loja</h2><div class="panel">
+  <section class="plsec"><h2>Produtos: quanto cobrar</h2><div class="panel">
+    <div class="note" style="margin-bottom:10px">Preencha o <b>custo de cada peça</b> (o que pagamos ao fornecedor). A conta tira o imposto de ${pct(+fisc().aliq.produtos||0)} sobre cada venda. <b>Mínimo</b> = preço que só paga a peça e o imposto, sem lucro. <b>Sugerido</b> = preço com a margem abaixo, arredondado para cima de 5 em 5.</div>
     <div class="grid2" style="max-width:460px"><label class="field">Imposto sobre venda (%)<input type="number" value="${+fisc().aliq.produtos||0}" disabled><small>Muda em Impostos e contador</small></label>${fld("p_margem",5,"Quanto do preço vira lucro")}</div>
-    <div class="tblw"><table class="pltbl"><thead><tr><th>Produto</th><th>Custo</th><th>Preço na loja</th><th>Sobra hoje</th><th>Preço mínimo</th><th>Sugerido</th><th></th></tr></thead><tbody id="plProd">
-    ${prods.map(p=>`<tr data-prow="${p.id}"><td>${esc(p.nome)}</td><td><input type="number" step="0.5" min="0" data-pcusto="${p.id}" value="${(S.cen&&S.cen.custos&&S.cen.custos[p.id])||""}" placeholder="custo"></td><td>${brl(+p.preco||0)}</td><td class="pc-sobra">—</td><td class="pc-min">—</td><td class="pc-sug">—</td><td class="pc-act"></td></tr>`).join("")||`<tr><td colspan="7">Cadastre produtos na loja do app.</td></tr>`}
-    </tbody></table></div><div class="note">O custo fica só aqui na Gestão; a galera do app não vê. "Usar na loja" troca o preço do produto no app.</div></div></section>
+    <div class="tblw"><table class="pltbl"><thead><tr><th>Produto</th><th>Custo da peça</th><th>Preço cobrado</th><th>Imposto</th><th>Lucro por peça</th><th>Mínimo</th><th>Sugerido</th><th></th></tr></thead><tbody id="plProd">
+    ${prods.map(p=>`<tr data-prow="${p.id}"><td>${esc(p.nome)}<br><small class="note">no app</small></td><td><input type="number" step="0.5" min="0" data-pcusto="${p.id}" value="${(S.cen&&S.cen.custos&&S.cen.custos[p.id])||""}" placeholder="custo"></td><td>${brl(+p.preco||0)}</td><td class="pc-imp">—</td><td class="pc-sobra">—</td><td class="pc-min">—</td><td class="pc-sug">—</td><td class="pc-act"></td></tr>`).join("")}
+    ${Object.entries((S.cen&&S.cen.extras)||{}).sort((a,b)=>(a[1].criado||0)-(b[1].criado||0)).map(([id,x])=>`<tr data-xrow="${id}"><td><input type="text" data-xid="${id}" data-xf="nome" value="${esc(x.nome||"")}" placeholder="nome do produto" style="width:150px;text-align:left"><br><small class="note">fora do app</small></td><td><input type="number" step="0.5" min="0" data-xid="${id}" data-xf="custo" value="${x.custo??""}" placeholder="custo"></td><td><input type="number" step="1" min="0" data-xid="${id}" data-xf="preco" value="${x.preco??""}" placeholder="preço"></td><td class="pc-imp">—</td><td class="pc-sobra">—</td><td class="pc-min">—</td><td class="pc-sug">—</td><td><button class="btn sm ghost" data-xrm="${id}" title="Remover">✕</button></td></tr>`).join("")}
+    </tbody></table></div>
+    <div class="toolbar" style="margin:10px 0 0"><button class="btn" data-xadd="1">+ Produto que não está no app</button></div>
+    <div class="note">Use as linhas "fora do app" para regata, boné, camisa de evento ou qualquer peça que ainda vai vender: coloque o custo e o preço que pensa em cobrar. Os custos ficam só aqui na Gestão; a galera do app não vê. "Usar na loja" troca o preço do produto no app.</div></div></section>
   <section class="plsec"><h2>Caixa da empresa</h2><div class="cols2">
     <div class="panel"><div class="grid2">${fld("c_saldo",0.01,"Saldo estimado agora")}${fld("c_das",1,"Estimativa: imposto de todos os meses anteriores menos o DAS já lançado")}${fld("c_mes",0.01,"Imposto e contador deste mês")}${fld("c_meses",1)}${fld("c_giro",500,"Medalhas e camisas antes das inscrições")}${fld("c_ev",1)}</div></div>
     <div class="panel"><div id="plC"></div><div id="plCMsg"></div></div></div></section>`;
@@ -1332,11 +1336,15 @@ function planCalc(){
   $("plAMeta").innerHTML=`Para cada sócio tirar <b>${brl0(M)}</b>, a assessoria precisa faturar <b>${brl0(need)}</b>: mensalidade de <b>${brl(mensN)}</b> com ${v("a_alunos")} alunos, ou <b>${aluN} alunos</b> pagando ${brl0(v("a_mens"))}.`;
   // produtos
   const pa=(+fisc().aliq.produtos||0)/100,pm=v("p_margem")/100;
-  document.querySelectorAll("[data-prow]").forEach(tr=>{const p=prodById(tr.dataset.prow);if(!p)return;const c=+(tr.querySelector("[data-pcusto]").value)||0,pr=+p.preco||0;
-    const q=s=>tr.querySelector(s);if(!c){q(".pc-sobra").innerHTML=`<span class="pill s-vence">preencha o custo</span>`;q(".pc-min").textContent="—";q(".pc-sug").textContent="—";q(".pc-act").innerHTML="";return}
-    const sob=pr*(1-pa)-c,min=c/(1-pa),sug=pm<1-pa?up5(c/(1-pa-pm)):null;
-    q(".pc-sobra").innerHTML=`<span class="${sob<0?"neg":"pos"}">${brl(sob)}</span>`;q(".pc-min").textContent=brl(min);q(".pc-sug").innerHTML=sug?`<b>${brl0(sug)}</b>`:"—";
-    q(".pc-act").innerHTML=sug&&Math.abs(sug-pr)>0.009?`<button class="btn sm" data-usepreco="${p.id}" data-v="${sug}">Usar na loja</button>`:"";});
+  const prodRow=(tr,c,pr,pid)=>{const q=s=>tr.querySelector(s);
+    if(!c){q(".pc-imp").textContent="—";q(".pc-sobra").innerHTML=`<span class="pill s-vence">preencha o custo</span>`;q(".pc-min").textContent="—";q(".pc-sug").textContent="—";if(pid)q(".pc-act").innerHTML="";return}
+    const min=c/(1-pa),sug=pm<1-pa?up5(c/(1-pa-pm)):null;
+    if(pr){const sob=pr*(1-pa)-c;q(".pc-imp").innerHTML=`<span class="neg">${brl(pr*pa)}</span>`;q(".pc-sobra").innerHTML=`<span class="${sob<0?"neg":"pos"}">${brl(sob)}</span><br><small class="note">${pct(Math.round(sob/pr*1000)/10)} do preço</small>`}
+    else{q(".pc-imp").textContent="—";q(".pc-sobra").innerHTML=`<small class="note">coloque um preço</small>`}
+    q(".pc-min").textContent=brl(min);q(".pc-sug").innerHTML=sug?`<b>${brl0(sug)}</b><br><small class="note">${pr&&pr>=sug?"preço atual já cobre":"imposto "+brl(sug*pa)}</small>`:"—";
+    if(pid)q(".pc-act").innerHTML=sug&&pr<sug-0.009?`<button class="btn sm" data-usepreco="${pid}" data-v="${sug}">Usar na loja</button>`:""};
+  document.querySelectorAll("[data-prow]").forEach(tr=>{const p=prodById(tr.dataset.prow);if(!p)return;prodRow(tr,+(tr.querySelector("[data-pcusto]").value)||0,+p.preco||0,p.id)});
+  document.querySelectorAll("[data-xrow]").forEach(tr=>{const g=f=>+(tr.querySelector(`[data-xf="${f}"]`).value)||0;prodRow(tr,g("custo"),g("preco"),null)});
   // caixa
   const fixo=v("a_treinus")+v("a_contador")+v("a_gastos"),livre=v("c_saldo")-v("c_das")-v("c_mes"),meta=fixo*v("c_meses")+v("c_giro");
   const evRes=(()=>{const ps=Object.values(S.orcs||{});if(!ps.length)return 0;return ps.reduce((s,o)=>s+orcCalcData(o).res,0)/ps.length})();
@@ -1417,6 +1425,9 @@ document.addEventListener("input",e=>{const t=e.target;if(!t.dataset)return;
   if(t.dataset.pl){planSet(t.dataset.pl,t.value===""?null:+t.value);planCalc();return}
   if(t.dataset.pcusto){const id=t.dataset.pcusto,val=t.value===""?null:+t.value;S.cen={...(S.cen||{}),custos:{...((S.cen&&S.cen.custos)||{}),[id]:val}};planCalc();
     clearTimeout(t._tm);t._tm=setTimeout(()=>setDoc(doc(fs,"caixa_config","cenario"),{custos:{[id]:val}},{merge:true}).catch(()=>toast("Não deu para salvar o custo.")),700);return}
+  if(t.dataset.xid){const id=t.dataset.xid,f=t.dataset.xf,val=f==="nome"?t.value:(t.value===""?null:+t.value);const ex=(S.cen&&S.cen.extras)||{};
+    S.cen={...(S.cen||{}),extras:{...ex,[id]:{...(ex[id]||{}),[f]:val}}};planCalc();
+    clearTimeout(t._tm);t._tm=setTimeout(()=>setDoc(doc(fs,"caixa_config","cenario"),{extras:{[id]:{[f]:val}}},{merge:true}).catch(()=>toast("Não deu para salvar o produto.")),700);return}
   if(S.orcDraft&&t.dataset.of&&t.closest("#planBody")){const k=t.dataset.of,isNum=t.type==="number";
     if(t.dataset.ok){const arr=S.orcDraft[t.dataset.ok];const r=arr&&arr[+t.dataset.oi];if(r)r[k]=k==="v"?(t.value===""?0:+t.value):t.value}
     else S.orcDraft[k]=isNum?(t.value===""?0:+t.value):t.value;
@@ -1430,8 +1441,13 @@ document.addEventListener("change",e=>{if(e.target.id!=="orcFrom"||!e.target.val
   toast(`Custos da ${ev.nome} puxados como custos fixos. Separe o que é por atleta (camisa, medalha) se souber o número de inscritos.`);orcStructSave()});
 document.addEventListener("click",async e=>{const t=e.target.closest("button");if(!t||t.closest(".modal"))return;const d=t.dataset;
   if(d.plan){S.plan=d.plan;S.orc=null;renderPlan()}
-  else if(d.planreset){if(!needDb())return;const custos=(S.cen&&S.cen.custos)||{};S.cen={v:{},custos};clearTimeout(planTmr);planPend={};
-    guard(()=>setDoc(doc(fs,"caixa_config","cenario"),{v:{},custos}),"Cenário voltou aos números reais",true);renderPlan()}
+  else if(d.planreset){if(!needDb())return;const custos=(S.cen&&S.cen.custos)||{},extras=(S.cen&&S.cen.extras)||{};S.cen={v:{},custos,extras};clearTimeout(planTmr);planPend={};
+    guard(()=>setDoc(doc(fs,"caixa_config","cenario"),{v:{},custos,extras}),"Cenário voltou aos números reais",true);renderPlan()}
+  else if(d.xadd){if(!needDb())return;const id="x"+Date.now().toString(36),x={nome:"",custo:null,preco:null,criado:Date.now()};
+    S.cen={...(S.cen||{}),extras:{...((S.cen&&S.cen.extras)||{}),[id]:x}};renderPlan();const el=document.querySelector(`[data-xid="${id}"][data-xf="nome"]`);el&&el.focus();
+    setDoc(doc(fs,"caixa_config","cenario"),{extras:{[id]:x}},{merge:true}).catch(()=>toast("Não deu para salvar o produto."))}
+  else if(d.xrm){if(!needDb())return;const id=d.xrm,ex={...((S.cen&&S.cen.extras)||{})};delete ex[id];S.cen={...(S.cen||{}),extras:ex};renderPlan();
+    guard(()=>updateDoc(doc(fs,"caixa_config","cenario"),{["extras."+id]:deleteField()}),"Produto removido",true)}
   else if(d.usepreco){if(!needDb())return;const p=prodById(d.usepreco);if(!p)return;if(!t.dataset.armed){t.dataset.armed=1;t.textContent=`Confirmar ${brl0(+d.v)}`;return}
     guard(()=>updateDoc(doc(fs,"produtos",p.id),{preco:+d.v}),`${p.nome} agora custa ${brl0(+d.v)} na loja`,true)}
   else if(d.orcnew){if(!needDb())return;const id="orc"+Date.now().toString(36);S.orcs={...S.orcs,[id]:ORC_NOVO()};orcOpen(id);orcSave()}
