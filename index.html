@@ -536,6 +536,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .ckres b{flex:1}
 .card.editando{box-shadow:0 0 0 2px var(--green)}
 .adm-item.sel{background:var(--green-soft);border-radius:12px;padding-inline:8px}
+.chip.solid{background:rgba(232,93,154,.14);color:#ff8fbf}
+.solid-info{background:rgba(232,93,154,.10);border:1px solid rgba(232,93,154,.30);border-radius:12px;padding:10px 12px;line-height:1.45}
 </style>
 </head>
 <body>
@@ -708,7 +710,7 @@ function vInicio(){
 
 const TICKET='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 0 2-2h14a2 2 0 0 0 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 0-2 2H5a2 2 0 0 0-2-2v-2a2 2 0 0 0 0-4z"/><path d="M14 6v12" stroke-dasharray="2 2.5"/></svg>';
 const temIngresso=e=>e.pago&&/^https?:\/\//.test(e.ingresso||'');
-function entradaChip(e){if(e.pago)return `<span class="chip pago">${TICKET}${e.preco?esc(e.preco):'Pago'}</span>`;if(e.pago===false)return `<span class="chip free">Gratuito</span>`;return ''}
+function entradaChip(e){if(e.solidario)return `<span class="chip solid">💚 Solidário</span>`;if(e.pago)return `<span class="chip pago">${TICKET}${e.preco?esc(e.preco):'Pago'}</span>`;if(e.pago===false)return `<span class="chip free">Gratuito</span>`;return ''}
 function evCard(e){
   const d=pd(e.data);const ids=Object.keys(S.membros).filter(id=>S.membros[id].presencas&&S.membros[id].presencas[e.id]);
   const vou=!!me().presencas[e.id];const past=(e.data||'')<hoje();
@@ -718,6 +720,7 @@ function evCard(e){
   <div class="ev-body"><div class="row"><span class="chip ${cls}">${esc(tipo)}</span>${entradaChip(e)}</div><h3>${esc(e.titulo)}</h3>
   <div class="meta">${d?`<span>${esc(fmtLong(e.data))}</span>`:''}${e.hora?`<span class="num">${esc(e.hora)}</span>`:''}${e.local?`<span>${esc(e.local)}</span>`:''}</div>
   ${e.descricao?`<p style="margin:0" class="small">${esc(e.descricao)}</p>`:''}
+  ${e.solidario?`<div class="solid-info small"><b>Inscrição solidária:</b> ${esc(e.doacao||'traga sua doação')}.${e.folhasCk>0?` Entregue no treino, mostre o QR do seu cartão e ganhe <b>${fmtF(e.folhasCk)} folhas</b>.`:''}</div>`:''}
   ${e.link&&!(temIngresso(e)&&e.link===e.ingresso)?`<a class="small" href="${esc(e.link)}" target="_blank" rel="noopener">Inscrição e detalhes</a>`:''}
   <div class="people">${avs?`<span class="avs">${avs}</span>`:''}<span class="muted small num">${ids.length?ids.length+(ids.length===1?' vai':' vão'):(S.uid?'Ninguém confirmou ainda':'')}</span></div>
   ${!past&&temIngresso(e)?`<a class="btn primary ticket" href="${esc(e.ingresso)}" target="_blank" rel="noopener">${TICKET}Comprar ingresso</a>`:''}
@@ -994,7 +997,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();S.bip=e;sch
 window.addEventListener('appinstalled',()=>{S.bip=null;schedule()});
 async function shareEvento(id){
   const e=S.eventos.find(x=>x.id===id);if(!e)return;
-  const txt=`${e.tipo||'Treino'} Passos Verdes: ${e.titulo}\n${[fmtLong(e.data),e.hora,e.local].filter(Boolean).join(' · ')}\n${temIngresso(e)?`\nIngresso${e.preco?' '+e.preco:''}: ${e.ingresso}\n`:(e.pago===false?'Entrada gratuita\n':'')}\nConfirme presença no app: ${location.origin}/#agenda`;
+  const txt=`${e.tipo||'Treino'} Passos Verdes: ${e.titulo}\n${[fmtLong(e.data),e.hora,e.local].filter(Boolean).join(' · ')}\n${temIngresso(e)?`\nIngresso${e.preco?' '+e.preco:''}: ${e.ingresso}\n`:(e.solidario?`Inscrição solidária: ${e.doacao}\n`:(e.pago===false?'Entrada gratuita\n':''))}\nConfirme presença no app: ${location.origin}/#agenda`;
   if(navigator.share){try{await navigator.share({title:e.titulo,text:txt});return}catch(err){if(err&&err.name==='AbortError')return}}
   window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
 }
@@ -1459,7 +1462,8 @@ function vAdmin(){
     <div class="grid2"><label for="ev-d">Data<input type="date" id="ev-d" required value="${ee?esc(ee.data):''}"></label><label for="ev-h">Horário<input type="time" id="ev-h" value="${ee?esc(ee.hora||''):''}"></label></div>
     <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp">${['Treino','Corrida','Ação'].map(t=>`<option ${ee&&ee.tipo===t?'selected':''}>${t}</option>`).join('')}</select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo" value="${ee?esc(ee.local||''):''}"></label></div>
     <label for="ev-ds">Detalhes<textarea id="ev-ds" placeholder="Distância, ritmo, o que levar">${ee?esc(ee.descricao||''):''}</textarea></label>
-    <div class="grid2"><label for="ev-en">Entrada<select id="ev-en"><option value="gratuito" ${ee&&ee.pago?'':'selected'}>Gratuito</option><option value="pago" ${ee&&ee.pago?'selected':''}>Pago</option></select></label><label for="ev-pr">Valor (se for pago)<input type="text" id="ev-pr" maxlength="30" placeholder="Ex.: R$ 60 ou a partir de R$ 49" value="${ee?esc(ee.preco||''):''}"></label></div>
+    <div class="grid2"><label for="ev-en">Entrada<select id="ev-en"><option value="gratuito" ${ee&&(ee.pago||ee.solidario)?'':'selected'}>Gratuito</option><option value="solidario" ${ee&&ee.solidario?'selected':''}>Solidário (doação)</option><option value="pago" ${ee&&ee.pago?'selected':''}>Pago</option></select></label><label for="ev-pr">Valor (se for pago)<input type="text" id="ev-pr" maxlength="30" placeholder="Ex.: R$ 60 ou a partir de R$ 49" value="${ee?esc(ee.preco||''):''}"></label></div>
+    <div class="grid2"><label for="ev-dc">O que doar (se for solidário)<input type="text" id="ev-dc" maxlength="60" placeholder="Ex.: 1 kg de alimento não perecível" value="${ee?esc(ee.doacao||''):''}"></label><label for="ev-fk">Folhas no check-in (se for solidário)<input type="number" id="ev-fk" min="0" max="1000" placeholder="${cfgF().checkin}" value="${ee&&ee.folhasCk!=null?esc(ee.folhasCk):''}"></label></div>
     <label for="ev-ig">Link do ingresso (se for pago)<input type="url" id="ev-ig" placeholder="https://www.uticket.com.br/…" value="${ee?esc(ee.ingresso||''):''}"></label>
     <label for="ev-lk">Link de inscrição ou regulamento (opcional)<input type="url" id="ev-lk" placeholder="https://" value="${ee?esc(ee.link||''):''}"></label>
     ${photoField('ev-f','Banner do encontro (opcional)',ee?ee.foto:'')}
@@ -1899,10 +1903,12 @@ async function addTo(col,data,form){
   try{await S.db.collection(col).add({...data,criado:Date.now()});form.reset();form.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');form.querySelectorAll('input[type=file]').forEach(el=>delete S.pending[el.id]);render();toast('Publicado.');return true}
   catch(e){toast('Não foi possível publicar. '+(e&&e.code==='permission-denied'?'Só quem edita o app pode publicar.':'Tente de novo.'));return false}
 }
-const EDIT_IDS={eventos:'#ev-t,#ev-d,#ev-h,#ev-l,#ev-ds,#ev-lk,#ev-pr,#ev-ig',noticias:'#nt-t,#nt-x,#nt-g,#nt-d',desafios:'#ds-t,#ds-x,#ds-m,#ds-i,#ds-f'};
-function entradaForm(){const pago=val('ev-en')==='pago';const ig=val('ev-ig');
+const EDIT_IDS={eventos:'#ev-t,#ev-d,#ev-h,#ev-l,#ev-ds,#ev-lk,#ev-pr,#ev-ig,#ev-dc,#ev-fk',noticias:'#nt-t,#nt-x,#nt-g,#nt-d',desafios:'#ds-t,#ds-x,#ds-m,#ds-i,#ds-f'};
+function entradaForm(){const en=val('ev-en');const pago=en==='pago';const ig=val('ev-ig');
+  if(en==='solidario'){const dc=val('ev-dc');if(!dc){toast('Diga o que doar. Ex.: 1 kg de alimento.');document.getElementById('ev-dc')?.focus();return null}
+    const fk=val('ev-fk');return {pago:false,solidario:true,doacao:dc,folhasCk:fk===''?cfgF().checkin:Math.max(0,Math.round(Number(fk)||0)),preco:'',ingresso:''}}
   if(pago&&!/^https?:\/\//.test(ig)){toast('Evento pago precisa do link do ingresso (começando com https://).');document.getElementById('ev-ig')?.focus();return null}
-  return pago?{pago:true,preco:val('ev-pr'),ingresso:ig}:{pago:false,preco:'',ingresso:''}}
+  return pago?{pago:true,solidario:false,doacao:'',preco:val('ev-pr'),ingresso:ig}:{pago:false,solidario:false,doacao:'',preco:'',ingresso:''}}
 const EDIT_PIC={eventos:'ev-f',noticias:'nt-f'};
 function limparEdicao(col){document.querySelectorAll(EDIT_IDS[col]||'#x').forEach(el=>el.value='');if(EDIT_PIC[col])delete S.pending[EDIT_PIC[col]]}
 async function salvarEdicao(col,data,pic){
@@ -1930,7 +1936,7 @@ document.addEventListener('submit',e=>{
   else if(k==='desafio'&&S.edit&&S.edit.col==='desafios'){salvarEdicao('desafios',{titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f')})}
   else if(k==='evento'){const av=checked('ev-av');const ent=entradaForm();if(!ent)return;const d={titulo:val('ev-t'),data:val('ev-d'),hora:val('ev-h'),tipo:val('ev-tp')||'Treino',local:val('ev-l'),descricao:val('ev-ds'),link:val('ev-lk'),...ent,foto:S.pending['ev-f']||''};
     addTo('eventos',d,f).then(ok=>{if(ok&&av){const pre={Treino:'Novo treino',Corrida:'Nova corrida','Ação':'Nova ação'}[d.tipo]||'Novo encontro';
-      notificar({tipo:'eventos',titulo:`${pre}: ${d.titulo}`,texto:[fmtLong(d.data),d.hora,d.local].filter(Boolean).join(' · ')+(d.pago?'. Ingressos já à venda'+(d.preco?' ('+d.preco+')':'')+'. Garanta o seu!':'. Entrada gratuita. Bora? Toca e confirma.'),url:'/#agenda'})}})}
+      notificar({tipo:'eventos',titulo:`${pre}: ${d.titulo}`,texto:[fmtLong(d.data),d.hora,d.local].filter(Boolean).join(' · ')+(d.solidario?`. Inscrição solidária: ${d.doacao}. Doe e ganhe ${d.folhasCk} folhas!`:d.pago?'. Ingressos já à venda'+(d.preco?' ('+d.preco+')':'')+'. Garanta o seu!':'. Entrada gratuita. Bora? Toca e confirma.'),url:'/#agenda'})}})}
   else if(k==='noticia'){const av=checked('nt-av');const d={titulo:val('nt-t'),texto:val('nt-x'),tag:val('nt-g'),data:val('nt-d')||hoje(),foto:S.pending['nt-f']||''};
     addTo('noticias',d,f).then(ok=>{if(ok&&av)notificar({tipo:'noticias',titulo:d.titulo,texto:resumo(d.texto),url:'/#inicio'})})}
   else if(k==='aviso'){notificar({tipo:'geral',titulo:val('aw-t'),texto:val('aw-x'),url:'/#'+(val('aw-u')||'inicio')}).then(ok=>{if(ok){['aw-t','aw-x'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''})}})}
@@ -2212,7 +2218,7 @@ const SHT={
   c.fillStyle=NEON;c.textAlign='center';c.font=shFont(900,110);c.fillText(dt?String(dt.getDate()):'–',180,y+115);c.fillStyle=MUT;c.font=shBody(800,34);c.fillText(dt?MES[dt.getMonth()]:'',180,y+165);c.textAlign='left';
   c.fillStyle=INK;c.font=shBody(700,40);const info=[dt?dt.toLocaleDateString('pt-BR',{weekday:'long'}):'',e.hora].filter(Boolean).join(' · ');c.fillText(info,320,y+50);
   if(e.local){c.fillStyle=MUT;c.font=shBody(600,36);let t=e.local;while(c.measureText(t).width>680&&t.length>4)t=t.slice(0,-2);c.fillText(t===e.local?t:t+'…',320,y+105)}
-  if(e.pago||e.pago===false){c.fillStyle=e.pago?INK:NEON;c.font=shBody(800,32);c.fillText(e.pago?('Ingresso '+(e.preco||'')).trim():'Entrada gratuita',320,y+160)}
+  if(e.solidario||e.pago||e.pago===false){c.fillStyle=e.pago?INK:NEON;c.font=shBody(800,32);let t=e.solidario?('Solidário: '+(e.doacao||'traga sua doação')):e.pago?('Ingresso '+(e.preco||'')).trim():'Entrada gratuita';while(c.measureText(t).width>680&&t.length>4)t=t.slice(0,-2);c.fillText(t,320,y+160)}
   c.fillStyle=INK;c.font=shBody(800,46);c.fillText('Bora junto? Confirma no app.',80,Math.min(y+300,1540));
   await shUser(c,1640);
  },
@@ -2340,7 +2346,8 @@ function adminFolhasHtml(){
   const c=cfgF();const pend=S.resgates.filter(r=>r.status==='pendente').sort((a,b)=>(a.criado||0)-(b.criado||0));
   const ep=S.editPremio?S.premios.find(p=>p.id===S.editPremio):null;
   const evs=[...S.eventos].sort((a,b)=>Math.abs(pd(a.data)-new Date())-Math.abs(pd(b.data)-new Date()));
-  const ev=S.ckEv&&S.eventos.find(e=>e.id===S.ckEv)?S.ckEv:(evs[0]?evs[0].id:'');
+  const perto=evs.find(e=>e.solidario&&Math.abs(pd(e.data)-new Date())<3*864e5);
+  const ev=S.ckEv&&S.eventos.find(e=>e.id===S.ckEv)?S.ckEv:(perto?perto.id:(evs[0]?evs[0].id:''));const evo=S.eventos.find(e=>e.id===ev)||{};
   const nCk=S.todasFolhas.filter(f=>f.id&&f.id.startsWith('ck-'+ev+'-')).length;
   const busca=(S.ckBusca||'').toLowerCase();
   const lista=busca?Object.keys(S.membros).filter(u=>nome(u).toLowerCase().includes(busca)).slice(0,8):[];
@@ -2348,8 +2355,8 @@ function adminFolhasHtml(){
   return `
   <section class="section"><div class="sec-head"><h2 class="sec">Check-in com QR</h2><span class="muted small num">${nCk} ${nCk===1?'confirmado':'confirmados'}</span></div><div class="card">
     <p class="small muted" style="margin:0">Recebeu a doação? Peça para a pessoa abrir o <b>cartão de membro</b> e leia o QR. As folhas caem na hora.</p>
-    ${evs.length?`<label for="ck-ev">Evento<select id="ck-ev" data-ck="ev">${evs.slice(0,15).map(e=>`<option value="${esc(e.id)}" ${e.id===ev?'selected':''}>${esc(fmtShort(e.data))} · ${esc(e.titulo)}</option>`).join('')}</select></label>`:`<p class="small" style="margin:0">Cadastre o evento na agenda primeiro.</p>`}
-    <div class="grid2"><label for="ck-q">Folhas por check-in<input type="number" id="ck-q" min="1" max="1000" value="${esc(S.ckQtd||c.checkin)}" data-ck="q"></label><label for="ck-m">Motivo<input type="text" id="ck-m" maxlength="60" value="${esc(S.ckMot||'Doação no treino solidário')}" data-ck="m"></label></div>
+    ${evs.length?`<label for="ck-ev">Evento<select id="ck-ev" data-ck="ev">${evs.slice(0,15).map(e=>`<option value="${esc(e.id)}" ${e.id===ev?'selected':''}>${e.solidario?'💚 ':''}${esc(fmtShort(e.data))} · ${esc(e.titulo)}</option>`).join('')}</select></label>`:`<p class="small" style="margin:0">Cadastre o evento na agenda primeiro.</p>`}
+    <div class="grid2"><label for="ck-q">Folhas por check-in<input type="number" id="ck-q" min="1" max="1000" value="${esc(S.ckQtd||evo.folhasCk||c.checkin)}" data-ck="q"></label><label for="ck-m">Motivo<input type="text" id="ck-m" maxlength="60" value="${esc(S.ckMot||(evo.solidario?'Doação: '+(evo.titulo||'treino solidário'):'Check-in: '+(evo.titulo||'evento')))}" data-ck="m"></label></div>
     ${ev?`<button class="btn primary" data-action="ck-scan">Abrir câmera</button>
     <label for="ck-b">Sem câmera? Busque pelo nome<input type="search" id="ck-b" placeholder="Digite o nome" value="${esc(S.ckBusca||'')}" data-ck="b" autocomplete="off"></label>
     ${lista.map(u=>{const feito=S.todasFolhas.some(f=>f.id==='ck-'+ev+'-'+u);return `<div class="adm-item"><div class="row" style="flex-wrap:nowrap">${avatar(u,30)}<b class="small">${esc(nome(u))}</b></div>${feito?`<span class="st ok">Confirmado</span>`:`<button class="btn small primary" data-action="ck-manual" data-uid="${esc(u)}">Confirmar</button>`}</div>`}).join('')}`:''}
@@ -2458,7 +2465,7 @@ document.addEventListener('input',e=>{
   else if(el.dataset.ck==='m')S.ckMot=el.value;
   else if(el.dataset.sug){const c=parseFloat(String(el.value).replace(',','.'));const s=document.getElementById('pm-sug');if(s)s.innerHTML=c>0?`Sugestão: <b>${fmtF(Math.round(c*25/5)*5)} folhas</b> (custo × 25).`:'Dica: folhas = custo × 25. Assim cada aluno ativo ganha uns R$ 7 por mês em prêmios.'}
 });
-document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ck==='ev'){S.ckEv=e.target.value;render()}});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ck==='ev'){S.ckEv=e.target.value;S.ckQtd=null;S.ckMot=null;render()}});
 document.addEventListener('submit',async e=>{
   const f=e.target.closest('form[data-form]');if(!f)return;const k=f.dataset.form;
   if(!['premio','regras-folhas','ajuste-folhas'].includes(k))return;e.preventDefault();e.stopImmediatePropagation();

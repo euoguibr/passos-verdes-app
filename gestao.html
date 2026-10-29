@@ -1016,7 +1016,8 @@ window.addEventListener("hashchange",route);
    ========================================================= */
 const vkey=(t,c)=>(t||"-")+"|"+(c||"-");
 const vlabel=(t,c)=>[t,c].filter(x=>x&&x!=="-").join(" · ")||"Único";
-const dims=p=>({T:(p.tamanhos&&p.tamanhos.length)?p.tamanhos:["-"],C:(p.cores&&p.cores.length)?p.cores:["-"]});
+const tamsDe=p=>(Array.isArray(p.tamanhos)?p.tamanhos:[]).flatMap(t=>String(t).split(/[\s\/|]+/)).map(t=>t.trim()).filter(Boolean);
+const dims=p=>({T:tamsDe(p).length?tamsDe(p):["-"],C:(p.cores&&p.cores.length)?p.cores:["-"]});
 const controla=p=>!!(p&&p.estoque&&typeof p.estoque==="object");
 const estTotal=p=>Object.values((p&&p.estoque)||{}).reduce((s,n)=>s+(+n||0),0);
 const estOf=(p,t,c)=>controla(p)?(+p.estoque[vkey(t,c)]||0):null;
