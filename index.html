@@ -477,6 +477,11 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .medal.can{cursor:pointer;position:relative}
 .medal.can::after{content:"";position:absolute;top:2px;right:calc(50% - 34px);width:20px;height:20px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1200' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M8 8l4-4 4 4'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 3px var(--bg)}
 .btn.story svg{width:18px;height:18px}
+.admtabs{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--toph,68px));z-index:4;display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 12px;margin-bottom:4px;background:var(--bg)}
+.admtabs::-webkit-scrollbar{display:none}
+.admtabs button{flex:none;appearance:none;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font:inherit;font-weight:700;font-size:14px;border-radius:999px;padding:7px 14px;min-height:40px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;white-space:nowrap}
+.admtabs button[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:var(--on-green)}
+.admb{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--danger);color:#fff;font-size:12px;font-weight:800}
 .aflist{display:flex;flex-direction:column;gap:8px}
 .afp{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
 .afp.sel{border-color:var(--green)}
@@ -1407,10 +1412,10 @@ function vAdmin(){
   const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
   const editing=c=>S.edit&&S.edit.col===c?S[c].find(x=>x.id===S.edit.id)||null:null;
   const ee=editing('eventos'),en=editing('noticias'),ed=editing('desafios');
-  return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
-  <section class="section"><a class="card" href="/gestao.html" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;justify-content:space-between;gap:12px"><span class="stack" style="gap:2px"><b>Gestão financeira e estoque</b><span class="small muted">Caixa, mensalidades, eventos, vendas e estoque da loja</span></span><span class="btn small primary">Abrir</span></a></section>
+  return admTabs(`<!--T:top--><section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1></section>
+<!--T:resumo-->  <section class="section"><a class="card" href="/gestao.html" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;justify-content:space-between;gap:12px"><span class="stack" style="gap:2px"><b>Gestão financeira e estoque</b><span class="small muted">Caixa, mensalidades, eventos, vendas e estoque da loja</span></span><span class="btn small primary">Abrir</span></a></section>
   ${statsHtml()}
-  <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
+<!--T:resumo-->  <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
   ${pend.length?pend.map(l=>{const pv=S.provas[l.id];const sv=l.origem==='strava';return `<div class="check">${sv?`<div class="nothumb stv-ok"><b>✓</b>Dados do Strava</div>`:pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
     <div class="stack" style="gap:6px"><b>${esc(nomeL(l))}</b><span class="num"><b>${kmf(l.km)} km</b> · ${esc(dtit(l.desafio))}</span>
     <span class="muted small">Enviado em ${l.criado?new Date(l.criado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}</span>
@@ -1419,22 +1424,22 @@ function vAdmin(){
     <div class="row"><button class="btn small primary" data-action="aprovar" data-id="${esc(l.id)}">Aprovar</button><button class="btn small danger ${S.armed==='rc'+l.id?'armed':''}" data-action="recusar" data-id="${esc(l.id)}">${S.armed==='rc'+l.id?'Confirmar':'Recusar'}</button></div></div></div>`}).join('')
   :`<p class="muted small" style="margin:0">Nada para conferir agora.</p>`}</div></section>
 
-  ${adminFolhasHtml()}
-  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>(p.status||'novo')==='novo').length)}</span></div><div class="card">
+<!--T:folhas-->  ${adminFolhasHtml()}
+<!--T:loja-->  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>(p.status||'novo')==='novo').length)}</span></div><div class="card">
   ${peds.length?peds.map(p=>`<div class="pedido"><div><b class="small">${esc(p.qtd)}x ${esc(p.produto)}${p.tamanho?' · '+esc(p.tamanho):''}${p.cor?' · '+esc(p.cor):''}</b>
     <div class="muted small">${esc(p.nome||'Sem nome')} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</div></div>
     <div class="row" style="flex-wrap:nowrap">${(s=>`<span class="st ${s[0]}">${s[1]}</span>`)(PST[p.status||'novo']||PST.novo)}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
   <p class="muted small" style="margin:0">Confirme pagamentos, dê baixa no estoque e lance no caixa pela <a href="/gestao.html#vendas">Gestão → Vendas</a>. O WhatsApp e a chave Pix da loja ficam no formulário "Sobre o projeto", mais abaixo.</p></div></section>
 
-  <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
+<!--T:resumo-->  <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
   ${S.reportes.length?[...S.reportes].sort((a,b)=>(a.status==='resolvido'?1:0)-(b.status==='resolvido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,30).map(r=>`<div class="check">${okPic(r.foto)?`<img class="thumb" src="${r.foto}" alt="Print enviado" data-action="zoom" data-src="${r.foto}">`:`<div class="nothumb">Sem print</div>`}
     <div class="stack" style="gap:6px"><div class="row" style="justify-content:space-between"><b class="small">${esc(r.nome||'Alguém')}</b><span class="st ${r.status==='resolvido'?'ok':'wait'}">${r.status==='resolvido'?'Resolvido':'Aberto'}</span></div>
     <p class="small" style="margin:0;white-space:pre-line">${esc(r.texto)}</p><span class="muted small">${r.criado?new Date(r.criado).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):''}${/iPhone|iPad/.test(r.app||'')?' · iPhone':/Android/.test(r.app||'')?' · Android':''}</span>
     <div class="row"><button class="btn small" data-action="rep-status" data-id="${esc(r.id)}">${r.status==='resolvido'?'Reabrir':'Marcar resolvido'}</button><button class="btn small danger ${S.armed==='reportes'+r.id?'armed':''}" data-action="del" data-col="reportes" data-id="${esc(r.id)}">${S.armed==='reportes'+r.id?'Confirmar':'Apagar'}</button></div></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum problema reportado. Quem testa o app pode reportar em Configurações.</p>`}</div></section>
 
-  <section class="section"><h2 class="sec">Avisos automáticos</h2><div class="card">
+<!--T:avisos-->  <section class="section"><h2 class="sec">Avisos automáticos</h2><div class="card">
     <p class="small" style="margin:0">O app manda sozinho: <b>lembrete na véspera</b> para quem confirmou presença (por volta das 18h), <b>parabéns</b> para os aniversariantes e o <b>campeão do jogo</b> toda segunda (por volta das 8h).</p>
     <div class="row"><button class="btn small" data-action="cron-teste" data-v="vespera">Testar lembrete da véspera</button><button class="btn small" data-action="cron-teste" data-v="manha">Testar avisos da manhã</button></div>
     <p class="muted small" style="margin:0">O teste envia só para o seu celular e mostra o que seria enviado.</p></div></section>
@@ -1446,7 +1451,7 @@ function vAdmin(){
     <div><button class="btn primary" type="submit">Enviar para todos</button></div>
     <p class="muted small" style="margin:0">Vai para todo mundo que ativou os avisos. Use para recados importantes. Ao publicar treino, notícia, desafio ou produto, o aviso já sai sozinho se a caixinha estiver marcada.</p></form></section>
 
-  <section class="section"><h2 class="sec">${pa?'Editar parceiro':'Novo parceiro do clube'}</h2><form class="card" data-form="parceiro">
+<!--T:config-->  <section class="section"><h2 class="sec">${pa?'Editar parceiro':'Novo parceiro do clube'}</h2><form class="card" data-form="parceiro">
     <label for="pa-n">Nome do parceiro<input type="text" id="pa-n" required placeholder="Ex.: Açaí do Porto" value="${pa?esc(pa.nome):''}"></label>
     <label for="pa-b">Benefício<input type="text" id="pa-b" required maxlength="60" placeholder="Ex.: 10% de desconto" value="${pa?esc(pa.beneficio):''}"></label>
     <label for="pa-r">Regras (opcional)<textarea id="pa-r" placeholder="Ex.: Válido de segunda a sexta, não cumulativo">${pa?esc(pa.regras||''):''}</textarea></label>
@@ -1458,14 +1463,14 @@ function vAdmin(){
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${pa?'Salvar alterações':'Adicionar ao clube'}</button>${pa?`<button type="button" class="btn" data-action="cancelpar">Cancelar edição</button>`:''}</div></form>
     <div class="card">${S.parceiros.length?S.parceiros.map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small">${esc(p.beneficio)}${p.ativo===false?' · pausado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="editpar" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="parceiros" data-id="${esc(p.id)}" data-f="ativo">${p.ativo===false?'Ativar':'Pausar'}</button><button class="btn small danger ${S.armed==='parceiros'+p.id?'armed':''}" data-action="del" data-col="parceiros" data-id="${esc(p.id)}">${S.armed==='parceiros'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum parceiro cadastrado.</p>`}</div></section>
 
-  <section class="section"><h2 class="sec">Quem corre com a gente</h2><form class="card" data-form="depoimento">
+<!--T:conteudo-->  <section class="section"><h2 class="sec">Quem corre com a gente</h2><form class="card" data-form="depoimento">
     <label for="dp-t">Depoimento<textarea id="dp-t" maxlength="280" required placeholder="Ex.: Comecei sem conseguir correr 2 km. Hoje fiz minha primeira meia com a galera."></textarea></label>
     <div class="grid2"><label for="dp-n">Nome<input type="text" id="dp-n" required></label><label for="dp-i">Instagram<input type="text" id="dp-i" placeholder="@perfil"></label></div>
     ${photoField('dp-f','Foto (opcional)')}
     <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Adicionar depoimento</button></div></form>
     <div class="card">${S.depoimentos.length?S.depoimentos.map(d=>`<div class="adm-item"><div><b class="small">${esc(d.nome)}</b><div class="muted small">${esc(resumo(d.texto,70))}</div></div><div class="row"><button class="btn small" data-action="toggle" data-col="depoimentos" data-id="${esc(d.id)}" data-f="ativo">${d.ativo===false?'Mostrar':'Esconder'}</button><button class="btn small danger ${S.armed==='depoimentos'+d.id?'armed':''}" data-action="del" data-col="depoimentos" data-id="${esc(d.id)}">${S.armed==='depoimentos'+d.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum depoimento ainda.</p>`}</div></section>
 
-  <section class="section"><h2 class="sec">Banners do Início</h2><form class="card" data-form="banner">
+<!--T:conteudo-->  <section class="section"><h2 class="sec">Banners do Início</h2><form class="card" data-form="banner">
     ${photoField('bn-f','Imagem do banner (horizontal, 1600 × 900 px)')}
     <div class="grid2"><label for="bn-l">Link ao tocar (opcional)<input type="url" id="bn-l" placeholder="https://"></label><label for="bn-o">Ordem<input type="number" id="bn-o" step="1" placeholder="1, 2, 3…"></label></div>
     <div class="grid2"><label for="bn-t">Descrição curta<input type="text" id="bn-t" placeholder="Ex.: Inscrições abertas Corrida Kids"></label><label for="bn-s">Selo no banner<select id="bn-s"><option value="">Sem selo</option>${['Inscrições abertas','Últimas vagas','Novidade','Hoje','Lançamento','Esgotando'].map(x=>`<option>${x}</option>`).join('')}</select></label></div>
@@ -1473,7 +1478,7 @@ function vAdmin(){
     <p class="muted small" style="margin:0">Com mais de um banner, eles passam sozinhos a cada 5 segundos. Sem nenhum, o espaço some do Início.</p></form>
     <div class="card">${bannerList().length?bannerList().map(b=>`<div class="bn-adm"><img src="${b.foto}" alt=""><div class="row" style="justify-content:space-between"><span class="small muted">${esc(b.titulo||'Sem descrição')}${b.ordem!=null?' · ordem '+esc(b.ordem):''}</span><button class="btn small danger ${S.armed==='banners'+b.id?'armed':''}" data-action="del" data-col="banners" data-id="${esc(b.id)}">${S.armed==='banners'+b.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum banner. O Início abre direto na saudação.</p>`}</div></section>
 
-  <section class="section"><h2 class="sec">${ep?'Editar produto':'Novo produto'}</h2><form class="card" data-form="produto">
+<!--T:loja-->  <section class="section"><h2 class="sec">${ep?'Editar produto':'Novo produto'}</h2><form class="card" data-form="produto">
     <label for="pr-n">Nome<input type="text" id="pr-n" required placeholder="Ex.: Camisa Passos Verdes 2026" value="${ep?esc(ep.nome):''}"></label>
     <div class="grid2"><label for="pr-p">Preço (R$)<input type="number" id="pr-p" min="0" step="0.01" inputmode="decimal" required value="${ep?esc(ep.preco):''}"></label><label for="pr-pd">Preço antes (opcional)<input type="number" id="pr-pd" min="0" step="0.01" inputmode="decimal" placeholder="Para mostrar % OFF" value="${ep&&ep.precoDe?esc(ep.precoDe):''}"></label></div>
     <div class="grid2"><label for="pr-sl">Selo<select id="pr-sl"><option value="">Sem selo</option>${['Lançamento','Mais vendido','Última peça','Edição limitada'].map(x=>`<option ${ep&&ep.selo===x?'selected':''}>${x}</option>`).join('')}</select></label>
@@ -1486,7 +1491,7 @@ function vAdmin(){
     ${ep?'':'<label class="chk" for="pr-av"><input type="checkbox" id="pr-av" checked> Avisar a galera no celular</label>'}
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ep?'Salvar alterações':'Adicionar à loja'}</button>${ep?`<button type="button" class="btn" data-action="cancelprod">Cancelar edição</button>`:''}</div></form>
     <div class="card">${S.produtos.length?S.produtos.map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small">${brl(p.preco)}${p.esgotado?' · esgotado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="editprod" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="produtos" data-id="${esc(p.id)}" data-f="esgotado">${p.esgotado?'Repor':'Esgotou'}</button><button class="btn small danger ${S.armed==='produtos'+p.id?'armed':''}" data-action="del" data-col="produtos" data-id="${esc(p.id)}">${S.armed==='produtos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum produto cadastrado.</p>`}</div></section>
-  <section class="section"><h2 class="sec">${ee?'Editar encontro':'Novo encontro'}</h2><form class="card" data-form="evento">
+<!--T:agenda-->  <section class="section"><h2 class="sec">${ee?'Editar encontro':'Novo encontro'}</h2><form class="card" data-form="evento">
     <label for="ev-t">Nome<input type="text" id="ev-t" required placeholder="Ex.: Treino coletivo de sábado" value="${ee?esc(ee.titulo):''}"></label>
     <div class="grid2"><label for="ev-d">Data<input type="date" id="ev-d" required value="${ee?esc(ee.data):''}"></label><label for="ev-h">Horário<input type="time" id="ev-h" value="${ee?esc(ee.hora||''):''}"></label></div>
     <div class="grid2"><label for="ev-tp">Tipo<select id="ev-tp">${['Treino','Corrida','Ação'].map(t=>`<option ${ee&&ee.tipo===t?'selected':''}>${t}</option>`).join('')}</select></label><label for="ev-l">Local<input type="text" id="ev-l" placeholder="Ex.: Praça de Santo Aleixo" value="${ee?esc(ee.local||''):''}"></label></div>
@@ -1500,7 +1505,7 @@ function vAdmin(){
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ee?'Salvar alterações':'Publicar encontro'}</button>${ee?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
     <div class="card">${admList('eventos',[...S.eventos].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>fmtLong(x.data)+(x.hora?' · '+x.hora:''),null,true)}</div></section>
 
-  <section class="section"><h2 class="sec">${en?'Editar notícia':'Nova notícia'}</h2><form class="card" data-form="noticia">
+<!--T:conteudo-->  <section class="section"><h2 class="sec">${en?'Editar notícia':'Nova notícia'}</h2><form class="card" data-form="noticia">
     <label for="nt-t">Título<input type="text" id="nt-t" required value="${en?esc(en.titulo):''}"></label>
     <label for="nt-x">Texto<textarea id="nt-x" required>${en?esc(en.texto||''):''}</textarea></label>
     <div class="grid2"><label for="nt-g">Etiqueta<input type="text" id="nt-g" placeholder="Ex.: Assessoria" value="${en?esc(en.tag||''):''}"></label><label for="nt-d">Data<input type="date" id="nt-d" value="${en?esc(en.data||''):''}"></label></div>
@@ -1509,7 +1514,7 @@ function vAdmin(){
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${en?'Salvar alterações':'Publicar notícia'}</button>${en?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
     <div class="card">${admList('noticias',[...S.noticias].sort((a,b)=>(b.data||'').localeCompare(a.data||'')),x=>x.titulo,x=>x.data?fmtLong(x.data):'',null,true)}</div></section>
 
-  <section class="section"><h2 class="sec">${ed?'Editar desafio':'Novo desafio'}</h2><form class="card" data-form="desafio">
+<!--T:agenda-->  <section class="section"><h2 class="sec">${ed?'Editar desafio':'Novo desafio'}</h2><form class="card" data-form="desafio">
     <label for="ds-t">Nome<input type="text" id="ds-t" required placeholder="Ex.: 500 km da galera em novembro" value="${ed?esc(ed.titulo):''}"></label>
     <label for="ds-x">Regras<textarea id="ds-x" placeholder="O que vale, como lançar">${ed?esc(ed.descricao||''):''}</textarea></label>
     <div class="grid2"><label for="ds-m">Meta da galera (km)<input type="number" id="ds-m" min="1" step="1" value="${ed&&ed.meta?esc(ed.meta):''}"></label><label for="ds-i">Começa<input type="date" id="ds-i" value="${ed?esc(ed.inicio||''):''}"></label></div>
@@ -1518,20 +1523,20 @@ function vAdmin(){
     <div class="row"><button class="btn primary" type="submit">${ed?'Salvar alterações':'Lançar desafio'}</button>${ed?`<button type="button" class="btn" data-action="cancel-edit">Cancelar edição</button>`:''}</div></form>
     <div class="card">${admList('desafios',S.desafios,x=>x.titulo,x=>kmf(sumKm(x.id))+' km lançados','ativo',true)}</div></section>
 
-  <section class="section"><h2 class="sec">Nova enquete</h2><form class="card" data-form="enquete">
+<!--T:conteudo-->  <section class="section"><h2 class="sec">Nova enquete</h2><form class="card" data-form="enquete">
     <label for="en-p">Pergunta<input type="text" id="en-p" required placeholder="Ex.: Qual percurso no próximo longão?"></label>
     <label for="en-o">Opções (uma por linha)<textarea id="en-o" required></textarea></label>
     <button class="btn primary" type="submit">Abrir enquete</button></form>
     <div class="card">${admList('enquetes',S.enquetes,x=>x.pergunta,x=>(x.opcoes||[]).length+' opções','ativa')}</div></section>
 
-  <section class="section"><h2 class="sec">Nova pergunta do quiz</h2><form class="card" data-form="quiz">
+<!--T:conteudo-->  <section class="section"><h2 class="sec">Nova pergunta do quiz</h2><form class="card" data-form="quiz">
     <label for="qz-p">Pergunta<input type="text" id="qz-p" required></label>
     <label for="qz-o">Opções (uma por linha)<textarea id="qz-o" required></textarea></label>
     <div class="grid2"><label for="qz-c">Nº da opção certa<input type="number" id="qz-c" min="1" step="1" required></label><label for="qz-e">Explicação<input type="text" id="qz-e"></label></div>
     <button class="btn primary" type="submit">Adicionar ao quiz</button></form>
     <div class="card">${admList('quiz',S.quiz,x=>x.pergunta,x=>'Certa: '+((x.opcoes||[])[x.correta]||''))}</div></section>
 
-  <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
+<!--T:config-->  <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
     <label for="in-s">Texto de apresentação<textarea id="in-s">${esc(i.sobre||'')}</textarea></label>
     <div class="grid2"><label for="in-i">Instagram<input type="text" id="in-i" value="${esc(i.instagram||'')}" placeholder="@perfil"></label><label for="in-w">WhatsApp<input type="text" id="in-w" value="${esc(i.whatsapp||'')}" placeholder="(21) 9…"></label></div>
     <label for="in-g">Prêmio do jogo da semana (opcional)<input type="text" id="in-g" maxlength="80" value="${esc(i.premioJogo||'')}" placeholder="Ex.: Açaí grátis no Açaí do Porto"></label>
@@ -1541,9 +1546,29 @@ function vAdmin(){
     <label for="in-px">Chave Pix da loja<input type="text" id="in-px" value="${esc(i.pix||'')}" placeholder="CNPJ, e-mail, +55 21 9… ou chave aleatória"></label>
     <div class="grid2"><label for="in-pxn">Nome no Pix<input type="text" id="in-pxn" maxlength="25" value="${esc(i.pixNome||'Passos Verdes')}"></label><label for="in-pxc">Cidade no Pix<input type="text" id="in-pxc" maxlength="15" value="${esc(i.pixCidade||'Magé')}"></label></div>
     <p class="muted small" style="margin:0">Com a chave preenchida, a loja ganha o botão "Pagar com Pix" com o valor já calculado. Telefone vai com +55 na frente.</p>
-    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`;
+    <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`);
 }
 
+
+/* painel em abas */
+const ADM_TABS=[['resumo','Resumo'],['folhas','Folhas'],['agenda','Agenda'],['conteudo','Conteúdo'],['loja','Loja'],['avisos','Avisos'],['config','Ajustes']];
+function admBadge(t){if(t==='resumo')return S.lancamentos.filter(l=>l.status==='pendente').length+S.reportes.filter(r=>r.status!=='resolvido').length;
+  if(t==='folhas')return S.resgates.filter(r=>r.status==='pendente').length;if(t==='loja')return S.pedidos.filter(p=>(p.status||'novo')==='novo').length;return 0}
+function admTabs(H){
+  const ek=S.edit?'e:'+S.edit.col+S.edit.id:S.editProd?'p:'+S.editProd:S.editPar?'a:'+S.editPar:S.editPremio?'m:'+S.editPremio:'';
+  if(ek&&ek!==S._admEk){S.admTab=ek[0]==='e'?({eventos:'agenda',desafios:'agenda',noticias:'conteudo'}[S.edit.col]||S.admTab):({p:'loja',a:'config',m:'folhas'}[ek[0]])}
+  S._admEk=ek;
+  if(!S.admTab){try{S.admTab=localStorage.getItem('pv-admtab')}catch(e){}}
+  if(!ADM_TABS.some(t=>t[0]===S.admTab))S.admTab='resumo';
+  const g={};const parts=H.split(/<!--T:(\w+)-->/);for(let i=1;i<parts.length;i+=2)(g[parts[i]]=g[parts[i]]||[]).push(parts[i+1]);
+  const bar=`<nav class="admtabs" aria-label="Seções do painel">${ADM_TABS.map(([k,t])=>{const n=admBadge(k);return `<button type="button" data-action="adm-tab" data-t="${k}" aria-pressed="${S.admTab===k}">${t}${n?`<span class="admb num">${n}</span>`:''}</button>`}).join('')}</nav>`;
+  return (g.top||[]).join('')+bar+`<div class="admbody">${(g[S.admTab]||[]).join('')}</div>`;
+}
+{const _t=document.querySelector('.top');const _f=()=>{if(_t)document.documentElement.style.setProperty('--toph',_t.offsetHeight+'px')};_f();if(_t&&window.ResizeObserver)new ResizeObserver(_f).observe(_t)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="adm-tab"]');if(!b)return;e.stopImmediatePropagation();
+  S.admTab=b.dataset.t;try{localStorage.setItem('pv-admtab',S.admTab)}catch(err){}render();
+  const n=document.querySelector('.admtabs');if(n){const y=n.getBoundingClientRect().top+window.scrollY-(document.querySelector('.top')?.offsetHeight||0)-4;if(window.scrollY>y)window.scrollTo(0,y)}
+  const on=document.querySelector('.admtabs [aria-pressed="true"]');if(on)on.scrollIntoView({block:'nearest',inline:'center'})});
 /* ---------- Fotos ---------- */
 const okPic=u=>typeof u==='string'&&/^data:image\/(jpeg|png|webp);base64,/.test(u);
 function picHtml(u,cls){return okPic(u)?`<img class="${cls}" src="${u}" alt="" loading="lazy">`:''}
@@ -2462,6 +2487,11 @@ function adminFolhasHtml(){
   const lista=busca?Object.keys(S.membros).filter(u=>nome(u).toLowerCase().includes(busca)).slice(0,8):[];
   const ms=Object.keys(S.membros).sort((a,b)=>nome(a).localeCompare(nome(b)));
   return `
+  <section class="section"><div class="sec-head"><h2 class="sec">Trocas de prêmios</h2><span class="muted small num">${pend.length} ${pend.length===1?'aguardando':'aguardando'}</span></div><div class="card">
+    ${pend.length?pend.map(r=>{const sd=saldoDe(r.uid);const k='re'+r.id;return `<div class="adm-item"><div><b class="small">${esc(nome(r.uid)!=='Corredor(a)'?nome(r.uid):r.nome)} · ${esc(r.premio)}</b><div class="muted small num">${fmtF(r.folhas)} folhas · saldo ${fmtF(sd)}${sd<r.folhas?' · <b style="color:var(--danger)">saldo insuficiente</b>':''}</div></div>
+      <div class="row" style="flex-wrap:nowrap"><button class="btn small primary" data-action="res-ok" data-id="${esc(r.id)}">Entregue</button><button class="btn small danger ${S.armed===k?'armed':''}" data-action="res-x" data-id="${esc(r.id)}">${S.armed===k?'Confirmar':'Cancelar'}</button></div></div>`}).join(''):`<p class="muted small" style="margin:0">Nenhuma troca aguardando entrega.</p>`}
+  </div></section>
+  ${adminDarHtml(ms)}
   <section class="section"><div class="sec-head"><h2 class="sec">Check-in com QR</h2><span class="muted small num">${nCk} ${nCk===1?'confirmado':'confirmados'}</span></div><div class="card">
     <p class="small muted" style="margin:0">Recebeu a doação? Peça para a pessoa abrir o <b>cartão de membro</b> e leia o QR. As folhas caem na hora.</p>
     ${evs.length?`<label for="ck-ev">Evento<select id="ck-ev" data-ck="ev">${evs.slice(0,15).map(e=>`<option value="${esc(e.id)}" ${e.id===ev?'selected':''}>${e.solidario?'💚 ':''}${esc(fmtShort(e.data))} · ${esc(e.titulo)}</option>`).join('')}</select></label>`:`<p class="small" style="margin:0">Cadastre o evento na agenda primeiro.</p>`}
@@ -2469,10 +2499,6 @@ function adminFolhasHtml(){
     ${ev?`<button class="btn primary" data-action="ck-scan">Abrir câmera</button>
     <label for="ck-b">Sem câmera? Busque pelo nome<input type="search" id="ck-b" placeholder="Digite o nome" value="${esc(S.ckBusca||'')}" data-ck="b" autocomplete="off"></label>
     ${lista.map(u=>{const feito=S.todasFolhas.some(f=>f.id==='ck-'+ev+'-'+u);return `<div class="adm-item"><div class="row" style="flex-wrap:nowrap">${avatar(u,30)}<b class="small">${esc(nome(u))}</b></div>${feito?`<span class="st ok">Confirmado</span>`:`<button class="btn small primary" data-action="ck-manual" data-uid="${esc(u)}">Confirmar</button>`}</div>`}).join('')}`:''}
-  </div></section>
-  <section class="section"><div class="sec-head"><h2 class="sec">Trocas de prêmios</h2><span class="muted small num">${pend.length} ${pend.length===1?'aguardando':'aguardando'}</span></div><div class="card">
-    ${pend.length?pend.map(r=>{const sd=saldoDe(r.uid);const k='re'+r.id;return `<div class="adm-item"><div><b class="small">${esc(nome(r.uid)!=='Corredor(a)'?nome(r.uid):r.nome)} · ${esc(r.premio)}</b><div class="muted small num">${fmtF(r.folhas)} folhas · saldo ${fmtF(sd)}${sd<r.folhas?' · <b style="color:var(--danger)">saldo insuficiente</b>':''}</div></div>
-      <div class="row" style="flex-wrap:nowrap"><button class="btn small primary" data-action="res-ok" data-id="${esc(r.id)}">Entregue</button><button class="btn small danger ${S.armed===k?'armed':''}" data-action="res-x" data-id="${esc(r.id)}">${S.armed===k?'Confirmar':'Cancelar'}</button></div></div>`}).join(''):`<p class="muted small" style="margin:0">Nenhuma troca aguardando entrega.</p>`}
   </div></section>
   <section class="section"><h2 class="sec">${ep?'Editar prêmio':'Novo prêmio'}</h2><form class="card ${ep?'editando':''}" data-form="premio">
     ${ep?`<div class="notice small">Você está editando <b>${esc(ep.nome)}</b>. Para cadastrar um prêmio novo, toque em Cancelar edição.</div>`:''}
@@ -2493,7 +2519,7 @@ function adminFolhasHtml(){
     <label for="rf-c">Folhas padrão do check-in<input type="number" id="rf-c" min="0" value="${c.checkin}"></label>
     <p class="small muted" style="margin:0">Os pódios são pagos sozinhos toda segunda às 8h, com os km aprovados até lá. Aprovem as corridas até domingo à noite.</p>
     <div><button class="btn primary" type="submit">Salvar regras</button></div></form></section>
-  ${adminDarHtml(ms)}`;
+`;
 }
 async function resOk(id){
   const r=S.resgates.find(x=>x.id===id);if(!r)return;
