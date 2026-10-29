@@ -192,7 +192,7 @@ a{color:var(--green)}
 .btn.danger.armed{background:var(--danger);border-color:var(--danger);color:var(--surface)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
 
-input[type=text],input[type=number],input[type=date],input[type=time],input[type=url],textarea,select{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
+input[type=text],input[type=search],input[type=number],input[type=date],input[type=time],input[type=url],textarea,select{width:100%;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-height:44px}
 textarea{min-height:88px;resize:vertical}
 label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direction:column;gap:5px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -477,6 +477,19 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .medal.can{cursor:pointer;position:relative}
 .medal.can::after{content:"";position:absolute;top:2px;right:calc(50% - 34px);width:20px;height:20px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1200' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M8 8l4-4 4 4'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 3px var(--bg)}
 .btn.story svg{width:18px;height:18px}
+.aflist{display:flex;flex-direction:column;gap:8px}
+.afp{border:1px solid var(--line);border-radius:18px;background:var(--surface);overflow:hidden}
+.afp.sel{border-color:var(--green)}
+.afrow{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;width:100%;display:flex;gap:12px;align-items:center;padding:12px;cursor:pointer}
+.aft{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.aft>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aftag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;background:var(--green-soft);color:var(--green)}
+.afs{display:flex;align-items:center;gap:4px;color:var(--green);flex:none}
+.afs i{width:16px;height:16px;display:block}.afs i svg{width:100%;height:100%}
+.afsel{display:flex;flex-direction:column;gap:10px;padding:0 12px 14px;border-top:1px solid var(--line);padding-top:12px}
+.afform{display:flex;flex-direction:column;gap:10px}
+.afh{display:grid;grid-template-columns:auto 1fr auto auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.afh:last-of-type{border-bottom:0}
 .ganhou{z-index:70;background:radial-gradient(600px 500px at 50% 30%,var(--glow),transparent 70%),var(--bg);overflow:hidden}
 .ganhou .gin{position:relative;z-index:2;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
 .ganhou .gleaf{width:96px;height:96px;color:var(--green);animation:gpop .7s cubic-bezier(.3,1.6,.5,1) both}
@@ -2312,6 +2325,52 @@ async function darFolhas(id,uid,qtd,motivo,tipo){
     if(qtd>0&&tipo!=='resgate')avisoFolhas(uid,qtd,motivo);return 'ok'}
   catch(e){console.warn('folhas',e);return 'erro'}
 }
+/* dar folhas: busca, nº de membro, histórico e marcação de alunos */
+const numDe=uid=>uid===S.uid?bibNum():100+hash(uid)%900;
+const semAc=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+const ehAluno=uid=>!!(S.alunosApp&&S.alunosApp[uid]);
+const ajustesDe=uid=>S.todasFolhas.filter(f=>f.uid===uid&&f.tipo==='ajuste').sort((a,b)=>(b.criado||0)-(a.criado||0));
+const dm=ms=>ms?new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+function adminDarHtml(ms){
+  const f=S.afFiltro||'todos',q=semAc(S.afBusca);const nAl=ms.filter(ehAluno).length;
+  let l=ms.filter(u=>{if(f==='alunos'&&!ehAluno(u))return false;if(f==='sem'&&ajustesDe(u).length)return false;if(!q)return true;const m=S.membros[u]||{};
+    return semAc(m.apelido).includes(q)||semAc(m.nome).includes(q)||String(numDe(u)).startsWith(q.replace(/\D/g,'')||'x')});
+  l.sort((a,b)=>(ehAluno(b)-ehAluno(a))||nome(a).localeCompare(nome(b)));const tot=l.length;l=l.slice(0,40);
+  const row=u=>{const m=S.membros[u]||{};const aj=ajustesDe(u)[0];const sel=S.afSel===u;const full=m.nome&&semAc(m.nome)!==semAc(m.apelido)?m.nome:'';
+    return `<div class="afp ${sel?'sel':''}"><button type="button" class="afrow" data-action="af-sel" data-uid="${esc(u)}" aria-expanded="${sel}">${avatar(u,42).replace(/ data-action="ver"[^>]*?title="[^"]*"/,'')}
+      <span class="aft"><span><b>${esc(nome(u))}</b> <span class="num muted small">· Nº ${numDe(u)}</span>${ehAluno(u)?' <span class="aftag">Aluno</span>':''}</span>
+      <span class="small muted">${[full,m.bairro,m.desde?'desde '+desdeTxt(m):''].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</span>
+      <span class="small ${aj?'':'muted'}">${aj?`Última da equipe: <b class="okf">${aj.qtd>0?'+':''}${fmtF(aj.qtd)}</b> ${esc(aj.motivo||'')} · ${dm(aj.criado)}`:'Ainda não ganhou folhas da equipe'}</span></span>
+      <span class="afs num"><b>${fmtF(saldoDe(u))}</b><i>${LEAF}</i></span></button>${sel?selHtml(u):''}</div>`};
+  return `<section class="section"><div class="sec-head"><h2 class="sec">Dar folhas manualmente</h2><span class="muted small num">${nAl} ${nAl===1?'aluno':'alunos'} marcados</span></div><div class="card">
+    <p class="small muted" style="margin:0">Na dúvida entre duas pessoas com o mesmo nome? Peça o <b>Nº</b> que aparece no app dela, no topo da tela inicial e no cartão de membro.</p>
+    <label for="af-b">Buscar pessoa<input type="search" id="af-b" data-af="b" placeholder="Nome, apelido ou Nº" value="${esc(S.afBusca||'')}" autocomplete="off"></label>
+    <div class="seg" role="group" aria-label="Filtro">${[['todos','Todos'],['alunos','Só alunos'],['sem','Sem folhas']].map(([k,t])=>`<button type="button" data-action="af-filtro" data-f="${k}" aria-pressed="${f===k}">${t}</button>`).join('')}</div>
+    <div class="aflist">${l.length?l.map(row).join(''):`<p class="muted small" style="margin:0">Ninguém encontrado.</p>`}</div>
+    ${tot>40?`<p class="small muted" style="margin:0">Mostrando 40 de ${tot}. Use a busca para achar os outros.</p>`:''}
+  </div></section>`;
+}
+function selHtml(u){
+  const hs=S.todasFolhas.filter(f=>f.uid===u).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  return `<div class="afsel">
+    <button type="button" class="btn small ${ehAluno(u)?'':'primary'}" data-action="af-aluno" data-uid="${esc(u)}">${ehAluno(u)?'✓ Aluno da assessoria · desmarcar':'Marcar como aluno da assessoria'}</button>
+    <form data-form="ajuste-folhas" class="afform"><input type="hidden" id="af-u" value="${esc(u)}">
+      <div class="row" style="gap:8px">${[[50,'Bem-vindo ao app!'],[100,'Indicou um aluno novo']].map(([n,t])=>`<button type="button" class="btn small" data-action="af-rapido" data-q="${n}" data-m="${esc(t)}">+${n} · ${esc(t)}</button>`).join('')}</div>
+      <div class="grid2"><label for="af-q">Folhas (use − para tirar)<input type="number" id="af-q" required placeholder="Ex.: 50"></label><label for="af-m">Motivo<input type="text" id="af-m" maxlength="60" required placeholder="Ex.: Bem-vindo ao app!"></label></div>
+      <button class="btn primary" type="submit">Dar folhas para ${esc(nome(u))}</button></form>
+    <p class="eyebrow" style="margin:6px 0 0">Histórico · saldo ${fmtF(saldoDe(u))}</p>
+    ${hs.length?hs.slice(0,10).map(h=>`<div class="afh"><span class="num muted small">${dm(h.criado)}</span><span class="small">${esc(h.motivo||h.tipo||'')}</span><b class="num small ${h.qtd>0?'okf':''}">${h.qtd>0?'+':''}${fmtF(h.qtd)}</b>${h.tipo==='ajuste'?`<button type="button" class="btn small danger ${S.armed==='folhas'+h.id?'armed':''}" data-action="del" data-col="folhas" data-id="${esc(h.id)}">${S.armed==='folhas'+h.id?'Confirmar':'Desfazer'}</button>`:'<span></span>'}</div>`).join(''):`<p class="small muted" style="margin:0">Nenhuma folha ainda.</p>`}
+    ${hs.length>10?`<p class="small muted" style="margin:0">+ ${hs.length-10} lançamentos mais antigos</p>`:''}
+  </div>`;
+}
+document.addEventListener('input',e=>{const el=e.target;if(!el.dataset||el.dataset.af!=='b')return;S.afBusca=el.value;const pos=el.selectionStart;render();const n=document.getElementById('af-b');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(err){}}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;if(!a.startsWith('af-'))return;e.stopImmediatePropagation();
+  if(a==='af-sel'){S.afSel=S.afSel===b.dataset.uid?null:b.dataset.uid;render()}
+  else if(a==='af-filtro'){S.afFiltro=b.dataset.f;render()}
+  else if(a==='af-rapido'){const q=document.getElementById('af-q'),m=document.getElementById('af-m');if(q)q.value=b.dataset.q;if(m)m.value=b.dataset.m}
+  else if(a==='af-aluno'){const u=b.dataset.uid;const novo=!ehAluno(u);
+    try{await setDoc(doc(fs,'projeto','alunos'),{lista:{[u]:novo}},{merge:true});S.alunosApp={...(S.alunosApp||{}),[u]:novo};render();toast(novo?`${nome(u)} marcado(a) como aluno(a).`:`${nome(u)} desmarcado(a).`)}catch(err){toast('Não deu para salvar.')}}
+});
 /* aviso de folhas ganhas: push no celular da pessoa + comemoração ao abrir o app */
 async function avisoFolhas(uid,qtd,motivo){
   try{if(!auth.currentUser)return;const tok=await auth.currentUser.getIdToken();
@@ -2434,10 +2493,7 @@ function adminFolhasHtml(){
     <label for="rf-c">Folhas padrão do check-in<input type="number" id="rf-c" min="0" value="${c.checkin}"></label>
     <p class="small muted" style="margin:0">Os pódios são pagos sozinhos toda segunda às 8h, com os km aprovados até lá. Aprovem as corridas até domingo à noite.</p>
     <div><button class="btn primary" type="submit">Salvar regras</button></div></form></section>
-  <section class="section"><h2 class="sec">Dar folhas manualmente</h2><form class="card" data-form="ajuste-folhas">
-    <label for="af-u">Pessoa<select id="af-u" required><option value="">Escolha</option>${ms.map(u=>`<option value="${esc(u)}">${esc(nome(u))}</option>`).join('')}</select></label>
-    <div class="grid2"><label for="af-q">Folhas (use − para tirar)<input type="number" id="af-q" required placeholder="Ex.: 100"></label><label for="af-m">Motivo<input type="text" id="af-m" maxlength="60" required placeholder="Ex.: Indicou um aluno novo"></label></div>
-    <div><button class="btn primary" type="submit">Dar folhas</button></div></form></section>`;
+  ${adminDarHtml(ms)}`;
 }
 async function resOk(id){
   const r=S.resgates.find(x=>x.id===id);if(!r)return;
@@ -2537,6 +2593,9 @@ document.addEventListener('submit',async e=>{
     try{await setDoc(doc(fs,'projeto','folhas'),d);toast('Regras salvas.')}catch(err){toast('Não deu para salvar.')}
   }else if(k==='ajuste-folhas'){
     const uid=v('af-u'),q=Math.round(num('af-q')||0),m=v('af-m');if(!uid||!q||!m){toast('Escolha a pessoa, a quantidade e o motivo.');return}
+    const rep=ajustesDe(uid).find(f=>semAc(f.motivo)===semAc(m));const k='afdup'+uid+semAc(m);
+    if(rep&&S.armed!==k){S.armed=k;toast(`${nome(uid)} já recebeu “${rep.motivo}” em ${dm(rep.criado)}. Toque de novo para dar outra vez.`);return}
+    S.armed=null;
     const st=await darFolhas('aj-'+newId('folhas'),uid,q,m,'ajuste');
     if(st==='ok'){['af-q','af-m'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});toast(`${q>0?'+':''}${q} folhas para ${nome(uid)}.`)}else toast('Não deu para salvar.');
   }
@@ -2596,6 +2655,7 @@ function ligarAdmin(){
         for(const l of S.lancamentos)if(l.status==='pendente'&&!(l.id in p))p[l.id]=null;S.provas=p;schedule()},()=>{});
       unsubR=DB.collection('reportes').onSnapshot(s=>{S.reportes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       unsubTF=onSnapshot(collection(fs,'folhas'),s=>{S.todasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+      if(!window.__unsubAl)window.__unsubAl=onSnapshot(doc(fs,'projeto','alunos'),s=>{const d=s.exists&&(typeof s.exists==='function'?s.exists():s.exists)?s.data():null;S.alunosApp=(d&&d.lista)||{};schedule()},()=>{});
       unsubTR=onSnapshot(collection(fs,'resgates'),s=>{S.resgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
   }
