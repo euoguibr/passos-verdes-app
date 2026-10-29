@@ -378,6 +378,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
       <button class="btn primary" id="btnGasto">+ Gasto</button>
     </div>
     <div class="sumbar num" id="lSum"></div>
+    <div id="abertoBox"></div>
     <div class="list" id="movList"></div>
   </main>
 
@@ -685,6 +686,13 @@ function renderMov(){
   if(S.lf!=="todos")all=all.filter(x=>x.frente===S.lf);
   const ein=all.filter(x=>x.tipo==="entrada").reduce((s,x)=>s+x.valor,0),eout=all.filter(x=>x.tipo==="saida").reduce((s,x)=>s+x.valor,0);
   $("lSum").innerHTML=`<span>Entradas <b class="pos">${brl(ein)}</b></span><span>Saídas <b class="neg">${brl(eout)}</b></span><span>Saldo ${S.lf==="todos"?"do mês":"desta frente"} <b>${brl(ein-eout)}</b></span>`;
+  const ab=S.lancs.filter(l=>l.previsto&&!l.eventoId).sort((a,b)=>(a.data||"").localeCompare(b.data||""));
+  const abP=ab.filter(l=>l.tipo==="saida").reduce((s,l)=>s+(+l.valor||0),0),abR=ab.filter(l=>l.tipo==="entrada").reduce((s,l)=>s+(+l.valor||0),0);
+  $("abertoBox").innerHTML=ab.length?`<div class="panel" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline"><h3 style="font-size:17px">Em aberto (ainda não saiu nem entrou na conta)</h3><span class="note num">${abP?`A pagar <b class="neg">${brl(abP)}</b>`:""}${abP&&abR?" · ":""}${abR?`A receber <b class="pos">${brl(abR)}</b>`:""}</span></div>
+    <div class="list" style="margin-top:8px">${ab.map(l=>`<div class="item mov dim"><div class="kind ${l.tipo==="entrada"?"k-in":"k-out"}" aria-hidden="true">${l.tipo==="entrada"?"+":"−"}</div>
+      <div><div class="name">${esc(l.desc)}</div><div class="meta num"><span class="tag" style="--c:${FR[frenteOf(l)].c}">${FR[frenteOf(l)].t}</span><span>previsto para ${fmtDY(l.data)}</span><span>${esc(l.cat||"")}</span></div></div>
+      <div class="right"><span class="amt num">${brl(+l.valor||0)}</span><button class="btn sm primary" data-pagou="${l.id}">${l.tipo==="entrada"?"Recebemos":"Pagamos"}</button><button class="btn sm ghost" data-item="${l.id}">Editar</button></div></div>`).join("")}</div>
+    <div class="note">Não entram no saldo nem no imposto. Quando o dinheiro sair ou entrar, clique no botão: o lançamento vai para o mês com a data de hoje.</div></div>`:"";
   $("movList").innerHTML=all.length?all.map(m=>`<div class="item mov">
       <div class="kind ${m.tipo==="entrada"?"k-in":"k-out"}" aria-hidden="true">${m.tipo==="entrada"?"+":"−"}</div>
       <div><div class="name">${esc(m.desc)}</div><div class="meta num"><span class="tag" style="--c:${FR[m.frente].c}">${FR[m.frente].t}</span><span>${fmtDY(m.data)}</span><span>${esc(m.cat||"")}</span>${m.ev?`<span>${esc(m.ev)}</span>`:""}</div></div>
@@ -767,6 +775,9 @@ function itemModal({id,tipo,frente,eventoId}){
     <label class="field">Valor unitário (R$)<input id="iU" type="number" step="0.01" inputmode="decimal" value="${l.unit!==undefined&&l.unit!==""?l.unit:(l.valor||"")}"></label>
     <label class="field">Data<input id="iDt" type="date" value="${l.data}"></label></div>
     <div class="totalbox num"><span>Total</span><span id="iTot">R$ 0,00</span></div>
+    <div class="grid2" id="iParcWrap"><label class="field">Pago agora (R$)<input id="iPg" type="number" step="0.01" min="0" inputmode="decimal" placeholder="o total"><small>Sinal ou parte: preencha só se não foi tudo agora</small></label>
+    <label class="field" id="iRdWrap" hidden>Restante previsto para<input id="iRd" type="date"></label></div>
+    <div class="note" id="iParcMsg" hidden></div>
     <label class="field">Categoria<input id="iC" list="catList" value="${esc(l.cat||"")}" placeholder="Escolha ou digite"></label>
     <label class="field check" id="iPvWrap"><input id="iPv" type="checkbox" ${l.previsto?"checked":""}> Ainda é previsto (não entrou nem saiu da conta)</label>
     <div class="acts">${id?`<button class="btn danger left" id="iDel">Excluir</button>`:""}<button class="btn" data-close>Cancelar</button><button class="btn primary" id="iOk">Salvar</button></div>`,
@@ -774,18 +785,25 @@ function itemModal({id,tipo,frente,eventoId}){
     const tot=()=>{const q=parseFloat($("iQ").value),u=parseFloat($("iU").value);const v=(isNaN(q)?1:q)*(isNaN(u)?0:u);$("iTot").textContent=brl(v);return v};
     const sync=()=>{f=$("iF").value;$("iEvWrap").hidden=f!=="eventos"&&f!=="retirada";
       const list=t==="entrada"?FR[f].in:FR[f].out;$("catList").innerHTML=list.map(c=>`<option value="${esc(c)}">`).join("");
-      $("iPvWrap").hidden=!$("iEv").value;
+      const pvOn=$("iPv").checked;$("iParcWrap").hidden=pvOn||!!l.previsto;parc();
       ov.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.t===t))};
     ov.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{t=b.dataset.t;sync()});
-    $("iF").onchange=sync;$("iEv").onchange=sync;$("iQ").oninput=tot;$("iU").oninput=tot;sync();tot();
+    function parc(){const pg=parseFloat($("iPg").value),T=tot(),on=pg>0&&pg<T-0.004;$("iRdWrap").hidden=!on;$("iParcMsg").hidden=!on;
+      if(on){if(!$("iRd").value)$("iRd").value=$("iDt").value;$("iParcMsg").innerHTML=`Fica <b>${brl(pg)}</b> lançado agora e <b>${brl(T-pg)}</b> em aberto, como ${t==="saida"?"a pagar":"a receber"}. Ele só entra no caixa quando você clicar em "${t==="saida"?"Pagamos":"Recebemos"}".`}}
+    $("iF").onchange=sync;$("iEv").onchange=sync;$("iPv").onchange=sync;$("iQ").oninput=()=>{tot();parc()};$("iU").oninput=()=>{tot();parc()};$("iPg").oninput=parc;sync();tot();
     ov.querySelector("#iOk").onclick=()=>{
       if(!needDb())return;const desc=$("iD").value.trim(),d=$("iDt").value,v=tot();
       const q=parseFloat($("iQ").value),u=parseFloat($("iU").value);
       const ev=(f==="eventos"||f==="retirada")?($("iEv").value||null):null;
       if(!desc||!d||isNaN(u)||u<0){toast("Preencha descrição, valor e data.");return}
       if(!ev&&!(v>0)){toast("O valor precisa ser maior que zero.");return}
-      const body={tipo:t,frente:f,eventoId:ev,desc,cat:$("iC").value.trim()||"Outros",qtd:isNaN(q)?1:q,unit:u,valor:Math.round(v*100)/100,data:d,previsto:ev?$("iPv").checked:false};
+      const body={tipo:t,frente:f,eventoId:ev,desc,cat:$("iC").value.trim()||"Outros",qtd:isNaN(q)?1:q,unit:u,valor:Math.round(v*100)/100,data:d,previsto:$("iPv").checked};
       if(!body.previsto){if(!id||l.previsto)body.registradoEm=nowISO();else if(l.registradoEm)body.registradoEm=l.registradoEm;}
+      const pg=parseFloat($("iPg").value);
+      if(!body.previsto&&pg>0&&pg<v-0.004){const pgR=Math.round(pg*100)/100,rest=Math.round((v-pgR)*100)/100,rd=$("iRd").value||d,base=desc.replace(/\s*·\s*(sinal|parte paga)$/i,"");
+        const paid={...body,desc:base+" · parte paga",qtd:1,unit:pgR,valor:pgR,totalCombinado:body.valor};
+        const open={...body,desc:base+" · restante",qtd:1,unit:rest,valor:rest,data:rd,previsto:true,totalCombinado:body.valor};delete open.registradoEm;
+        guard(async()=>{if(id)await S.db.doc("lancamentos/"+id).set(paid);else await S.db.collection("lancamentos").add(paid);await S.db.collection("lancamentos").add(open)},`${brl(pgR)} lançado e ${brl(rest)} em aberto`);return}
       guard(()=>id?S.db.doc("lancamentos/"+id).set(body):S.db.collection("lancamentos").add(body),"Lançamento salvo");
     };
     armDelete(ov.querySelector("#iDel"),()=>{if(needDb())guard(()=>S.db.doc("lancamentos/"+id).delete(),"Lançamento excluído")});
@@ -977,6 +995,8 @@ document.addEventListener("click",async e=>{
   else if(d.evrep)repasseModal(d.evrep);
   else if(d.additem)itemModal({tipo:d.additem,frente:"eventos",eventoId:S.ev});
   else if(d.item)itemModal({id:d.item});
+  else if(d.pagou){if(!needDb()||busy)return;const l=S.lancs.find(x=>x.id===d.pagou);if(!l)return;busy=true;
+    await guard(()=>S.db.doc("lancamentos/"+l.id).update({previsto:false,registradoEm:nowISO(),data:todayISO()}),l.tipo==="saida"?"Pagamento lançado no caixa":"Recebimento lançado no caixa",true);busy=false}
   else if(d.tog){if(!needDb()||busy)return;const l=S.lancs.find(x=>x.id===d.tog);if(!l)return;busy=true;
     await guard(()=>S.db.doc("lancamentos/"+l.id).update(l.previsto?{previsto:false,registradoEm:nowISO()}:{previsto:true}),l.previsto?"Marcado como no caixa":"Voltou para previsto",true);busy=false}
   else if(d.evconf){if(!needDb()||busy)return;busy=true;const its=S.lancs.filter(x=>x.eventoId===d.evconf&&x.previsto);
