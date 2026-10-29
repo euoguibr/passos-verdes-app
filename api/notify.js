@@ -10,7 +10,7 @@ function getApp() {
   }
   return admin;
 }
-const TIPOS = ['geral', 'eventos', 'noticias', 'desafios', 'loja'];
+const TIPOS = ['geral', 'eventos', 'noticias', 'desafios', 'loja', 'folhas'];
 const INVALIDOS = ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token', 'messaging/invalid-argument'];
 const corta = (t, n) => { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
 
@@ -34,15 +34,21 @@ module.exports = async (req, res) => {
     const url = typeof body.url === 'string' && body.url.startsWith('/') ? body.url.slice(0, 100) : '/';
     if (!title) return res.status(400).json({ erro: 'Escreva um título.' });
 
-    const [devs, membros] = await Promise.all([db.collection('dispositivos').get(), db.collection('membros').get()]);
-    const prefs = {};
-    membros.forEach(d => { prefs[d.id] = (d.data() && d.data().avisos) || {}; });
     const tokens = [];
-    devs.forEach(d => {
-      const v = d.data() || {};
-      if (tipo !== 'geral' && (prefs[v.uid] || {})[tipo] === false) return;
-      tokens.push(d.id);
-    });
+    // Aviso pessoal (ex.: "você ganhou folhas"): só os celulares dessa pessoa.
+    const para = typeof body.uid === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(body.uid) ? body.uid : '';
+    if (para) {
+      (await db.collection('dispositivos').where('uid', '==', para).get()).forEach(d => tokens.push(d.id));
+    } else {
+      const [devs, membros] = await Promise.all([db.collection('dispositivos').get(), db.collection('membros').get()]);
+      const prefs = {};
+      membros.forEach(d => { prefs[d.id] = (d.data() && d.data().avisos) || {}; });
+      devs.forEach(d => {
+        const v = d.data() || {};
+        if (tipo !== 'geral' && (prefs[v.uid] || {})[tipo] === false) return;
+        tokens.push(d.id);
+      });
+    }
 
     let enviados = 0, falhas = 0;
     const remover = [];

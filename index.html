@@ -477,6 +477,21 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .medal.can{cursor:pointer;position:relative}
 .medal.can::after{content:"";position:absolute;top:2px;right:calc(50% - 34px);width:20px;height:20px;border-radius:50%;background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230B1200' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M8 8l4-4 4 4'/%3E%3C/svg%3E") center/12px no-repeat;box-shadow:0 0 0 3px var(--bg)}
 .btn.story svg{width:18px;height:18px}
+.ganhou{z-index:70;background:radial-gradient(600px 500px at 50% 30%,var(--glow),transparent 70%),var(--bg);overflow:hidden}
+.ganhou .gin{position:relative;z-index:2;width:100%;max-width:380px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center}
+.ganhou .gleaf{width:96px;height:96px;color:var(--green);animation:gpop .7s cubic-bezier(.3,1.6,.5,1) both}
+.ganhou .gleaf svg{width:100%;height:100%}
+.ganhou .gnum{font-family:var(--display);font-stretch:72%;font-variation-settings:"wdth" 72;font-weight:900;font-size:96px;line-height:.9;color:var(--green);animation:gpop .7s .15s cubic-bezier(.3,1.6,.5,1) both}
+.ganhou .gsub{margin:-6px 0 6px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.ganhou .glist{width:100%;display:flex;flex-direction:column;gap:6px;margin:4px 0 6px}
+.ganhou .glist div{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);text-align:left}
+.ganhou .glist b{color:var(--green);white-space:nowrap}
+.ganhou .btn{width:100%}
+.gchuva i{position:absolute;top:-60px;width:34px;height:34px;color:var(--green);opacity:.75;animation:gcai linear infinite}
+.gchuva i svg{width:100%;height:100%}
+@keyframes gcai{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(110vh) rotate(540deg)}}
+@keyframes gpop{0%{transform:scale(0) rotate(-40deg);opacity:0}100%{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.gchuva{display:none}.ganhou .gleaf,.ganhou .gnum{animation:none}}
 .stsheet{z-index:60;justify-content:flex-start}
 .strava-btn{background:#FC5200;border-color:#FC5200;color:#fff;font-weight:700}
 .strava-link{color:#FC5200!important;font-weight:700}
@@ -560,6 +575,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <div class="overlay shsheet" id="shsheet" hidden role="dialog" aria-label="Postar no story"></div>
 <div class="scan" id="scan" hidden role="dialog" aria-label="Check-in com QR"></div>
 <div class="overlay stsheet" id="pixsheet" hidden role="dialog" aria-label="Pagar com Pix"></div>
+<div class="overlay ganhou" id="ganhou" hidden role="dialog" aria-label="Você ganhou folhas"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -2292,9 +2308,43 @@ function dispDe(uid){return saldoDe(uid)-reservadoDe(uid)}
 async function darFolhas(id,uid,qtd,motivo,tipo){
   qtd=Math.round(Number(qtd)||0);if(!qtd)return 'zero';
   try{const ref=doc(fs,'folhas',id);if((await getDoc(ref)).exists())return 'existe';
-    await setDoc(ref,{uid,nome:nome(uid),qtd,motivo:String(motivo||'').slice(0,80),tipo,criado:Date.now(),por:S.uid});return 'ok'}
+    await setDoc(ref,{uid,nome:nome(uid),qtd,motivo:String(motivo||'').slice(0,80),tipo,criado:Date.now(),por:S.uid});
+    if(qtd>0&&tipo!=='resgate')avisoFolhas(uid,qtd,motivo);return 'ok'}
   catch(e){console.warn('folhas',e);return 'erro'}
 }
+/* aviso de folhas ganhas: push no celular da pessoa + comemoração ao abrir o app */
+async function avisoFolhas(uid,qtd,motivo){
+  try{if(!auth.currentUser)return;const tok=await auth.currentUser.getIdToken();
+    await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},
+      body:JSON.stringify({uid,tipo:'folhas',titulo:`🍃 Você ganhou +${fmtF(qtd)} folhas!`,texto:`${String(motivo||'Presente da equipe Passos Verdes').slice(0,80)} · Toque para ver seus prêmios.`,url:'/#folhas'})})}
+  catch(e){console.warn('aviso folhas',e)}
+}
+const GANHO={aberto:false};
+function ganhosNovos(){
+  if(!S.uid||!Array.isArray(S.minhasFolhas))return null;const k='pv-fvisto-'+S.uid;let v=null;
+  try{v=localStorage.getItem(k)}catch(e){}
+  if(v===null){v=Date.now()-7*864e5;try{localStorage.setItem(k,String(v))}catch(e){}}
+  return S.minhasFolhas.filter(f=>(Number(f.qtd)||0)>0&&f.tipo!=='resgate'&&(Number(f.criado)||0)>Number(v)).sort((a,b)=>(a.criado||0)-(b.criado||0));
+}
+function checarGanhos(){
+  if(GANHO.aberto||!S.uid)return;const n=ganhosNovos();if(!n||!n.length)return;
+  if(['onb','mcard','crop','game','shsheet','scan','pixsheet'].some(id=>{const e=document.getElementById(id);return e&&!e.hidden}))return;
+  GANHO.aberto=true;GANHO.ate=Math.max(...n.map(f=>Number(f.criado)||0));
+  const tot=n.reduce((t,f)=>t+(Number(f.qtd)||0),0);const el=$('#ganhou');
+  const fl=Array.from({length:14},(_,i)=>`<i style="left:${(i*37+11)%100}%;animation-delay:${(i%7)*.18}s;animation-duration:${2.4+(i%4)*.4}s">${LEAF}</i>`).join('');
+  el.innerHTML=`<div class="gchuva" aria-hidden="true">${fl}</div><div class="gin">
+    <div class="gleaf">${LEAF}</div>
+    <p class="eyebrow" style="margin:0">Você ganhou</p>
+    <div class="gnum num">+${fmtF(tot)}</div><p class="gsub">folhas</p>
+    <div class="glist">${n.slice(-3).map(f=>`<div><span>${esc(f.motivo||'Presente da equipe')}</span><b class="num">+${fmtF(f.qtd)}</b></div>`).join('')}${n.length>3?`<div class="muted small">e mais ${n.length-3}</div>`:''}</div>
+    <p class="small muted" style="margin:0">Seu saldo agora: <b class="num" style="color:var(--ink)">${fmtF(dispDe(S.uid))} folhas</b></p>
+    <button class="btn primary" data-action="gan-ver">Ver prêmios</button><button class="btn" data-action="gan-x">Fechar</button></div>`;
+  el.hidden=false;
+}
+function fecharGanho(){try{localStorage.setItem('pv-fvisto-'+S.uid,String(GANHO.ate||Date.now()))}catch(e){}const el=$('#ganhou');el.hidden=true;el.innerHTML='';GANHO.aberto=false}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;if(!a.startsWith('gan-'))return;e.stopImmediatePropagation();
+  fecharGanho();if(a==='gan-ver')go('folhas')});
+setInterval(checarGanhos,4000);
 /* semana */
 function semanaD(off=0){const k=semanaKey(off);const a=pd(k);const b=new Date(a);b.setDate(a.getDate()+6);const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
   return {id:'semana-'+k,titulo:'Desafio da semana',descricao:'Zera toda segunda. Cada km aprovado vira folha.',ativo:off===0,meta:0,inicio:k,fim:iso(b),semanal:true}}
@@ -2524,7 +2574,7 @@ onAuthStateChanged(auth,async u=>{
     getDoc(doc(fs,'admins',(u.email||'').toLowerCase())).then(a=>{if(S.uid!==u.uid)return;S.admin=a.exists();if(S.admin)ligarAdmin();render()}).catch(()=>{});
     pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
     unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
-    unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule();setTimeout(checarGanhos,600)},()=>{});
     unsubRs=onSnapshot(query(collection(fs,'resgates'),where('uid','==',u.uid)),s=>{S.meusResgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubX=onSnapshot(collection(fs,'reacoes'),s=>{const r={};s.docs.forEach(d=>{r[d.id]=d.data()});S.reacoes=r;schedule()},()=>{});
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
