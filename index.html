@@ -293,6 +293,10 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .prod .bdg{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:6px;background:var(--green);color:var(--on-green)}
 .prod .bdg.off{background:var(--danger);color:#fff}
 .prod .bdg.last{background:var(--ipe);color:#1a1405}
+.prod .bdg.enc{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.prod .ult{font-size:12.5px;font-weight:700;color:var(--danger)}
+.pixcode{width:100%;min-height:96px;font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;resize:none}
+.pixsteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 .prod .pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .prod .de{font-size:13px;color:var(--muted);text-decoration:line-through}
 .swatches{display:flex;gap:5px;flex-wrap:wrap}
@@ -530,6 +534,8 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .ckres{min-height:84px;border-radius:18px;padding:14px;background:#111311;border:1px solid #232723;display:flex;align-items:center;gap:12px;font-weight:600}
 .ckres.ok{border-color:#C8F560;background:#1F2A0F}.ckres.no{border-color:#7a2a2a;background:#2a1414}.ckres.ja{border-color:#b0870a}
 .ckres b{flex:1}
+.card.editando{box-shadow:0 0 0 2px var(--green)}
+.adm-item.sel{background:var(--green-soft);border-radius:12px;padding-inline:8px}
 </style>
 </head>
 <body>
@@ -551,6 +557,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <div class="gameov" id="game" hidden role="dialog" aria-label="Jogo Corre, Verde!"></div>
 <div class="overlay shsheet" id="shsheet" hidden role="dialog" aria-label="Postar no story"></div>
 <div class="scan" id="scan" hidden role="dialog" aria-label="Check-in com QR"></div>
+<div class="overlay stsheet" id="pixsheet" hidden role="dialog" aria-label="Pagar com Pix"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -791,12 +798,68 @@ function quizCard(q){
 function brl(n){return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 const tamanhosDe=p=>(Array.isArray(p.tamanhos)?p.tamanhos:[]).flatMap(t=>String(t).split(/[\s\/|]+/)).map(t=>t.trim()).filter(Boolean);
 const splitList=v=>String(v||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
+const vkey=(t,c)=>(t||'-')+'|'+(c||'-');
+const ctrlEst=p=>!!(p&&p.estoque&&typeof p.estoque==='object')&&!p.encomenda;
+function qtdVar(p,t,c){return ctrlEst(p)?(Number(p.estoque[vkey(t,c)])||0):Infinity}
+function dispTam(p,t){const cs=(p.cores&&p.cores.length)?p.cores:['-'];return cs.reduce((s,c)=>s+qtdVar(p,t,c),0)}
+function dispCor(p,t,c){if(t)return qtdVar(p,t,c);const ts=tamanhosDe(p).length?tamanhosDe(p):['-'];return ts.reduce((s,x)=>s+qtdVar(p,x,c),0)}
+function pixKey(){let k=String((S.info&&S.info.pix)||'').trim();if(!k)return '';if(k.includes('@')||/[a-f0-9]{8}-[a-f0-9]{4}-/i.test(k))return k;if(k.startsWith('+'))return '+'+k.replace(/\D/g,'');const d=k.replace(/\D/g,'');return d.length===11||d.length===14?d:k.replace(/\s/g,'')}
+function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=c&0x8000?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
+function pixPayload(valor,txid){
+  const f=(id,v)=>id+String(v.length).padStart(2,'0')+v;
+  const clean=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 ]/g,'').trim().toUpperCase();
+  const i=S.info||{};const nome=clean(i.pixNome||'Passos Verdes').slice(0,25)||'PASSOS VERDES',cid=clean(i.pixCidade||'Mage').slice(0,15)||'MAGE';
+  const p=f('00','01')+f('26',f('00','br.gov.bcb.pix')+f('01',pixKey()))+f('52','0000')+f('53','986')+(valor>0?f('54',valor.toFixed(2)):'')+f('58','BR')+f('59',nome)+f('60',cid)+f('62',f('05',(String(txid||'').replace(/[^A-Za-z0-9]/g,'').slice(0,25)||'***')))+'6304';
+  return p+crc16(p);
+}
+// confere tamanho, cor e estoque antes de pedir
+function selPedido(p){
+  const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
+  if(tam.length&&!sel.t){toast('Escolha o tamanho.');return null}
+  if(cor.length&&!sel.c){toast('Escolha a cor.');return null}
+  const q=Number(sel.q||1),tem=qtdVar(p,sel.t,sel.c);
+  if(tem<q){toast(tem>0?`Só tem ${tem} nessa opção.`:'Essa opção acabou. Escolha outra.');return null}
+  return {sel,q,total:(Number(p.preco)||0)*q};
+}
+const PIX={ped:null,busy:false};
+function pixRender(){
+  const el=$('#pixsheet');const o=PIX.ped;if(!o){el.hidden=true;el.innerHTML='';return}
+  const code=pixPayload(o.total,'PV'+o.id);const curto=o.id.slice(-5).toUpperCase();
+  const msg=`Olá! Paguei pelo Pix o pedido #${curto} da loja Passos Verdes:\n\n${o.qtd}x ${o.produto}${o.tamanho?` · tamanho ${o.tamanho}`:''}${o.cor?` · cor ${o.cor}`:''}\nTotal: ${brl(o.total)}${o.nome?`\n\nNome: ${o.nome}`:''}\n\nSegue o comprovante:`;
+  const wa=waNumber();
+  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Pedido #${esc(curto)}</p><h2 class="sec">Pagar com Pix</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="pix-x" aria-label="Fechar">×</button></div>
+  <div class="card" style="gap:6px"><b>${esc(o.qtd)}x ${esc(o.produto)}${o.tamanho?' · '+esc(o.tamanho):''}${o.cor?' · '+esc(o.cor):''}</b><span class="price num" style="font-size:26px">${brl(o.total)}</span></div>
+  <div class="card" style="gap:10px"><label for="pix-code" class="small"><b>Pix copia e cola</b></label><textarea id="pix-code" class="pixcode" readonly>${esc(code)}</textarea>
+  <button class="btn primary" data-action="pix-copy">Copiar código Pix</button>
+  <ol class="pixsteps small muted"><li>Copie o código acima.</li><li>No app do seu banco, vá em Pix → Pix copia e cola e cole. O valor já vem preenchido.</li><li>Mande o comprovante no WhatsApp. A equipe confirma e separa a sua peça.</li></ol></div>
+  ${wa?`<a class="btn" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>`:''}
+  <p class="small muted" style="margin:0;text-align:center">Pedido registrado. Se mudar de ideia, é só avisar a gente.</p></div>`;
+  el.hidden=false;
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
+  if(!a.startsWith('pix'))return;e.stopImmediatePropagation();
+  if(a==='pix-x'){PIX.ped=null;pixRender()}
+  else if(a==='pix-copy'){const t=$('#pix-code');try{await navigator.clipboard.writeText(t.value);toast('Código copiado! Agora é colar no app do banco.')}catch(err){t.select();toast('Selecione e copie o código.')}}
+  else if(a==='pix'){
+    if(!S.uid){login();return}
+    const p=S.produtos.find(x=>x.id===b.dataset.id);if(!p||PIX.busy)return;const r=selPedido(p);if(!r)return;
+    const quem=me().apelido||S.myName||'';PIX.busy=true;b.disabled=true;
+    const ped={uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:r.sel.t||'',cor:r.sel.c||'',qtd:r.q,total:r.total,status:'novo',criado:Date.now(),canal:'app',pix:true};
+    try{const ref=await S.db.collection('pedidos').add(ped);PIX.ped={...ped,id:ref.id};pixRender()}
+    catch(err){toast('Não deu para registrar o pedido. Tente de novo.')}
+    PIX.busy=false;b.disabled=false;
+  }
+},true);
 function waNumber(){let d=String((S.info&&S.info.whatsapp)||'').replace(/\D/g,'');if(!d)return '';if(!d.startsWith('55'))d='55'+d;return d}
 function prodCard(p){
   const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
   const opt=(arr,v)=>arr.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('');
   const wa=waNumber();const de=Number(p.precoDe)||0;const off=de>Number(p.preco)?Math.round((1-Number(p.preco)/de)*100):0;
-  const badges=[p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:''].join('');
+  const badges=[p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('');
+  const ctl=ctrlEst(p);const optT=v=>tam.map(o=>{const z=ctl&&dispTam(p,o)<=0;return `<option ${o===v&&!z?'selected':''} ${z?'disabled':''}>${esc(o)}${z?' (esgotado)':''}</option>`}).join('');
+  const optC=v=>cor.map(o=>{const z=ctl&&dispCor(p,sel.t,o)<=0;return `<option ${o===v&&!z?'selected':''} ${z?'disabled':''} value="${esc(o)}">${esc(o)}${z?' (esgotado)':''}</option>`}).join('');
+  const resta=ctl&&(!tam.length||sel.t)&&(!cor.length||sel.c)?qtdVar(p,sel.t,sel.c):null;const pk=pixKey();
   const sw=cor.map(c=>corHex(c)).filter(Boolean);
   return `<article class="card prod ${p.esgotado?'soldout':''}"><div class="pimgw">${okPic(p.foto)?`<img class="pimg" src="${p.foto}" alt="${esc(p.nome)}" loading="lazy" data-action="zoom" data-src="${p.foto}">`:`<div class="noimg small">Sem foto</div>`}${badges?`<div class="badges">${badges}</div>`:''}</div>
   <div class="pb"><h3>${esc(p.nome)}</h3>
@@ -805,15 +868,18 @@ function prodCard(p){
   <div class="pr"><span class="price">${brl(p.preco)}</span>${off?`<span class="de">${brl(de)}</span>`:''}</div>
   ${p.descricao?`<p class="small muted" style="margin:0">${esc(p.descricao)}</p>`:''}
   ${p.esgotado?`<span class="st no" style="align-self:flex-start">Esgotado</span>`:`
-  ${tam.length?`<label for="pt-${esc(p.id)}">Tamanho<select id="pt-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="t"><option value="">Escolha</option>${opt(tam,sel.t)}</select></label>`:''}
-  ${cor.length?`<label for="pc-${esc(p.id)}">Cor<select id="pc-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="c"><option value="">Escolha</option>${opt(cor,sel.c)}</select></label>`:''}
+  ${tam.length?`<label for="pt-${esc(p.id)}">Tamanho<select id="pt-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="t"><option value="">Escolha</option>${optT(sel.t)}</select></label>`:''}
+  ${cor.length?`<label for="pc-${esc(p.id)}">Cor<select id="pc-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="c"><option value="">Escolha</option>${optC(sel.c)}</select></label>`:''}
   <label for="pq-${esc(p.id)}">Quantidade<select id="pq-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="q">${[1,2,3,4,5].map(n=>`<option ${Number(sel.q||1)===n?'selected':''}>${n}</option>`).join('')}</select></label>
-  ${wa?`<a class="btn primary" href="https://wa.me/${wa}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">Quero o meu</a>`:`<span class="muted small">Pedidos em breve.</span>`}
+  ${resta!==null&&resta<=3?`<span class="ult">${resta>0?(resta===1?'Última peça nessa opção':`Últimas ${resta} nessa opção`):'Essa opção acabou'}</span>`:''}
+  ${p.encomenda?`<span class="muted small">Feito sob encomenda: o prazo a gente combina depois do pagamento.</span>`:''}
+  ${pk?`<button class="btn primary" data-action="pix" data-id="${esc(p.id)}">Pagar com Pix</button>`:''}
+  ${wa?`<a class="btn ${pk?'':'primary'}" href="https://wa.me/${wa}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">${pk?'Pedir pelo WhatsApp':'Quero o meu'}</a>`:(pk?'':`<span class="muted small">Pedidos em breve.</span>`)}
   ${/^https?:\/\//.test(p.linkPagamento||'')?`<a class="btn" href="${esc(p.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a>`:''}`}
   </div></article>`;
 }
 function vLoja(){
-  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Fecha o pedido direto no WhatsApp.</p>
+  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Paga no Pix aqui mesmo ou fecha o pedido no WhatsApp.</p>
   <div class="trust"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4a2 2 0 1 0 0 .1"/><path d="M8 21l3-6 3 2v4M6 12l3-3 4 1 3 3 3 1"/></svg><b>Retire no treino</b>Sem frete, entregue na mão</div>
   <div><svg viewBox="0 0 24 24" fill="currentColor">${WAICON.replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg><b>Pedido no Zap</b>Atendimento direto com a gente</div>
   <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c4 3 6 6 6 10a6 6 0 0 1-12 0c0-4 2-7 6-10z"/><path d="M12 21v-7"/></svg><b>Feito em Magé</b>Cada compra fortalece o projeto</div></div></section>`;
@@ -824,23 +890,21 @@ function vLoja(){
   for(const g of secs)h+=`<section class="section loja-sec">${secs.length>1?`<h2 class="sec">${esc(g.k)}</h2>`:''}<div class="prod-grid">${g.ps.map(prodCard).join('')}</div></section>`;
   return h;
 }
-function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>p.status!=='concluido').length+S.reportes.filter(r=>r.status!=='resolvido').length+S.resgates.filter(r=>r.status==='pendente').length:0}
+function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>(p.status||'novo')==='novo').length+S.reportes.filter(r=>r.status!=='resolvido').length+S.resgates.filter(r=>r.status==='pendente').length:0}
 document.addEventListener('input',e=>{const el=e.target;if(!el.id)return;
   if(el.id==='pf-a'){let d=el.value.replace(/\D/g,'').slice(0,4);if(d.length===1&&Number(d)>3)d='0'+d;el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d}
   else if(el.id==='pf-p'){let d=el.value.replace(/\D/g,'').slice(0,4);el.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d}
 });
-document.addEventListener('change',e=>{const el=e.target;if(el.dataset&&el.dataset.aviso){const k=el.dataset.aviso,v=el.checked;saveMe(m=>{m.avisos={...(m.avisos||{}),[k]:v}});return}if(el.dataset&&el.dataset.sel){const id=el.dataset.sel;S.sel[id]={...(S.sel[id]||{}),[el.dataset.k]:el.value}}});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset&&el.dataset.aviso){const k=el.dataset.aviso,v=el.checked;saveMe(m=>{m.avisos={...(m.avisos||{}),[k]:v}});return}if(el.dataset&&el.dataset.sel){const id=el.dataset.sel;S.sel[id]={...(S.sel[id]||{}),[el.dataset.k]:el.value};const pp=S.produtos.find(x=>x.id===id);if(ctrlEst(pp)){if(el.dataset.k==='t'&&S.sel[id].c&&dispCor(pp,el.value,S.sel[id].c)<=0)S.sel[id].c='';schedule()}}});
 document.addEventListener('click',e=>{
   const a=e.target.closest('a[data-buy]');if(!a)return;
   const p=S.produtos.find(x=>x.id===a.dataset.buy);if(!p){e.preventDefault();return}
-  const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
-  if(tam.length&&!sel.t){e.preventDefault();toast('Escolha o tamanho.');return}
-  if(cor.length&&!sel.c){e.preventDefault();toast('Escolha a cor.');return}
-  const q=Number(sel.q||1);const total=(Number(p.preco)||0)*q;
+  const r=selPedido(p);if(!r){e.preventDefault();return}
+  const sel=r.sel,q=r.q,total=r.total;
   const quem=me().apelido||S.myName||'';
   const msg=`Olá! Quero fazer um pedido na loja Passos Verdes:\n\n${q}x ${p.nome}${sel.t?` · tamanho ${sel.t}`:''}${sel.c?` · cor ${sel.c}`:''}\nTotal: ${brl(total)}${quem?`\n\nNome: ${quem}`:''}`;
   a.href=`https://wa.me/${waNumber()}?text=${encodeURIComponent(msg)}`;
-  if(S.uid)S.db.collection('pedidos').add({uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:sel.t||'',cor:sel.c||'',qtd:q,total,status:'novo',criado:Date.now()}).catch(()=>{});
+  if(S.uid)S.db.collection('pedidos').add({uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:sel.t||'',cor:sel.c||'',qtd:q,total,status:'novo',criado:Date.now(),canal:'app'}).catch(()=>{});
 },true);
 
 const AVISOS=[['eventos','Treinos, corridas e ações'],['noticias','Notícias'],['desafios','Desafios'],['loja','Novidades da loja']];
@@ -1305,12 +1369,14 @@ function vAdmin(){
   const i=S.info||{};
   const pend=S.lancamentos.filter(l=>l.status==='pendente').sort((a,b)=>(a.criado||0)-(b.criado||0));
   const dtit=id=>String(id).startsWith('semana-')?'Desafio da semana '+fmtShort(String(id).slice(7)):(S.desafios.find(d=>d.id===id)||{}).titulo||'Desafio';
-  const peds=[...S.pedidos].sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,40);
+  const PST={novo:['wait','Aguardando pagamento'],pago:['ok','Pago · a entregar'],concluido:['ok','Entregue'],cancelado:['no','Cancelado']};
+  const peds=[...S.pedidos].filter(p=>p.status!=='cancelado').sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,20);
   const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
   const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
   const editing=c=>S.edit&&S.edit.col===c?S[c].find(x=>x.id===S.edit.id)||null:null;
   const ee=editing('eventos'),en=editing('noticias'),ed=editing('desafios');
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
+  <section class="section"><a class="card" href="/gestao.html" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;justify-content:space-between;gap:12px"><span class="stack" style="gap:2px"><b>Gestão financeira e estoque</b><span class="small muted">Caixa, mensalidades, eventos, vendas e estoque da loja</span></span><span class="btn small primary">Abrir</span></a></section>
   ${statsHtml()}
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
   ${pend.length?pend.map(l=>{const pv=S.provas[l.id];const sv=l.origem==='strava';return `<div class="check">${sv?`<div class="nothumb stv-ok"><b>✓</b>Dados do Strava</div>`:pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
@@ -1322,12 +1388,12 @@ function vAdmin(){
   :`<p class="muted small" style="margin:0">Nada para conferir agora.</p>`}</div></section>
 
   ${adminFolhasHtml()}
-  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>p.status!=='concluido').length)}</span></div><div class="card">
+  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>(p.status||'novo')==='novo').length)}</span></div><div class="card">
   ${peds.length?peds.map(p=>`<div class="pedido"><div><b class="small">${esc(p.qtd)}x ${esc(p.produto)}${p.tamanho?' · '+esc(p.tamanho):''}${p.cor?' · '+esc(p.cor):''}</b>
     <div class="muted small">${esc(p.nome||'Sem nome')} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</div></div>
-    <div class="row" style="flex-wrap:nowrap">${p.status==='concluido'?`<span class="st ok">Entregue</span>`:`<button class="btn small" data-action="pedok" data-id="${esc(p.id)}">Entregue</button>`}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
+    <div class="row" style="flex-wrap:nowrap">${(s=>`<span class="st ${s[0]}">${s[1]}</span>`)(PST[p.status||'novo']||PST.novo)}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
-  <p class="muted small" style="margin:0">O WhatsApp que recebe os pedidos é o do formulário "Sobre o projeto", mais abaixo.</p></div></section>
+  <p class="muted small" style="margin:0">Confirme pagamentos, dê baixa no estoque e lance no caixa pela <a href="/gestao.html#vendas">Gestão → Vendas</a>. O WhatsApp e a chave Pix da loja ficam no formulário "Sobre o projeto", mais abaixo.</p></div></section>
 
   <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
   ${S.reportes.length?[...S.reportes].sort((a,b)=>(a.status==='resolvido'?1:0)-(b.status==='resolvido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,30).map(r=>`<div class="check">${okPic(r.foto)?`<img class="thumb" src="${r.foto}" alt="Print enviado" data-action="zoom" data-src="${r.foto}">`:`<div class="nothumb">Sem print</div>`}
@@ -1439,6 +1505,9 @@ function vAdmin(){
     <label for="in-m">Manifesto (frase de destaque no Início)<textarea id="in-m" maxlength="160">${esc(infoV('manifesto'))}</textarea></label>
     <div class="grid2"><label for="in-gr">Link do grupo do WhatsApp<input type="url" id="in-gr" value="${esc(infoV('grupo'))}"></label><label for="in-e">E-mail de contato<input type="email" id="in-e" value="${esc(infoV('email'))}"></label></div>
     <div class="grid2"><label for="in-r">Faixa de recado no topo (opcional)<input type="text" id="in-r" maxlength="70" value="${esc(i.recado||'')}" placeholder="Ex.: Inscrições abertas pro Longão da Serra"></label><label for="in-rl">Link da faixa (opcional)<input type="url" id="in-rl" value="${esc(i.recadoLink||'')}" placeholder="https://"></label></div>
+    <label for="in-px">Chave Pix da loja<input type="text" id="in-px" value="${esc(i.pix||'')}" placeholder="CNPJ, e-mail, +55 21 9… ou chave aleatória"></label>
+    <div class="grid2"><label for="in-pxn">Nome no Pix<input type="text" id="in-pxn" maxlength="25" value="${esc(i.pixNome||'Passos Verdes')}"></label><label for="in-pxc">Cidade no Pix<input type="text" id="in-pxc" maxlength="15" value="${esc(i.pixCidade||'Magé')}"></label></div>
+    <p class="muted small" style="margin:0">Com a chave preenchida, a loja ganha o botão "Pagar com Pix" com o valor já calculado. Telefone vai com +55 na frente.</p>
     <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`;
 }
 
@@ -1907,7 +1976,7 @@ document.addEventListener('submit',e=>{
     addTo('desafios',d,f).then(ok=>{if(ok&&av)notificar({tipo:'desafios',titulo:'Novo desafio: '+d.titulo,texto:(d.meta?`Meta da galera: ${kmf(d.meta)} km. `:'')+'Bora somar seus km?',url:'/#desafios'})})}
   else if(k==='enquete'){const o=lines('en-o');if(o.length<2){toast('Coloque pelo menos 2 opções.');return}addTo('enquetes',{pergunta:val('en-p'),opcoes:o,ativa:true},f)}
   else if(k==='quiz'){const o=lines('qz-o');const c=parseInt(val('qz-c'),10)-1;if(o.length<2){toast('Coloque pelo menos 2 opções.');return}if(!(c>=0&&c<o.length)){toast('O número da opção certa precisa existir na lista.');return}addTo('quiz',{pergunta:val('qz-p'),opcoes:o,correta:c,explicacao:val('qz-e')},f)}
-  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),premioJogo:val('in-g'),manifesto:val('in-m'),grupo:val('in-gr'),email:val('in-e'),recado:val('in-r'),recadoLink:val('in-rl')}).then(()=>{render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
+  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),premioJogo:val('in-g'),manifesto:val('in-m'),grupo:val('in-gr'),email:val('in-e'),recado:val('in-r'),recadoLink:val('in-rl'),pix:val('in-px'),pixNome:val('in-pxn'),pixCidade:val('in-pxc')}).then(()=>{render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
 });
 
 document.addEventListener('click',async e=>{
@@ -2289,7 +2358,8 @@ function adminFolhasHtml(){
     ${pend.length?pend.map(r=>{const sd=saldoDe(r.uid);const k='re'+r.id;return `<div class="adm-item"><div><b class="small">${esc(nome(r.uid)!=='Corredor(a)'?nome(r.uid):r.nome)} · ${esc(r.premio)}</b><div class="muted small num">${fmtF(r.folhas)} folhas · saldo ${fmtF(sd)}${sd<r.folhas?' · <b style="color:var(--danger)">saldo insuficiente</b>':''}</div></div>
       <div class="row" style="flex-wrap:nowrap"><button class="btn small primary" data-action="res-ok" data-id="${esc(r.id)}">Entregue</button><button class="btn small danger ${S.armed===k?'armed':''}" data-action="res-x" data-id="${esc(r.id)}">${S.armed===k?'Confirmar':'Cancelar'}</button></div></div>`}).join(''):`<p class="muted small" style="margin:0">Nenhuma troca aguardando entrega.</p>`}
   </div></section>
-  <section class="section"><h2 class="sec">${ep?'Editar prêmio':'Novo prêmio'}</h2><form class="card" data-form="premio">
+  <section class="section"><h2 class="sec">${ep?'Editar prêmio':'Novo prêmio'}</h2><form class="card ${ep?'editando':''}" data-form="premio">
+    ${ep?`<div class="notice small">Você está editando <b>${esc(ep.nome)}</b>. Para cadastrar um prêmio novo, toque em Cancelar edição.</div>`:''}
     <label for="pm-n">Nome<input type="text" id="pm-n" maxlength="60" required placeholder="Ex.: Mensalidade grátis" value="${ep?esc(ep.nome):''}"></label>
     <label for="pm-d">Descrição (opcional)<input type="text" id="pm-d" maxlength="120" placeholder="Ex.: 1 mês de assessoria" value="${ep?esc(ep.descricao||''):''}"></label>
     <div class="grid2"><label for="pm-c">Quanto custa para vocês (R$)<input type="text" id="pm-c" inputmode="decimal" placeholder="Ex.: 35" value="${ep&&ep.custo?esc(String(ep.custo).replace('.',',')):''}" data-sug="1"></label>
@@ -2298,7 +2368,7 @@ function adminFolhasHtml(){
     <label for="pm-e">Estoque (opcional)<input type="number" id="pm-e" min="0" placeholder="Deixe vazio se não tiver limite" value="${ep&&ep.estoque!=null?esc(ep.estoque):''}"></label>
     ${photoField('pm-ft','Foto (opcional)',ep?ep.foto:'')}
     <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ep?'Salvar prêmio':'Adicionar prêmio'}</button>${ep?`<button type="button" class="btn" data-action="pm-cancel">Cancelar edição</button>`:''}</div></form>
-    <div class="card">${S.premios.length?[...S.premios].sort((a,b)=>(a.folhas||0)-(b.folhas||0)).map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small num">${fmtF(p.folhas)} folhas${p.custo?' · custo R$ '+esc(String(p.custo).replace('.',',')):''}${p.estoque!=null&&p.estoque!==''?' · estoque '+esc(p.estoque):''}${p.ativo===false?' · pausado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="pm-edit" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="premios" data-id="${esc(p.id)}" data-f="ativo">${p.ativo===false?'Ativar':'Pausar'}</button><button class="btn small danger ${S.armed==='premios'+p.id?'armed':''}" data-action="del" data-col="premios" data-id="${esc(p.id)}">${S.armed==='premios'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum prêmio cadastrado.</p>`}</div></section>
+    <div class="card">${S.premios.length?[...S.premios].sort((a,b)=>(a.folhas||0)-(b.folhas||0)).map(p=>`<div class="adm-item ${S.editPremio===p.id?'sel':''}"><div><b class="small">${esc(p.nome)}</b><div class="muted small num">${fmtF(p.folhas)} folhas${p.custo?' · custo R$ '+esc(String(p.custo).replace('.',',')):''}${p.estoque!=null&&p.estoque!==''?' · estoque '+esc(p.estoque):''}${p.ativo===false?' · pausado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="pm-edit" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="premios" data-id="${esc(p.id)}" data-f="ativo">${p.ativo===false?'Ativar':'Pausar'}</button><button class="btn small danger ${S.armed==='premios'+p.id?'armed':''}" data-action="del" data-col="premios" data-id="${esc(p.id)}">${S.armed==='premios'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum prêmio cadastrado.</p>`}</div></section>
   <section class="section"><h2 class="sec">Regras das folhas</h2><form class="card" data-form="regras-folhas">
     <div class="grid2"><label for="rf-m">Meta semanal (km)<input type="text" inputmode="decimal" id="rf-m" value="${esc(String(c.metaSemanal).replace('.',','))}"></label><label for="rf-b">Bônus ao bater a meta<input type="number" id="rf-b" min="0" value="${c.folhasMeta}"></label></div>
     <label for="rf-k">Folhas por km aprovado<input type="text" inputmode="decimal" id="rf-k" value="${esc(String(c.folhasKm).replace('.',','))}"></label>
@@ -2396,8 +2466,15 @@ document.addEventListener('submit',async e=>{
   if(k==='premio'){
     const d={nome:v('pm-n'),descricao:v('pm-d'),custo:num('pm-c')||0,folhas:Math.round(num('pm-f')||0),estoque:v('pm-e')===''?null:Math.max(0,Math.round(num('pm-e'))),foto:S.pending['pm-ft']!==undefined?S.pending['pm-ft']:(S.editPremio?(S.premios.find(p=>p.id===S.editPremio)||{}).foto||'':'')};
     if(!d.nome||!(d.folhas>0)){toast('Preencha o nome e o preço em folhas.');return}
-    try{if(S.editPremio)await updateDoc(doc(fs,'premios',S.editPremio),d);else await addDoc(collection(fs,'premios'),{...d,ativo:true,criado:Date.now()});
-      S.editPremio=null;delete S.pending['pm-ft'];f.querySelectorAll('input:not([type=file])').forEach(i=>i.value='');render();toast('Prêmio salvo.')}catch(err){toast('Não deu para salvar o prêmio.')}
+    if(S.salvandoPremio)return;
+    const edit=S.editPremio;
+    if(!edit&&S.premios.some(p=>String(p.nome).trim().toLowerCase()===d.nome.toLowerCase()&&Number(p.folhas)===d.folhas)){toast('Esse prêmio já está cadastrado.');return}
+    S.salvandoPremio=true;const btn=f.querySelector('button[type=submit]');if(btn){btn.disabled=true;btn.textContent='Salvando…'}
+    const campos=[...f.querySelectorAll('input:not([type=file])')].map(i=>[i,i.value]);campos.forEach(([i])=>i.value='');
+    const pend=S.pending['pm-ft'];S.editPremio=null;delete S.pending['pm-ft'];
+    try{const op=edit?updateDoc(doc(fs,'premios',edit),d):addDoc(collection(fs,'premios'),{...d,ativo:true,criado:Date.now()});
+      S.salvandoPremio=false;render();toast(edit?'Prêmio atualizado.':'Prêmio adicionado.');await op}
+    catch(err){S.salvandoPremio=false;S.editPremio=edit;if(pend!==undefined)S.pending['pm-ft']=pend;render();campos.forEach(([i,v])=>{const el=document.getElementById(i.id);if(el)el.value=v});toast('Não deu para salvar o prêmio. Tente de novo.')}
   }else if(k==='regras-folhas'){
     const d={metaSemanal:Math.max(0,num('rf-m')||0),folhasKm:Math.max(0,num('rf-k')||0),folhasMeta:Math.max(0,Math.round(num('rf-b')||0)),podio:['rf-p1','rf-p2','rf-p3'].map(i=>Math.max(0,Math.round(num(i)||0))),jogo:['rf-j1','rf-j2','rf-j3'].map(i=>Math.max(0,Math.round(num(i)||0))),checkin:Math.max(0,Math.round(num('rf-c')||0))};
     try{await setDoc(doc(fs,'projeto','folhas'),d);toast('Regras salvas.')}catch(err){toast('Não deu para salvar.')}
