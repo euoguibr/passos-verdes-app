@@ -111,7 +111,43 @@ async function manha(a, ctx) {
       }
     }
   }
+  // Folhas: pódio do desafio da semana e do jogo (às segundas)
+  if (diaSemana(hoje) === 1 || ctx.modo === 'teste') {
+    try { resumo.push(...await pagarPodios(a, ctx, membros, toks, hoje)); } catch (e) { console.error('podios', e); resumo.push('Pódios: erro ' + (e.message || '')); }
+  }
   return resumo;
+}
+
+const PADRAO_F = { podio: [60, 40, 25], jogo: [30, 20, 10] };
+async function pagarPodios(a, ctx, membros, toks, hoje) {
+  const db = a.firestore(); const out = [];
+  const semana = addDias(segundaDe(hoje), -7); const did = 'semana-' + semana;
+  const cfg = (await db.doc('projeto/folhas').get()).data() || {};
+  const arr = (v, d) => Array.isArray(v) && v.length === 3 ? v.map(x => Math.max(0, Math.round(Number(x) || 0))) : d;
+  const podio = arr(cfg.podio, PADRAO_F.podio), jogo = arr(cfg.jogo, PADRAO_F.jogo);
+  const nomes = {}; membros.forEach(m => { const d = m.data() || {}; nomes[m.id] = d.apelido || (d.nome || '').split(' ')[0] || 'Corredor(a)'; });
+  // desafio da semana: soma dos km aprovados
+  const by = {};
+  (await db.collection('lancamentos').where('desafio', '==', did).get()).forEach(d => { const l = d.data(); if (l.status === 'aprovado') by[l.uid] = (by[l.uid] || 0) + (Number(l.km) || 0); });
+  const rk = Object.entries(by).sort((x, y) => y[1] - x[1]).slice(0, 3);
+  const jg = (await db.collection('jogo').doc(semana).collection('placar').orderBy('pontos', 'desc').limit(3).get()).docs.map(d => [d.id, d.data().pontos || 0]);
+  const pagar = async (lista, valores, prefixo, motivo, onde) => {
+    const txt = [];
+    for (let i = 0; i < lista.length; i++) {
+      const [uid] = lista[i]; const qtd = valores[i]; if (!qtd) continue;
+      txt.push(`${i + 1}º ${nomes[uid] || 'Corredor(a)'} +${qtd}`);
+      if (ctx.modo !== 'cron') continue;
+      try {
+        await db.doc(`folhas/${prefixo}-${semana}-${uid}`).create({ uid, nome: nomes[uid] || '', qtd, motivo: `${i + 1}º lugar ${motivo}`, tipo: 'podio', criado: Date.now(), por: 'sistema' });
+        await enviar(a, toks[uid] || [], { title: `🍃 +${qtd} folhas! Você ficou em ${i + 1}º`, body: `${i + 1}º lugar ${motivo}. Troque suas folhas por prêmios no app.`, url: '/#folhas', tag: `podio-${prefixo}-${semana}` });
+      } catch (e) { if (!(e && (e.code === 6 || /already exists/i.test(e.message || '')))) throw e; }
+    }
+    return txt.length ? `${onde}: ${txt.join(', ')}` : `${onde}: ninguém pontuou`;
+  };
+  out.push(await pagar(rk, podio, 'podio', 'no desafio da semana', 'Pódio do desafio'));
+  out.push(await pagar(jg, jogo, 'jogo', 'no jogo da semana', 'Pódio do jogo'));
+  if (ctx.modo !== 'cron') out.push('(teste: nenhuma folha foi paga)');
+  return out;
 }
 
 async function rodar(tarefa, req, res) {
@@ -133,4 +169,4 @@ async function rodar(tarefa, req, res) {
     return res.status(500).json({ erro: e.message || 'Erro.' });
   }
 }
-module.exports = { rodar, brtISO, addDias, diaSemana, segundaDe };
+module.exports = { rodar, brtISO, addDias, diaSemana, segundaDe, pagarPodios };

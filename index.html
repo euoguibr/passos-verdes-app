@@ -293,10 +293,6 @@ label{font-size:13px;font-weight:600;color:var(--muted);display:flex;flex-direct
 .prod .bdg{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:4px 7px;border-radius:6px;background:var(--green);color:var(--on-green)}
 .prod .bdg.off{background:var(--danger);color:#fff}
 .prod .bdg.last{background:var(--ipe);color:#1a1405}
-.prod .bdg.enc{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
-.prod .ult{font-size:12.5px;font-weight:700;color:var(--danger)}
-.pixcode{width:100%;min-height:96px;font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all;resize:none}
-.pixsteps{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
 .prod .pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
 .prod .de{font-size:13px;color:var(--muted);text-decoration:line-through}
 .swatches{display:flex;gap:5px;flex-wrap:wrap}
@@ -491,6 +487,49 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .stv-card{gap:12px}
 .stv-card .strava-btn{align-self:flex-start}
 .pw-strava{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#FC5200;font-weight:800;text-align:center}
+.sbf{display:inline-flex;align-items:center;gap:4px;color:var(--green)!important;font-weight:600}
+.sbf i,.saldo i,.custo svg,.pph svg{display:inline-grid}
+.sbf i svg{width:14px;height:14px}
+.carteira{width:100%;text-align:left;appearance:none;border:1px solid var(--line);border-radius:var(--r);padding:18px;background:radial-gradient(120% 140% at 100% 0%,var(--glow) 0%,transparent 60%),var(--surface);color:var(--ink);display:flex;flex-direction:column;gap:6px}
+.carteira.mini{cursor:pointer;flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+.carteira.mini .small{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+.carteira.mini .small svg{width:16px;height:16px}
+.saldo{display:flex;align-items:center;gap:8px;color:var(--green)}
+.saldo i svg{width:30px;height:30px}
+.saldo b{font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:52px;line-height:1;color:var(--ink)}
+.carteira.mini .saldo b{font-size:34px}
+.saldo span{font-weight:700;color:var(--muted)}
+.premios{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.premio{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.premio img,.premio .pph{width:100%;aspect-ratio:1;object-fit:cover;background:var(--sunk);display:grid;place-items:center;color:var(--green)}
+.premio .pph svg{width:40px;height:40px}
+.premio .pb{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.premio .pb .btn{margin-top:auto}
+.custo{display:inline-flex;align-items:center;gap:4px;font-weight:800;color:var(--green);font-size:18px}
+.custo svg{width:16px;height:16px}
+.ganhar>div{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.ganhar>div:last-of-type{border-bottom:0}
+.ganhar i{font-style:normal;width:30px;text-align:center}
+.ganhar span{flex:1}
+.ganhar b{color:var(--green);white-space:nowrap}
+.pos{color:var(--green)}.neg{color:var(--danger)}
+.okf{color:var(--green);font-weight:700}
+.semx{display:flex;flex-direction:column;gap:8px}
+.premiosemana{display:flex;flex-wrap:wrap;gap:6px}
+.premiosemana span{background:var(--sunk);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700}
+.premiosemana span:empty{display:none}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.qrbox{display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.qrbox canvas{width:112px;height:112px;border-radius:10px;background:#fff;flex:none;image-rendering:pixelated}
+.qrbox span{font-size:13px;color:var(--muted);line-height:1.4}
+.scan{position:fixed;inset:0;z-index:70;background:#050505;color:#F5F7F2;display:flex;justify-content:center;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.scwrap{width:100%;max-width:480px;display:flex;flex-direction:column;gap:14px}
+.scvid{position:relative;flex:1;min-height:0;border-radius:22px;overflow:hidden;background:#111}
+.scvid video{width:100%;height:100%;object-fit:cover;display:block}
+.scmira{position:absolute;inset:18% 14%;border:3px solid rgba(200,245,96,.9);border-radius:24px;box-shadow:0 0 0 9999px rgba(0,0,0,.35)}
+.ckres{min-height:84px;border-radius:18px;padding:14px;background:#111311;border:1px solid #232723;display:flex;align-items:center;gap:12px;font-weight:600}
+.ckres.ok{border-color:#C8F560;background:#1F2A0F}.ckres.no{border-color:#7a2a2a;background:#2a1414}.ckres.ja{border-color:#b0870a}
+.ckres b{flex:1}
 </style>
 </head>
 <body>
@@ -511,8 +550,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 <div class="overlay" id="crop" hidden role="dialog" aria-label="Ajustar foto de perfil"></div>
 <div class="gameov" id="game" hidden role="dialog" aria-label="Jogo Corre, Verde!"></div>
 <div class="overlay shsheet" id="shsheet" hidden role="dialog" aria-label="Postar no story"></div>
-<div class="overlay stsheet" id="stsheet" hidden role="dialog" aria-label="Importar do Strava"></div>
-<div class="overlay stsheet" id="pixsheet" hidden role="dialog" aria-label="Pagar com Pix"></div>
+<div class="scan" id="scan" hidden role="dialog" aria-label="Check-in com QR"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="zoom" id="zoom" hidden data-action="closezoom" role="dialog" aria-label="Foto ampliada"><img id="zoom-img" alt="Foto ampliada"></div>
 
@@ -535,11 +573,11 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MESL=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banners','depoimentos'];
+const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banners','depoimentos','premios'];
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],depoimentos:[],avatares:{},reacoes:{},campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null};
+  lancamentos:[],provas:{},banners:[],depoimentos:[],avatares:{},reacoes:{},campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null,cfgFolhas:null,minhasFolhas:[],meusResgates:[],todasFolhas:[],resgates:[],premios:[],editPremio:null,ckEv:null,ckQtd:null,ckMot:null,ckBusca:''};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='auto'?t:'dark'}catch(e){return 'dark'}}
 function applyTheme(t){
   try{localStorage.setItem('pv-theme',t)}catch(e){}
@@ -570,7 +608,7 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 
 /* ---------- Navegação ---------- */
-const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube','pessoa','privacidade'];
+const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube','pessoa','privacidade','folhas'];
 const TABS=['inicio','agenda','desafios','loja','galera','admin'];
 const ICON={
  inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
@@ -583,7 +621,7 @@ const LABEL={inicio:'Início',agenda:'Agenda',desafios:'Desafios',loja:'Loja',ga
 let view=(location.hash||'').slice(1);
 if(!VIEWS.includes(view)){view='inicio';try{const v=localStorage.getItem('pv-tab');if(VIEWS.includes(v))view=v}catch(e){}}
 window.addEventListener('hashchange',()=>{const v=(location.hash||'').slice(1);if(VIEWS.includes(v)&&v!==view)go(v)});
-function go(v){const mv=$('#view');if(mv){mv.classList.add('enter');clearTimeout(go.t);go.t=setTimeout(()=>mv.classList.remove('enter'),450)}view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
+function go(v){if(v==='folhas'&&view!=='folhas')S.prevView=view;const mv=$('#view');if(mv){mv.classList.add('enter');clearTimeout(go.t);go.t=setTimeout(()=>mv.classList.remove('enter'),450)}view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
 
 function renderTabs(){
   const list=TABS.filter(v=>v!=='admin'||S.admin);
@@ -600,7 +638,7 @@ function render(){
   root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
-  if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
+  if(view==='folhas')h=vFolhas();else if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
   root.innerHTML=h;
   const ob=onbHtml();const oe=$('#onb');if(ob){oe.innerHTML=ob;oe.hidden=false}else{oe.hidden=true;oe.innerHTML=''}
   renderCard();drawMini();
@@ -634,6 +672,11 @@ function vInicio(){
   h+=`<section class="section"><div class="sec-head"><h2 class="sec">${futuros.length>1?'Próximos encontros':'Próximo encontro'}</h2><button class="linkbtn" data-go="agenda">Agenda completa</button></div>`;
   h+=loading('eventos','Carregando a agenda…')??(futuros.length>1?`<div class="hscroll">${futuros.slice(0,6).map((e,i,arr)=>evMini(e,arr.some(x=>okPic(x.foto)))).join('')}</div>`:prox?evCard(prox):`<div class="empty">Nenhum encontro marcado ainda. Fica ligado que já já sai treino novo.</div>`);
   h+=`</section>`;
+  // Desafio da semana
+  if(S.uid){const c=cfgF();const sd=semanaD(0);const km=kmSemana(S.uid,sd.id);const meta=c.metaSemanal;const pct=meta?Math.min(100,km/meta*100):0;
+    h+=`<section class="section"><div class="sec-head"><h2 class="sec">Desafio da semana</h2><button class="linkbtn" data-go="desafios">Ver ranking</button></div>
+    <div class="card"><div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(km)} km</span>${meta?`<span class="muted small num">sua meta: ${kmf(meta)} km</span>`:''}</div>
+    ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}<span class="small muted">${fmtShort(sd.inicio)} a ${fmtShort(sd.fim)} · pódio vale ${c.podio[0]}, ${c.podio[1]} e ${c.podio[2]} folhas</span><button class="btn" data-go="desafios">Lançar minha corrida</button></div></section>`}
   // Desafio ativo
   const d=S.desafios.filter(x=>x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0))[0];
   if(d){const tot=sumKm(d.id),meta=Number(d.meta)||0,pct=meta?Math.min(100,tot/meta*100):0;
@@ -693,7 +736,7 @@ function vDesafios(){
   const l=loading('desafios','Carregando desafios…');if(l)return h+l;
   const at=S.desafios.filter(x=>x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0));
   const enc=S.desafios.filter(x=>!x.ativo).sort((a,b)=>(b.criado||0)-(a.criado||0));
-  if(!at.length)h+=`<div class="empty">Nenhum desafio rolando agora. Fica de olho que logo vem o próximo.</div>`;
+  h+=desafioCard(semanaD(0),true);
   for(const d of at)h+=desafioCard(d,true);
   if(enc.length)h+=`<details><summary>Desafios encerrados (${enc.length})</summary><div class="stack" style="margin-top:10px">${enc.map(d=>desafioCard(d,false)).join('')}</div></details>`;
   return h;
@@ -711,8 +754,6 @@ function desafioCard(d,ativo){
   const stl={aprovado:['ok','Aprovado'],pendente:['wait','Aguardando'],recusado:['no','Recusado']};
   const form=ativo&&S.uid?`<form class="stack" data-form="km" data-id="${esc(d.id)}" style="border-top:1px solid var(--line);padding-top:12px">
     <p class="eyebrow" style="margin:0">Lançar corrida</p>
-    <button type="button" class="btn strava-btn" data-action="strava" data-id="${esc(d.id)}"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M10 2 4 14h4l2-4 2 4h4z"/><path d="m15 14-2 4-2-4H9l4 8 4-8z" opacity=".65"/></svg>Importar do Strava</button>
-    <p class="small muted" style="margin:-4px 0 0;text-align:center">ou lance à mão com o print</p>
     <div class="grid2"><label for="km-${esc(d.id)}">Km corridos<input type="text" id="km-${esc(d.id)}" maxlength="6" inputmode="decimal" pattern="[0-9]+([,.][0-9]{1,2})?" title="Use número, ex.: 5,2" placeholder="Ex.: 5,2" required></label>
     <label for="lk-${esc(d.id)}">Link no Strava (opcional)<input type="url" id="lk-${esc(d.id)}" placeholder="https://strava.app.link/…"></label></div>
     ${photoField(fid,'Print da corrida (obrigatório)')}
@@ -721,7 +762,7 @@ function desafioCard(d,ativo){
   const mine=meus.length?`<div><p class="eyebrow" style="margin:0 0 4px">Seus lançamentos · <span class="num">${kmf(meuOk)} km aprovados</span></p>${meus.map(l=>{const[c,t]=stl[l.status]||stl.pendente;
     return `<div class="lanc"><span class="num">${kmf(l.km)} km <span class="muted small">${l.criado?new Date(l.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</span></span><span class="row" style="flex-wrap:nowrap"><span class="st ${c}">${t}</span>${l.status==='pendente'?`<button class="btn small danger ${S.armed==='rl'+l.id?'armed':''}" data-action="dellanc" data-id="${esc(l.id)}">${S.armed==='rl'+l.id?'Confirmar':'Cancelar'}</button>`:''}</span></div>`}).join('')}</div>`:'';
   return `<article class="card"><div class="row" style="justify-content:space-between"><span class="chip ${ativo?'treino':''}">${ativo?'Valendo':'Encerrado'}</span>${d.inicio||d.fim?`<span class="muted small num">${esc(fmtShort(d.inicio))}${d.fim?' a '+esc(fmtShort(d.fim)):''}</span>`:''}</div>
-  <h3>${esc(d.titulo)}</h3>${d.descricao?`<p class="small" style="margin:0">${esc(d.descricao)}</p>`:''}
+  <h3>${esc(d.titulo)}</h3>${d.descricao?`<p class="small" style="margin:0">${esc(d.descricao)}</p>`:''}${d.semanal?semanalExtra(d):''}
   ${S.uid?`<div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">${Math.round(pct)}% de ${kmf(meta)} km</span>`:''}</div>
   ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}`:(meta?`<p class="muted small" style="margin:0">Meta da galera: ${kmf(meta)} km</p>`:'')}
   ${form}${mine}
@@ -748,69 +789,14 @@ function quizCard(q){
   return `<article class="card"><h3>${esc(q.pergunta)}</h3><div class="opts">${opts.map((o,i)=>`<button class="opt" data-action="quiz" data-id="${esc(q.id)}" data-i="${i}">${esc(o)}</button>`).join('')}</div></article>`;
 }
 function brl(n){return (Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
+const tamanhosDe=p=>(Array.isArray(p.tamanhos)?p.tamanhos:[]).flatMap(t=>String(t).split(/[\s\/|]+/)).map(t=>t.trim()).filter(Boolean);
 const splitList=v=>String(v||'').split(/[,;\n]/).map(x=>x.trim()).filter(Boolean);
-const vkey=(t,c)=>(t||'-')+'|'+(c||'-');
-const ctrlEst=p=>!!(p&&p.estoque&&typeof p.estoque==='object')&&!p.encomenda;
-function qtdVar(p,t,c){return ctrlEst(p)?(Number(p.estoque[vkey(t,c)])||0):Infinity}
-function dispTam(p,t){const cs=(p.cores&&p.cores.length)?p.cores:['-'];return cs.reduce((s,c)=>s+qtdVar(p,t,c),0)}
-function dispCor(p,t,c){if(t)return qtdVar(p,t,c);const ts=(p.tamanhos&&p.tamanhos.length)?p.tamanhos:['-'];return ts.reduce((s,x)=>s+qtdVar(p,x,c),0)}
-function pixKey(){let k=String((S.info&&S.info.pix)||'').trim();if(!k)return '';if(k.includes('@')||/[a-f0-9]{8}-[a-f0-9]{4}-/i.test(k))return k;if(k.startsWith('+'))return '+'+k.replace(/\D/g,'');const d=k.replace(/\D/g,'');return d.length===11||d.length===14?d:k.replace(/\s/g,'')}
-function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=c&0x8000?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,'0')}
-function pixPayload(valor,txid){
-  const f=(id,v)=>id+String(v.length).padStart(2,'0')+v;
-  const clean=x=>String(x||'').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9 ]/g,'').trim().toUpperCase();
-  const i=S.info||{};const nome=clean(i.pixNome||'Passos Verdes').slice(0,25)||'PASSOS VERDES',cid=clean(i.pixCidade||'Mage').slice(0,15)||'MAGE';
-  const p=f('00','01')+f('26',f('00','br.gov.bcb.pix')+f('01',pixKey()))+f('52','0000')+f('53','986')+(valor>0?f('54',valor.toFixed(2)):'')+f('58','BR')+f('59',nome)+f('60',cid)+f('62',f('05',(String(txid||'').replace(/[^A-Za-z0-9]/g,'').slice(0,25)||'***')))+'6304';
-  return p+crc16(p);
-}
-// confere tamanho, cor e estoque antes de pedir
-function selPedido(p){
-  const sel=S.sel[p.id]||{};const tam=Array.isArray(p.tamanhos)?p.tamanhos:[];const cor=Array.isArray(p.cores)?p.cores:[];
-  if(tam.length&&!sel.t){toast('Escolha o tamanho.');return null}
-  if(cor.length&&!sel.c){toast('Escolha a cor.');return null}
-  const q=Number(sel.q||1),tem=qtdVar(p,sel.t,sel.c);
-  if(tem<q){toast(tem>0?`Só tem ${tem} nessa opção.`:'Essa opção acabou. Escolha outra.');return null}
-  return {sel,q,total:(Number(p.preco)||0)*q};
-}
-const PIX={ped:null,busy:false};
-function pixRender(){
-  const el=$('#pixsheet');const o=PIX.ped;if(!o){el.hidden=true;el.innerHTML='';return}
-  const code=pixPayload(o.total,'PV'+o.id);const curto=o.id.slice(-5).toUpperCase();
-  const msg=`Olá! Paguei pelo Pix o pedido #${curto} da loja Passos Verdes:\n\n${o.qtd}x ${o.produto}${o.tamanho?` · tamanho ${o.tamanho}`:''}${o.cor?` · cor ${o.cor}`:''}\nTotal: ${brl(o.total)}${o.nome?`\n\nNome: ${o.nome}`:''}\n\nSegue o comprovante:`;
-  const wa=waNumber();
-  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Pedido #${esc(curto)}</p><h2 class="sec">Pagar com Pix</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="pix-x" aria-label="Fechar">×</button></div>
-  <div class="card" style="gap:6px"><b>${esc(o.qtd)}x ${esc(o.produto)}${o.tamanho?' · '+esc(o.tamanho):''}${o.cor?' · '+esc(o.cor):''}</b><span class="price num" style="font-size:26px">${brl(o.total)}</span></div>
-  <div class="card" style="gap:10px"><label for="pix-code" class="small"><b>Pix copia e cola</b></label><textarea id="pix-code" class="pixcode" readonly>${esc(code)}</textarea>
-  <button class="btn primary" data-action="pix-copy">Copiar código Pix</button>
-  <ol class="pixsteps small muted"><li>Copie o código acima.</li><li>No app do seu banco, vá em Pix → Pix copia e cola e cole. O valor já vem preenchido.</li><li>Mande o comprovante no WhatsApp. A equipe confirma e separa a sua peça.</li></ol></div>
-  ${wa?`<a class="btn" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>`:''}
-  <p class="small muted" style="margin:0;text-align:center">Pedido registrado. Se mudar de ideia, é só avisar a gente.</p></div>`;
-  el.hidden=false;
-}
-document.addEventListener('click',async e=>{
-  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
-  if(!a.startsWith('pix'))return;e.stopImmediatePropagation();
-  if(a==='pix-x'){PIX.ped=null;pixRender()}
-  else if(a==='pix-copy'){const t=$('#pix-code');try{await navigator.clipboard.writeText(t.value);toast('Código copiado! Agora é colar no app do banco.')}catch(err){t.select();toast('Selecione e copie o código.')}}
-  else if(a==='pix'){
-    if(!S.uid){login();return}
-    const p=S.produtos.find(x=>x.id===b.dataset.id);if(!p||PIX.busy)return;const r=selPedido(p);if(!r)return;
-    const quem=me().apelido||S.myName||'';PIX.busy=true;b.disabled=true;
-    const ped={uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:r.sel.t||'',cor:r.sel.c||'',qtd:r.q,total:r.total,status:'novo',criado:Date.now(),canal:'app',pix:true};
-    try{const ref=await S.db.collection('pedidos').add(ped);PIX.ped={...ped,id:ref.id};pixRender()}
-    catch(err){toast('Não deu para registrar o pedido. Tente de novo.')}
-    PIX.busy=false;b.disabled=false;
-  }
-},true);
 function waNumber(){let d=String((S.info&&S.info.whatsapp)||'').replace(/\D/g,'');if(!d)return '';if(!d.startsWith('55'))d='55'+d;return d}
 function prodCard(p){
-  const sel=S.sel[p.id]||{};const tam=Array.isArray(p.tamanhos)?p.tamanhos:[];const cor=Array.isArray(p.cores)?p.cores:[];
+  const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
   const opt=(arr,v)=>arr.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('');
   const wa=waNumber();const de=Number(p.precoDe)||0;const off=de>Number(p.preco)?Math.round((1-Number(p.preco)/de)*100):0;
-  const badges=[p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('');
-  const ctl=ctrlEst(p);const optT=v=>tam.map(o=>{const z=ctl&&dispTam(p,o)<=0;return `<option ${o===v&&!z?'selected':''} ${z?'disabled':''}>${esc(o)}${z?' (esgotado)':''}</option>`}).join('');
-  const optC=v=>cor.map(o=>{const z=ctl&&dispCor(p,sel.t,o)<=0;return `<option ${o===v&&!z?'selected':''} ${z?'disabled':''} value="${esc(o)}">${esc(o)}${z?' (esgotado)':''}</option>`}).join('');
-  const resta=ctl&&(!tam.length||sel.t)&&(!cor.length||sel.c)?qtdVar(p,sel.t,sel.c):null;const pk=pixKey();
+  const badges=[p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:''].join('');
   const sw=cor.map(c=>corHex(c)).filter(Boolean);
   return `<article class="card prod ${p.esgotado?'soldout':''}"><div class="pimgw">${okPic(p.foto)?`<img class="pimg" src="${p.foto}" alt="${esc(p.nome)}" loading="lazy" data-action="zoom" data-src="${p.foto}">`:`<div class="noimg small">Sem foto</div>`}${badges?`<div class="badges">${badges}</div>`:''}</div>
   <div class="pb"><h3>${esc(p.nome)}</h3>
@@ -819,18 +805,15 @@ function prodCard(p){
   <div class="pr"><span class="price">${brl(p.preco)}</span>${off?`<span class="de">${brl(de)}</span>`:''}</div>
   ${p.descricao?`<p class="small muted" style="margin:0">${esc(p.descricao)}</p>`:''}
   ${p.esgotado?`<span class="st no" style="align-self:flex-start">Esgotado</span>`:`
-  ${tam.length?`<label for="pt-${esc(p.id)}">Tamanho<select id="pt-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="t"><option value="">Escolha</option>${optT(sel.t)}</select></label>`:''}
-  ${cor.length?`<label for="pc-${esc(p.id)}">Cor<select id="pc-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="c"><option value="">Escolha</option>${optC(sel.c)}</select></label>`:''}
+  ${tam.length?`<label for="pt-${esc(p.id)}">Tamanho<select id="pt-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="t"><option value="">Escolha</option>${opt(tam,sel.t)}</select></label>`:''}
+  ${cor.length?`<label for="pc-${esc(p.id)}">Cor<select id="pc-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="c"><option value="">Escolha</option>${opt(cor,sel.c)}</select></label>`:''}
   <label for="pq-${esc(p.id)}">Quantidade<select id="pq-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="q">${[1,2,3,4,5].map(n=>`<option ${Number(sel.q||1)===n?'selected':''}>${n}</option>`).join('')}</select></label>
-  ${resta!==null&&resta<=3?`<span class="ult">${resta>0?(resta===1?'Última peça nessa opção':`Últimas ${resta} nessa opção`):'Essa opção acabou'}</span>`:''}
-  ${p.encomenda?`<span class="muted small">Feito sob encomenda: o prazo a gente combina depois do pagamento.</span>`:''}
-  ${pk?`<button class="btn primary" data-action="pix" data-id="${esc(p.id)}">Pagar com Pix</button>`:''}
-  ${wa?`<a class="btn ${pk?'':'primary'}" href="https://wa.me/${wa}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">${pk?'Pedir pelo WhatsApp':'Quero o meu'}</a>`:(pk?'':`<span class="muted small">Pedidos em breve.</span>`)}
+  ${wa?`<a class="btn primary" href="https://wa.me/${wa}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">Quero o meu</a>`:`<span class="muted small">Pedidos em breve.</span>`}
   ${/^https?:\/\//.test(p.linkPagamento||'')?`<a class="btn" href="${esc(p.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a>`:''}`}
   </div></article>`;
 }
 function vLoja(){
-  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Paga no Pix aqui mesmo ou fecha o pedido no WhatsApp.</p>
+  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Fecha o pedido direto no WhatsApp.</p>
   <div class="trust"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4a2 2 0 1 0 0 .1"/><path d="M8 21l3-6 3 2v4M6 12l3-3 4 1 3 3 3 1"/></svg><b>Retire no treino</b>Sem frete, entregue na mão</div>
   <div><svg viewBox="0 0 24 24" fill="currentColor">${WAICON.replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg><b>Pedido no Zap</b>Atendimento direto com a gente</div>
   <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c4 3 6 6 6 10a6 6 0 0 1-12 0c0-4 2-7 6-10z"/><path d="M12 21v-7"/></svg><b>Feito em Magé</b>Cada compra fortalece o projeto</div></div></section>`;
@@ -841,21 +824,23 @@ function vLoja(){
   for(const g of secs)h+=`<section class="section loja-sec">${secs.length>1?`<h2 class="sec">${esc(g.k)}</h2>`:''}<div class="prod-grid">${g.ps.map(prodCard).join('')}</div></section>`;
   return h;
 }
-function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>(p.status||'novo')==='novo').length+S.reportes.filter(r=>r.status!=='resolvido').length:0}
+function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>p.status!=='concluido').length+S.reportes.filter(r=>r.status!=='resolvido').length+S.resgates.filter(r=>r.status==='pendente').length:0}
 document.addEventListener('input',e=>{const el=e.target;if(!el.id)return;
   if(el.id==='pf-a'){let d=el.value.replace(/\D/g,'').slice(0,4);if(d.length===1&&Number(d)>3)d='0'+d;el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d}
   else if(el.id==='pf-p'){let d=el.value.replace(/\D/g,'').slice(0,4);el.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d}
 });
-document.addEventListener('change',e=>{const el=e.target;if(el.dataset&&el.dataset.aviso){const k=el.dataset.aviso,v=el.checked;saveMe(m=>{m.avisos={...(m.avisos||{}),[k]:v}});return}if(el.dataset&&el.dataset.sel){const id=el.dataset.sel;S.sel[id]={...(S.sel[id]||{}),[el.dataset.k]:el.value};const pp=S.produtos.find(x=>x.id===id);if(ctrlEst(pp)){if(el.dataset.k==='t'&&S.sel[id].c&&dispCor(pp,el.value,S.sel[id].c)<=0)S.sel[id].c='';schedule()}}});
+document.addEventListener('change',e=>{const el=e.target;if(el.dataset&&el.dataset.aviso){const k=el.dataset.aviso,v=el.checked;saveMe(m=>{m.avisos={...(m.avisos||{}),[k]:v}});return}if(el.dataset&&el.dataset.sel){const id=el.dataset.sel;S.sel[id]={...(S.sel[id]||{}),[el.dataset.k]:el.value}}});
 document.addEventListener('click',e=>{
   const a=e.target.closest('a[data-buy]');if(!a)return;
   const p=S.produtos.find(x=>x.id===a.dataset.buy);if(!p){e.preventDefault();return}
-  const r=selPedido(p);if(!r){e.preventDefault();return}
-  const sel=r.sel,q=r.q,total=r.total;
+  const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
+  if(tam.length&&!sel.t){e.preventDefault();toast('Escolha o tamanho.');return}
+  if(cor.length&&!sel.c){e.preventDefault();toast('Escolha a cor.');return}
+  const q=Number(sel.q||1);const total=(Number(p.preco)||0)*q;
   const quem=me().apelido||S.myName||'';
   const msg=`Olá! Quero fazer um pedido na loja Passos Verdes:\n\n${q}x ${p.nome}${sel.t?` · tamanho ${sel.t}`:''}${sel.c?` · cor ${sel.c}`:''}\nTotal: ${brl(total)}${quem?`\n\nNome: ${quem}`:''}`;
   a.href=`https://wa.me/${waNumber()}?text=${encodeURIComponent(msg)}`;
-  if(S.uid)S.db.collection('pedidos').add({uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:sel.t||'',cor:sel.c||'',qtd:q,total,status:'novo',criado:Date.now(),canal:'app'}).catch(()=>{});
+  if(S.uid)S.db.collection('pedidos').add({uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:sel.t||'',cor:sel.c||'',qtd:q,total,status:'novo',criado:Date.now()}).catch(()=>{});
 },true);
 
 const AVISOS=[['eventos','Treinos, corridas e ações'],['noticias','Notícias'],['desafios','Desafios'],['loja','Novidades da loja']];
@@ -1015,7 +1000,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.clima&&
 function statusHtml(){
   const c=S.clima;const nm=(me().apelido||S.myName||'').split(' ')[0];
   const wx=c?(()=>{const [ic]=climaInfo(c.code,c.dia);return `<button class="sb-w" data-action="clima-toggle" aria-expanded="${!!S.climaOpen}" aria-label="Previsão do tempo"><b>${SVGI[ic]}${c.temp}°</b><span>${esc(c.nome)}${c.chuva?` · ${c.chuva}% chuva`:''}</span></button>`})():'';
-  const quem=S.uid?`<button class="sb-me" data-go="perfil">${avatar(S.uid,42).replace(/ data-action="ver"[^>]*?title="[^"]*"/,'')}<span class="t"><b>${esc(nm||'Você')} · Nº ${bibNum()}</b><span>Toque para ver seu perfil</span></span></button>`
+  const quem=S.uid?`<button class="sb-me" data-go="folhas">${avatar(S.uid,42).replace(/ data-action="ver"[^>]*?title="[^"]*"/,'')}<span class="t"><b>${esc(nm||'Você')} · Nº ${bibNum()}</b><span class="sbf"><i>${LEAF}</i>${fmtF(dispDe(S.uid))} folhas · ver prêmios</span></span></button>`
     :`<div class="sb-me"><span class="t"><b>${saud()}!</b><span>Entre para participar</span></span></div>`;
   let det='';
   if(c&&S.climaOpen){const [,ds]=climaInfo(c.code,c.dia);det=`<div class="sb-det"><span>${ds} · máx ${c.max}° mín ${c.min}°${Math.abs(c.sens-c.temp)>=3?` · sensação ${c.sens}°`:''}</span><span class="dica">${esc(climaDica(c))}</span>${c.local?'':`<button class="lk" data-action="clima-local">Usar minha localização</button>`}</div>`}
@@ -1046,10 +1031,9 @@ function vPerfil(){
   return `<section class="section"><div class="prof-head">${avatar(S.uid,88)}<div><p class="eyebrow">Nº ${bibNum()} · desde ${esc(desdeTxt(m))}</p><h1>${esc(nm)}</h1>
     <div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div></div></div>
     <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
+  ${carteiraMini()}
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
   <section class="section"><h2 class="sec">Suas conquistas</h2>${medalhasHtml(S.uid,true)}</section>
-  <section class="section"><h2 class="sec">Strava</h2><div class="card stv-card">${m.stravaConectado?`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><b>Strava conectado ✓</b><div class="small muted">Importe suas corridas direto em Desafios.</div></div><button class="btn small ${S.armed==='stoff'?'danger armed':''}" data-action="strava-off">${S.armed==='stoff'?'Confirmar':'Desconectar'}</button></div>`
-    :`<p style="margin:0">Conecte seu Strava para lançar corridas nos desafios sem print: é só escolher a corrida e enviar.</p><button class="btn strava-btn" data-action="strava-con-perfil" ${STV.busy?'disabled':''}>${STV.busy?'Abrindo o Strava…':'Conectar com o Strava'}</button><span class="small muted">Só você vê seus dados do Strava. Dá para desconectar quando quiser.</span>`}<p class="pw-strava" style="margin:0">Compatível com Strava</p></div></section>
   <section class="section"><h2 class="sec">Editar perfil</h2><form class="card" data-form="perfil">
     ${photoField('pf-f','Sua foto',fotoDe(S.uid),true)}
     <label for="pf-n">Como a galera te chama<input type="text" id="pf-n" maxlength="28" required value="${esc(m.apelido||'')}"></label>
@@ -1079,7 +1063,7 @@ function vConfig(){
   <section class="section"><h2 class="sec">Aparência</h2><div class="seg" role="group" aria-label="Aparência do app">${[['dark','Escuro'],['light','Claro'],['auto','Automático']].map(([k,l])=>`<button data-action="theme" data-v="${k}" aria-pressed="${th===k}">${l}</button>`).join('')}</div><p class="muted small" style="margin:0">Automático segue o modo do seu celular.</p></section>`;
   if(S.uid)h+=`<section class="section"><h2 class="sec">Notificações</h2><div class="card"><div class="row" style="justify-content:space-between"><b>Avisos no celular</b><span class="st ${c}">${t}</span></div>${p?`<p class="small muted" style="margin:0">${p}</p>`:''}
     ${S.push==='default'||S.push==='error'?`<div><button class="btn primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button></div>`:''}</div></section>
-  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button>${me().stravaConectado?`<button class="linkrow" data-action="strava-off">${S.armed==='stoff'?'Toque de novo para desconectar o Strava':'Desconectar Strava'}${CHEV}</button>`:''}<button class="linkrow" data-action="logout">Sair da conta${CHEV}</button><button class="linkrow" data-action="apagar-conta" style="color:var(--danger)">${S.armed==='apagar'?'Toque de novo para apagar sua conta':'Apagar minha conta'}</button></div>
+  <section class="section"><h2 class="sec">Conta</h2><div class="card" style="padding-block:4px"><button class="linkrow" data-go="perfil">Meu perfil${CHEV}</button><button class="linkrow" data-go="privacidade">Política de privacidade${CHEV}</button><button class="linkrow" data-action="logout">Sair da conta${CHEV}</button><button class="linkrow" data-action="apagar-conta" style="color:var(--danger)">${S.armed==='apagar'?'Toque de novo para apagar sua conta':'Apagar minha conta'}</button></div>
     ${auth.currentUser&&auth.currentUser.email?`<p class="muted small" style="margin:0">Conectado como ${esc(auth.currentUser.email)}</p>`:''}</section>`;
   else h+=visitante();
   if(S.uid)h+=`<section class="section"><h2 class="sec">Encontrou um problema?</h2><form class="card" data-form="reporte">
@@ -1104,7 +1088,7 @@ function vPrivacidade(){
   <li><b>Localização (opcional):</b> se você tocar em "Usar minha localização", ela é usada só no seu celular para buscar a previsão do tempo. Não é guardada nem enviada para a equipe.</li>
   <li><b>Avisos:</b> se você ativar as notificações, guardamos um código do seu aparelho para enviar os avisos.</li>
   <li><b>Uso do app:</b> o dia do seu último acesso e estatísticas anônimas de visitas, para entender como o app está sendo usado.</li>
-  <li><b>Strava (opcional):</b> se você conectar, o app lê só as suas corridas do período do desafio quando você toca em Importar. Só a corrida que você escolher vira lançamento (distância, data, tempo e link). A chave de acesso fica guardada no servidor e some quando você desconecta em Configurações.</li>
+  <li><b>Folhas:</b> o extrato das suas folhas (de onde vieram e as trocas por prêmios). Só você e a organização veem. No check-in, a equipe lê o QR do seu cartão de membro, que só tem o seu código no app e muda a cada minuto.</li>
   <li><b>Problemas reportados:</b> o texto e o print que você enviar.</li></ul>
   <h2>Para que usamos</h2>
   <p>Para fazer o app funcionar: mostrar seu perfil, rankings e presenças, enviar avisos de treinos e eventos, conferir desafios, organizar pedidos e melhorar o app. Não vendemos seus dados e não usamos para publicidade de terceiros.</p>
@@ -1160,13 +1144,14 @@ function renderCard(){
     el.innerHTML=`<div class="in"><div class="mcard"><div class="band"><span>Cartão de membro</span><span>Passos Verdes</span></div>
     <div class="body">${avatar(S.uid,84)}<div><span class="eyebrow num">Nº ${bibNum()}</span><span class="nm">${esc(nm)}</span><span class="small muted">Membro desde ${esc(desdeTxt(m))}${m.objetivo?' · '+esc(m.objetivo):''}</span></div></div>
     <div class="live"><span><i class="dot-live"></i>Válido agora</span><span id="mclock" class="num"></span></div></div>
+    <div class="qrbox"><canvas id="mqr" aria-label="QR code do seu cartão"></canvas><span>Na doação do treino solidário, mostre este QR para a equipe e ganhe folhas.</span></div>
     <p class="small muted" style="margin:0;text-align:center">O relógio e a faixa em movimento mostram que o cartão está aberto no app, e não é um print.</p>
     <button class="btn primary story" data-action="sh-membro">${STORYI}Postar no story</button>
     <button class="btn" data-action="card-close">Fechar</button></div>`;
   }
   el.hidden=false;
   const tick=()=>{const c=document.getElementById('mclock');if(c)c.textContent=new Date().toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'})};
-  tick();if(!clockT)clockT=setInterval(tick,1000);
+  tick();desenharQR();if(!clockT)clockT=setInterval(()=>{tick();desenharQR()},1000);
 }
 const HEART='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>';
 const BUBBLE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
@@ -1319,15 +1304,13 @@ function admList(col,items,title,sub,toggle,editable){
 function vAdmin(){
   const i=S.info||{};
   const pend=S.lancamentos.filter(l=>l.status==='pendente').sort((a,b)=>(a.criado||0)-(b.criado||0));
-  const dtit=id=>(S.desafios.find(d=>d.id===id)||{}).titulo||'Desafio';
-  const PST={novo:['wait','Aguardando pagamento'],pago:['ok','Pago · a entregar'],concluido:['ok','Entregue'],cancelado:['no','Cancelado']};
-  const peds=[...S.pedidos].filter(p=>p.status!=='cancelado').sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,20);
+  const dtit=id=>String(id).startsWith('semana-')?'Desafio da semana '+fmtShort(String(id).slice(7)):(S.desafios.find(d=>d.id===id)||{}).titulo||'Desafio';
+  const peds=[...S.pedidos].sort((a,b)=>(a.status==='concluido'?1:0)-(b.status==='concluido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,40);
   const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
   const pa=S.editPar?S.parceiros.find(p=>p.id===S.editPar):null;
   const editing=c=>S.edit&&S.edit.col===c?S[c].find(x=>x.id===S.edit.id)||null:null;
   const ee=editing('eventos'),en=editing('noticias'),ed=editing('desafios');
   return `<section class="section"><p class="eyebrow">Organização</p><h1 class="h-display">Painel da equipe</h1><p class="lede">Só quem edita o app vê esta aba. Tudo que você publica aqui aparece na hora para a galera.</p></section>
-  <section class="section"><a class="card" href="/gestao.html" style="text-decoration:none;color:inherit;flex-direction:row;align-items:center;justify-content:space-between;gap:12px"><span class="stack" style="gap:2px"><b>Gestão financeira e estoque</b><span class="small muted">Caixa, mensalidades, eventos, vendas e estoque da loja</span></span><span class="btn small primary">Abrir</span></a></section>
   ${statsHtml()}
   <section class="section"><div class="sec-head"><h2 class="sec">Corridas para conferir</h2><span class="muted small num">${pend.length}</span></div><div class="card">
   ${pend.length?pend.map(l=>{const pv=S.provas[l.id];const sv=l.origem==='strava';return `<div class="check">${sv?`<div class="nothumb stv-ok"><b>✓</b>Dados do Strava</div>`:pv&&okPic(pv.foto)?`<img class="thumb" src="${pv.foto}" alt="Print da corrida" data-action="zoom" data-src="${pv.foto}">`:`<div class="nothumb">${pv===undefined?'Carregando print…':'Sem print'}</div>`}
@@ -1338,12 +1321,13 @@ function vAdmin(){
     <div class="row"><button class="btn small primary" data-action="aprovar" data-id="${esc(l.id)}">Aprovar</button><button class="btn small danger ${S.armed==='rc'+l.id?'armed':''}" data-action="recusar" data-id="${esc(l.id)}">${S.armed==='rc'+l.id?'Confirmar':'Recusar'}</button></div></div></div>`}).join('')
   :`<p class="muted small" style="margin:0">Nada para conferir agora.</p>`}</div></section>
 
-  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>(p.status||'novo')==='novo').length)}</span></div><div class="card">
+  ${adminFolhasHtml()}
+  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>p.status!=='concluido').length)}</span></div><div class="card">
   ${peds.length?peds.map(p=>`<div class="pedido"><div><b class="small">${esc(p.qtd)}x ${esc(p.produto)}${p.tamanho?' · '+esc(p.tamanho):''}${p.cor?' · '+esc(p.cor):''}</b>
     <div class="muted small">${esc(p.nome||'Sem nome')} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</div></div>
-    <div class="row" style="flex-wrap:nowrap">${(s=>`<span class="st ${s[0]}">${s[1]}</span>`)(PST[p.status||'novo']||PST.novo)}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
+    <div class="row" style="flex-wrap:nowrap">${p.status==='concluido'?`<span class="st ok">Entregue</span>`:`<button class="btn small" data-action="pedok" data-id="${esc(p.id)}">Entregue</button>`}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
   :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
-  <p class="muted small" style="margin:0">Confirme pagamentos, dê baixa no estoque e lance no caixa pela <a href="/gestao.html#vendas">Gestão → Vendas</a>. O WhatsApp e a chave Pix da loja ficam no formulário "Sobre o projeto", mais abaixo.</p></div></section>
+  <p class="muted small" style="margin:0">O WhatsApp que recebe os pedidos é o do formulário "Sobre o projeto", mais abaixo.</p></div></section>
 
   <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
   ${S.reportes.length?[...S.reportes].sort((a,b)=>(a.status==='resolvido'?1:0)-(b.status==='resolvido'?1:0)||(b.criado||0)-(a.criado||0)).slice(0,30).map(r=>`<div class="check">${okPic(r.foto)?`<img class="thumb" src="${r.foto}" alt="Print enviado" data-action="zoom" data-src="${r.foto}">`:`<div class="nothumb">Sem print</div>`}
@@ -1455,9 +1439,6 @@ function vAdmin(){
     <label for="in-m">Manifesto (frase de destaque no Início)<textarea id="in-m" maxlength="160">${esc(infoV('manifesto'))}</textarea></label>
     <div class="grid2"><label for="in-gr">Link do grupo do WhatsApp<input type="url" id="in-gr" value="${esc(infoV('grupo'))}"></label><label for="in-e">E-mail de contato<input type="email" id="in-e" value="${esc(infoV('email'))}"></label></div>
     <div class="grid2"><label for="in-r">Faixa de recado no topo (opcional)<input type="text" id="in-r" maxlength="70" value="${esc(i.recado||'')}" placeholder="Ex.: Inscrições abertas pro Longão da Serra"></label><label for="in-rl">Link da faixa (opcional)<input type="url" id="in-rl" value="${esc(i.recadoLink||'')}" placeholder="https://"></label></div>
-    <label for="in-px">Chave Pix da loja<input type="text" id="in-px" value="${esc(i.pix||'')}" placeholder="CNPJ, e-mail, +55 21 9… ou chave aleatória"></label>
-    <div class="grid2"><label for="in-pxn">Nome no Pix<input type="text" id="in-pxn" maxlength="25" value="${esc(i.pixNome||'Passos Verdes')}"></label><label for="in-pxc">Cidade no Pix<input type="text" id="in-pxc" maxlength="15" value="${esc(i.pixCidade||'Magé')}"></label></div>
-    <p class="muted small" style="margin:0">Com a chave preenchida, a loja ganha o botão "Pagar com Pix" com o valor já calculado. Telefone vai com +55 na frente.</p>
     <button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar</button></form></section>`;
 }
 
@@ -1803,9 +1784,15 @@ async function enviarLanc(did,km,link,foto,form){
   }catch(e){try{await S.db.doc('provas/'+id).delete()}catch(err){}toast('Não deu para enviar agora. Tente de novo.')}
 }
 async function conferir(id,ok){
+  const l=S.lancamentos.find(x=>x.id===id);
   try{await S.db.doc('lancamentos/'+id).update({status:ok?'aprovado':'recusado',conferido:Date.now()});
     try{await S.db.doc('provas/'+id).delete()}catch(e){}
-    toast(ok?'Aprovado. Já está no ranking.':'Recusado.')}
+    let extra='';
+    if(ok&&l){const c=cfgF();const q=Math.round((Number(l.km)||0)*c.folhasKm);
+      if(q>0&&await darFolhas('km-'+id,l.uid,q,`${kmf(l.km)} km aprovados`,'km')==='ok')extra=` +${q} folhas.`;
+      if(String(l.desafio).startsWith('semana-')&&c.metaSemanal>0&&c.folhasMeta>0){const tot=S.lancamentos.filter(x=>x.id!==id&&x.desafio===l.desafio&&x.uid===l.uid&&x.status==='aprovado').reduce((t,x)=>t+(Number(x.km)||0),0)+(Number(l.km)||0);
+        if(tot>=c.metaSemanal&&await darFolhas('meta-'+l.desafio+'-'+l.uid,l.uid,c.folhasMeta,'Bateu a meta da semana','meta')==='ok')extra+=` Meta da semana batida: +${c.folhasMeta}.`}}
+    toast(ok?'Aprovado.'+extra:'Recusado.')}
   catch(e){toast('Não foi possível salvar a conferência.')}
 }
 
@@ -1912,7 +1899,7 @@ document.addEventListener('submit',e=>{
     const ep=S.editProd?S.produtos.find(p=>p.id===S.editProd):null;
     const foto=S.pending['pr-f']!==undefined?S.pending['pr-f']:(ep?ep.foto||'':'');
     const ord=val('pr-o')===''?null:Number(val('pr-o'));
-    const pd2=parseFloat(String(val('pr-pd')).replace(',','.'));const data={nome:val('pr-n'),preco,precoDe:pd2>0?pd2:0,selo:val('pr-sl'),secao:val('pr-sc'),descricao:val('pr-d'),tamanhos:splitList(val('pr-t')),cores:splitList(val('pr-c')),linkPagamento:/^https?:\/\//.test(val('pr-l'))?val('pr-l'):'',foto,ordem:ord};
+    const pd2=parseFloat(String(val('pr-pd')).replace(',','.'));const data={nome:val('pr-n'),preco,precoDe:pd2>0?pd2:0,selo:val('pr-sl'),secao:val('pr-sc'),descricao:val('pr-d'),tamanhos:splitList(val('pr-t')).flatMap(t=>t.split(/[\s\/|]+/)).filter(Boolean),cores:splitList(val('pr-c')),linkPagamento:/^https?:\/\//.test(val('pr-l'))?val('pr-l'):'',foto,ordem:ord};
     if(ep){S.db.doc('produtos/'+ep.id).update(data).then(()=>{S.editProd=null;delete S.pending['pr-f'];f.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');render();toast('Produto atualizado.')}).catch(()=>toast('Não foi possível salvar.'))}
     else{const av=checked('pr-av');addTo('produtos',{...data,esgotado:false},f).then(ok=>{if(ok&&av)notificar({tipo:'loja',titulo:'Novidade na loja: '+data.nome,texto:brl(data.preco)+(data.descricao?' · '+resumo(data.descricao,100):'')+'. Toque para ver.',url:'/#loja'})})}
   }
@@ -1920,7 +1907,7 @@ document.addEventListener('submit',e=>{
     addTo('desafios',d,f).then(ok=>{if(ok&&av)notificar({tipo:'desafios',titulo:'Novo desafio: '+d.titulo,texto:(d.meta?`Meta da galera: ${kmf(d.meta)} km. `:'')+'Bora somar seus km?',url:'/#desafios'})})}
   else if(k==='enquete'){const o=lines('en-o');if(o.length<2){toast('Coloque pelo menos 2 opções.');return}addTo('enquetes',{pergunta:val('en-p'),opcoes:o,ativa:true},f)}
   else if(k==='quiz'){const o=lines('qz-o');const c=parseInt(val('qz-c'),10)-1;if(o.length<2){toast('Coloque pelo menos 2 opções.');return}if(!(c>=0&&c<o.length)){toast('O número da opção certa precisa existir na lista.');return}addTo('quiz',{pergunta:val('qz-p'),opcoes:o,correta:c,explicacao:val('qz-e')},f)}
-  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),premioJogo:val('in-g'),manifesto:val('in-m'),grupo:val('in-gr'),email:val('in-e'),recado:val('in-r'),recadoLink:val('in-rl'),pix:val('in-px'),pixNome:val('in-pxn'),pixCidade:val('in-pxc')}).then(()=>{render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
+  else if(k==='info'){S.db.doc('projeto/info').set({sobre:val('in-s'),instagram:val('in-i'),whatsapp:val('in-w'),premioJogo:val('in-g'),manifesto:val('in-m'),grupo:val('in-gr'),email:val('in-e'),recado:val('in-r'),recadoLink:val('in-rl')}).then(()=>{render();toast('Salvo.')}).catch(()=>toast('Não foi possível salvar.'))}
 });
 
 document.addEventListener('click',async e=>{
@@ -2207,7 +2194,7 @@ document.addEventListener('click',e=>{
   else if(a==='sh-go')shGo();
   else if(a==='sh-save')shSave();
   else if(a==='sh-conq'){const c=conquistas(S.uid)[Number(b.dataset.i)];if(c&&c.ok)abrirStory('conquista',c)}
-  else if(a==='sh-rank'){const d=S.desafios.find(x=>x.id===b.dataset.id);const r=rankDe(b.dataset.id);if(d&&r)abrirStory('rank',{titulo:d.titulo,pos:r.pos,km:r.km,meta:Number(d.meta)||0,tot:sumKm(d.id)})}
+  else if(a==='sh-rank'){const d=S.desafios.find(x=>x.id===b.dataset.id)||(String(b.dataset.id).startsWith('semana-')?semanaD(0):null);const r=rankDe(b.dataset.id);if(d&&r)abrirStory('rank',{titulo:d.titulo,pos:r.pos,km:r.km,meta:Number(d.meta)||0,tot:sumKm(d.id)})}
   else if(a==='sh-jogo')abrirStory('jogo',{score:G.score||0,metros:Math.floor(G.dist/20),folhas:G.folhas||0,recorde:!!G.newBest});
   else if(a==='sh-ev'){const ev=S.eventos.find(x=>x.id===b.dataset.id);if(ev)abrirStory('evento',{e:ev})}
   else if(a==='sh-membro')abrirStory('membro',{});
@@ -2215,56 +2202,223 @@ document.addEventListener('click',e=>{
 
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[role=button][data-action]')){e.preventDefault();e.target.click()}});
 
-/* ---------- Importar do Strava ---------- */
-const STV={did:null,lista:null,busy:false,erro:''};
-async function stvApi(acao,body){
-  const tok=await auth.currentUser.getIdToken();
-  const r=await fetch('/api/strava?acao='+acao,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body||{})});
-  const j=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(new Error(j.erro||('Erro '+r.status)),{conectar:!!j.conectar,status:r.status});return j;
+/* ---------- Folhas: moeda do app ---------- */
+const FOLHA_PADRAO={metaSemanal:15,folhasKm:1,folhasMeta:20,podio:[60,40,25],jogo:[30,20,10],checkin:30};
+const LEAF='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15"/><path d="M5 19 14 10"/></svg>';
+function cfgF(){const c=S.cfgFolhas||{};const arr=(v,d)=>Array.isArray(v)&&v.length===3?v.map(x=>Math.max(0,Math.round(Number(x)||0))):d;
+  return {metaSemanal:Number(c.metaSemanal??FOLHA_PADRAO.metaSemanal)||0,folhasKm:Number(c.folhasKm??FOLHA_PADRAO.folhasKm)||0,folhasMeta:Math.round(Number(c.folhasMeta??FOLHA_PADRAO.folhasMeta))||0,
+    podio:arr(c.podio,FOLHA_PADRAO.podio),jogo:arr(c.jogo,FOLHA_PADRAO.jogo),checkin:Math.round(Number(c.checkin??FOLHA_PADRAO.checkin))||0}}
+const fmtF=n=>(Number(n)||0).toLocaleString('pt-BR');
+const semId=(off=0)=>'semana-'+semanaKey(off);
+function folhasDe(uid){return uid===S.uid&&!S.admin?S.minhasFolhas:(S.admin?S.todasFolhas.filter(f=>f.uid===uid):[])}
+function saldoDe(uid){return (uid===S.uid?S.minhasFolhas:S.todasFolhas.filter(f=>f.uid===uid)).reduce((t,f)=>t+(Number(f.qtd)||0),0)}
+function reservadoDe(uid){return (uid===S.uid?S.meusResgates:S.resgates.filter(r=>r.uid===uid)).filter(r=>r.status==='pendente').reduce((t,r)=>t+(Number(r.folhas)||0),0)}
+function dispDe(uid){return saldoDe(uid)-reservadoDe(uid)}
+async function darFolhas(id,uid,qtd,motivo,tipo){
+  qtd=Math.round(Number(qtd)||0);if(!qtd)return 'zero';
+  try{const ref=doc(fs,'folhas',id);if((await getDoc(ref)).exists())return 'existe';
+    await setDoc(ref,{uid,nome:nome(uid),qtd,motivo:String(motivo||'').slice(0,80),tipo,criado:Date.now(),por:S.uid});return 'ok'}
+  catch(e){console.warn('folhas',e);return 'erro'}
 }
-function stvRender(){
-  const el=$('#stsheet');if(!STV.did){el.hidden=true;el.innerHTML='';return}
-  const d=S.desafios.find(x=>x.id===STV.did)||{};const con=!!me().stravaConectado;
-  let body;
-  if(!con||STV.erro==='conectar')body=`<div class="card" style="gap:12px"><p style="margin:0">Conecte sua conta do Strava uma vez. Depois é só escolher a corrida e ela vai direto para a conferência, sem print.</p>
-    <ul class="small muted" style="margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px"><li>O app só lê as suas corridas quando você toca em Importar.</li><li>Ninguém da galera vê seus dados do Strava. Só o lançamento que você escolher.</li><li>Dá para desconectar quando quiser em Configurações.</li></ul>
-    <button class="btn strava-btn" data-action="strava-con" ${STV.busy?'disabled':''}>${STV.busy?'Abrindo o Strava…':'Conectar com o Strava'}</button></div>`;
-  else if(STV.lista===null)body=`<div class="skel" role="status" aria-label="Buscando suas corridas"><i></i><i></i><i></i></div>`;
-  else if(STV.erro)body=`<div class="notice">${esc(STV.erro)}</div><button class="btn" data-action="strava-reload">Tentar de novo</button>`;
-  else if(!STV.lista.length&&STV.aviso)body=`<div class="card"><p style="margin:0"><b>Strava conectado ✓</b></p><p class="small muted" style="margin:0">${esc(STV.aviso)}</p></div>`;
-  else if(!STV.lista.length)body=`<div class="empty">Nenhuma corrida no Strava no período do desafio${d.inicio?` (${esc(fmtShort(d.inicio))}${d.fim?' a '+esc(fmtShort(d.fim)):''})`:''}.</div>`;
-  else body=`<div class="stack" style="gap:8px">${STV.lista.map(c=>`<button class="stv-item" data-action="strava-pick" data-a="${esc(c.id)}" ${c.enviado||STV.busy?'disabled':''}><span class="km num">${kmf(c.km)}<small style="font-size:14px"> km</small></span><span class="t"><b>${esc(c.nome)}</b><span class="small muted">${esc(fmtShort(c.data))} · ${esc(c.tempo)}${c.ritmo?' · '+esc(c.ritmo)+'/km':''}${c.manual?' · lançada à mão':''}</span></span><span class="go">${c.enviado?'Já enviada':(STV.busy===c.id?'Enviando…':'Enviar')}</span></button>`).join('')}</div>
-    <p class="small muted" style="margin:0">A corrida vai para a conferência da organização e, aprovada, entra no ranking.</p>`;
-  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">${esc(d.titulo||'Desafio')}</p><h2 class="sec">Importar do Strava</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="strava-x" aria-label="Fechar">×</button></div>${body}<p class="pw-strava">Compatível com Strava</p></div>`;
-  el.hidden=false;
+/* semana */
+function semanaD(off=0){const k=semanaKey(off);const a=pd(k);const b=new Date(a);b.setDate(a.getDate()+6);const iso=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  return {id:'semana-'+k,titulo:'Desafio da semana',descricao:'Zera toda segunda. Cada km aprovado vira folha.',ativo:off===0,meta:0,inicio:k,fim:iso(b),semanal:true}}
+function kmSemana(uid,did){return S.lancamentos.filter(l=>l.desafio===did&&l.uid===uid&&l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0)}
+function semanalExtra(d){
+  const c=cfgF();const meta=c.metaSemanal;const km=S.uid?kmSemana(S.uid,d.id):0;const pct=meta?Math.min(100,km/meta*100):0;const ok=meta&&km>=meta;
+  return `<div class="semx">${S.uid&&meta?`<div class="row" style="justify-content:space-between;align-items:baseline"><span class="small"><b>Sua meta:</b> <span class="num">${kmf(km)} de ${kmf(meta)} km</span></span><span class="small ${ok?'okf':'muted'}">${ok?`Meta batida! +${c.folhasMeta} 🍃`:`+${c.folhasMeta} 🍃 ao bater`}</span></div><div class="bar"><i style="width:${pct}%"></i></div>`:''}
+  <div class="premiosemana"><span>🥇 ${c.podio[0]}</span><span>🥈 ${c.podio[1]}</span><span>🥉 ${c.podio[2]}</span><span>${c.folhasKm?`1 km = ${c.folhasKm} 🍃`:''}</span></div></div>`;
 }
-async function stvCarregar(){
-  STV.lista=null;STV.erro='';stvRender();
-  try{const j=await stvApi('lista',{desafio:STV.did});STV.lista=j.corridas||[];STV.aviso=j.aviso||''}
-  catch(e){if(e.conectar){STV.erro='conectar';STV.lista=[]}else{STV.erro=e.message||'Não deu para buscar suas corridas.';STV.lista=[]}}
-  stvRender();
+/* tela de folhas */
+function vFolhas(){
+  if(!S.uid)return `<section class="section"><p class="eyebrow">Folhas</p><h1 class="h-display">Corra, junte, troque</h1></section>`+visitante();
+  const c=cfgF();const saldo=saldoDe(S.uid),res=reservadoDe(S.uid),disp=saldo-res;
+  const pr=[...S.premios].filter(p=>p.ativo!==false).sort((a,b)=>(a.folhas||0)-(b.folhas||0));
+  const ext=[...S.minhasFolhas].sort((a,b)=>(b.criado||0)-(a.criado||0));
+  const meus=[...S.meusResgates].sort((a,b)=>(b.criado||0)-(a.criado||0));
+  const stR={pendente:['wait','Aguardando entrega'],entregue:['ok','Entregue'],cancelado:['no','Cancelado']};
+  let h=`<section class="section"><button class="linkbtn" data-go="${esc(S.prevView&&S.prevView!=='folhas'?S.prevView:'perfil')}">‹ Voltar</button><p class="eyebrow">Folhas</p><h1 class="h-display">Corra, junte, troque</h1></section>
+  <section class="section"><div class="carteira"><span class="eyebrow" style="margin:0">Seu saldo</span><div class="saldo"><i>${LEAF}</i><b class="num">${fmtF(disp)}</b><span>folhas</span></div>${res?`<span class="small muted">${fmtF(res)} reservadas em resgates aguardando entrega</span>`:''}</div></section>`;
+  h+=`<section class="section"><h2 class="sec">Troque por prêmios</h2>${loading('premios','Carregando prêmios…')??(pr.length?`<div class="premios">${pr.map(p=>{const falta=Math.max(0,(p.folhas||0)-disp);const esg=p.estoque!=null&&p.estoque!==''&&Number(p.estoque)<=0;const k='rs'+p.id;
+    return `<article class="premio">${okPic(p.foto)?`<img src="${p.foto}" alt="${esc(p.nome)}" loading="lazy">`:`<div class="pph">${LEAF}</div>`}<div class="pb"><b>${esc(p.nome)}</b>${p.descricao?`<span class="small muted">${esc(p.descricao)}</span>`:''}
+    <span class="custo num">${LEAF}${fmtF(p.folhas)}</span>${p.estoque!=null&&p.estoque!==''&&!esg?`<span class="small muted">Restam ${esc(p.estoque)}</span>`:''}
+    ${esg?`<span class="st no">Esgotado</span>`:falta?`<div class="bar"><i style="width:${Math.min(100,disp/(p.folhas||1)*100)}%"></i></div><span class="small muted">Faltam ${fmtF(falta)}</span>`:`<button class="btn small primary ${S.armed===k?'armed':''}" data-action="resgatar" data-id="${esc(p.id)}">${S.armed===k?'Confirmar troca':'Trocar'}</button>`}</div></article>`}).join('')}</div>`:`<div class="empty">Os prêmios estão chegando. Vai juntando suas folhas!</div>`)}</section>`;
+  if(meus.length)h+=`<section class="section"><h2 class="sec">Seus resgates</h2><div class="card">${meus.map(r=>{const[cl,t]=stR[r.status]||stR.pendente;return `<div class="lanc"><span><b>${esc(r.premio)}</b> <span class="muted small num">${fmtF(r.folhas)} folhas</span></span><span class="st ${cl}">${t}</span></div>`}).join('')}<p class="small muted" style="margin:6px 0 0">Retire o prêmio com a equipe no treino. As folhas saem do saldo na entrega.</p></div></section>`;
+  h+=`<section class="section"><h2 class="sec">Como ganhar</h2><div class="card ganhar">
+    ${c.folhasKm?`<div><i>🏃</i><span>Cada km aprovado nos desafios</span><b>${c.folhasKm} por km</b></div>`:''}
+    ${c.metaSemanal&&c.folhasMeta?`<div><i>🎯</i><span>Bater a meta da semana (${kmf(c.metaSemanal)} km)</span><b>+${c.folhasMeta}</b></div>`:''}
+    <div><i>🥇</i><span>Pódio do desafio da semana</span><b>${c.podio.join(' / ')}</b></div>
+    <div><i>🎮</i><span>Pódio do jogo da semana</span><b>${c.jogo.join(' / ')}</b></div>
+    <div><i>💚</i><span>Check-in em treino solidário (mostre o QR do seu cartão)</span><b>+${c.checkin}</b></div>
+    <p class="small muted" style="margin:4px 0 0">Os pódios fecham toda segunda de manhã. Folhas não valem dinheiro e não podem ser transferidas.</p></div></section>`;
+  h+=`<section class="section"><h2 class="sec">Extrato</h2><div class="card">${ext.length?ext.slice(0,60).map(f=>`<div class="lanc"><span><span class="small">${esc(f.motivo||'Folhas')}</span><br><span class="muted small">${f.criado?new Date(f.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'}):''}</span></span><b class="num ${Number(f.qtd)<0?'neg':'pos'}">${Number(f.qtd)>0?'+':''}${fmtF(f.qtd)}</b></div>`).join(''):`<p class="muted small" style="margin:0">Nada por aqui ainda. Lance sua primeira corrida no desafio da semana!</p>`}</div></section>`;
+  return h;
 }
-function stvAbrir(did){if(!S.uid){toast('Entre com sua conta para importar.');return}STV.did=did;STV.busy=false;if(me().stravaConectado)stvCarregar();else{STV.erro='';stvRender()}}
-document.addEventListener('click',async e=>{
-  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
-  if(!a.startsWith('strava'))return;e.stopImmediatePropagation();
-  if(a==='strava')stvAbrir(b.dataset.id);
-  else if(a==='strava-x'){STV.did=null;stvRender()}
-  else if(a==='strava-reload')stvCarregar();
-  else if(a==='strava-con-perfil'){STV.busy=true;render();
-    try{const j=await stvApi('link');try{sessionStorage.setItem('pv-stv-volta','perfil')}catch(err){}location.href=j.url}
-    catch(err){STV.busy=false;render();toast(err.message||'Não deu para abrir o Strava.')}}
-  else if(a==='strava-con'){STV.busy=true;stvRender();
-    try{const j=await stvApi('link');try{sessionStorage.setItem('pv-stv-did',STV.did)}catch(err){}location.href=j.url}
-    catch(err){STV.busy=false;stvRender();toast(err.message||'Não deu para abrir o Strava.')}}
-  else if(a==='strava-pick'){const id=b.dataset.a;STV.busy=id;stvRender();
-    try{const j=await stvApi('importar',{desafio:STV.did,id});toast(`${kmf(j.km)} km enviados para conferência.`);STV.did=null;STV.busy=false;stvRender()}
-    catch(err){STV.busy=false;if(err.conectar){STV.erro='conectar'}stvRender();toast(err.message||'Não deu para enviar.')}}
-  else if(a==='strava-off'){if(S.armed!=='stoff'){arm('stoff');return}S.armed=null;
-    try{await stvApi('desconectar');toast('Strava desconectado.')}catch(err){toast('Não deu para desconectar agora.')}}
+function carteiraMini(){
+  if(!S.uid)return '';const d=dispDe(S.uid);
+  return `<section class="section"><button class="carteira mini" data-go="folhas"><span class="saldo"><i>${LEAF}</i><b class="num">${fmtF(d)}</b><span>folhas</span></span><span class="small">Ver prêmios e extrato ${CHEV}</span></button></section>`;
+}
+async function resgatar(id){
+  const p=S.premios.find(x=>x.id===id);if(!p)return;
+  if(dispDe(S.uid)<(p.folhas||0)){toast('Folhas insuficientes.');return}
+  const k='rs'+id;if(S.armed!==k){arm(k);return}S.armed=null;
+  try{await addDoc(collection(fs,'resgates'),{uid:S.uid,nome:me().apelido||S.myName||'',premioId:p.id,premio:p.nome,folhas:Math.round(p.folhas||0),status:'pendente',criado:Date.now()});
+    toast('Pedido de troca enviado! Retire com a equipe no próximo treino.');
+  }catch(e){toast('Não deu para trocar agora.')}
+}
+/* painel: resgates, prêmios, regras, ajuste, check-in */
+function adminFolhasHtml(){
+  const c=cfgF();const pend=S.resgates.filter(r=>r.status==='pendente').sort((a,b)=>(a.criado||0)-(b.criado||0));
+  const ep=S.editPremio?S.premios.find(p=>p.id===S.editPremio):null;
+  const evs=[...S.eventos].sort((a,b)=>Math.abs(pd(a.data)-new Date())-Math.abs(pd(b.data)-new Date()));
+  const ev=S.ckEv&&S.eventos.find(e=>e.id===S.ckEv)?S.ckEv:(evs[0]?evs[0].id:'');
+  const nCk=S.todasFolhas.filter(f=>f.id&&f.id.startsWith('ck-'+ev+'-')).length;
+  const busca=(S.ckBusca||'').toLowerCase();
+  const lista=busca?Object.keys(S.membros).filter(u=>nome(u).toLowerCase().includes(busca)).slice(0,8):[];
+  const ms=Object.keys(S.membros).sort((a,b)=>nome(a).localeCompare(nome(b)));
+  return `
+  <section class="section"><div class="sec-head"><h2 class="sec">Check-in com QR</h2><span class="muted small num">${nCk} ${nCk===1?'confirmado':'confirmados'}</span></div><div class="card">
+    <p class="small muted" style="margin:0">Recebeu a doação? Peça para a pessoa abrir o <b>cartão de membro</b> e leia o QR. As folhas caem na hora.</p>
+    ${evs.length?`<label for="ck-ev">Evento<select id="ck-ev" data-ck="ev">${evs.slice(0,15).map(e=>`<option value="${esc(e.id)}" ${e.id===ev?'selected':''}>${esc(fmtShort(e.data))} · ${esc(e.titulo)}</option>`).join('')}</select></label>`:`<p class="small" style="margin:0">Cadastre o evento na agenda primeiro.</p>`}
+    <div class="grid2"><label for="ck-q">Folhas por check-in<input type="number" id="ck-q" min="1" max="1000" value="${esc(S.ckQtd||c.checkin)}" data-ck="q"></label><label for="ck-m">Motivo<input type="text" id="ck-m" maxlength="60" value="${esc(S.ckMot||'Doação no treino solidário')}" data-ck="m"></label></div>
+    ${ev?`<button class="btn primary" data-action="ck-scan">Abrir câmera</button>
+    <label for="ck-b">Sem câmera? Busque pelo nome<input type="search" id="ck-b" placeholder="Digite o nome" value="${esc(S.ckBusca||'')}" data-ck="b" autocomplete="off"></label>
+    ${lista.map(u=>{const feito=S.todasFolhas.some(f=>f.id==='ck-'+ev+'-'+u);return `<div class="adm-item"><div class="row" style="flex-wrap:nowrap">${avatar(u,30)}<b class="small">${esc(nome(u))}</b></div>${feito?`<span class="st ok">Confirmado</span>`:`<button class="btn small primary" data-action="ck-manual" data-uid="${esc(u)}">Confirmar</button>`}</div>`}).join('')}`:''}
+  </div></section>
+  <section class="section"><div class="sec-head"><h2 class="sec">Trocas de prêmios</h2><span class="muted small num">${pend.length} ${pend.length===1?'aguardando':'aguardando'}</span></div><div class="card">
+    ${pend.length?pend.map(r=>{const sd=saldoDe(r.uid);const k='re'+r.id;return `<div class="adm-item"><div><b class="small">${esc(nome(r.uid)!=='Corredor(a)'?nome(r.uid):r.nome)} · ${esc(r.premio)}</b><div class="muted small num">${fmtF(r.folhas)} folhas · saldo ${fmtF(sd)}${sd<r.folhas?' · <b style="color:var(--danger)">saldo insuficiente</b>':''}</div></div>
+      <div class="row" style="flex-wrap:nowrap"><button class="btn small primary" data-action="res-ok" data-id="${esc(r.id)}">Entregue</button><button class="btn small danger ${S.armed===k?'armed':''}" data-action="res-x" data-id="${esc(r.id)}">${S.armed===k?'Confirmar':'Cancelar'}</button></div></div>`}).join(''):`<p class="muted small" style="margin:0">Nenhuma troca aguardando entrega.</p>`}
+  </div></section>
+  <section class="section"><h2 class="sec">${ep?'Editar prêmio':'Novo prêmio'}</h2><form class="card" data-form="premio">
+    <label for="pm-n">Nome<input type="text" id="pm-n" maxlength="60" required placeholder="Ex.: Mensalidade grátis" value="${ep?esc(ep.nome):''}"></label>
+    <label for="pm-d">Descrição (opcional)<input type="text" id="pm-d" maxlength="120" placeholder="Ex.: 1 mês de assessoria" value="${ep?esc(ep.descricao||''):''}"></label>
+    <div class="grid2"><label for="pm-c">Quanto custa para vocês (R$)<input type="text" id="pm-c" inputmode="decimal" placeholder="Ex.: 35" value="${ep&&ep.custo?esc(String(ep.custo).replace('.',',')):''}" data-sug="1"></label>
+    <label for="pm-f">Preço em folhas<input type="number" id="pm-f" min="1" required placeholder="Ex.: 875" value="${ep?esc(ep.folhas):''}"></label></div>
+    <p class="small muted" id="pm-sug" style="margin:-4px 0 0">Dica: folhas = custo × 25. Assim cada aluno ativo ganha uns R$ 7 por mês em prêmios.</p>
+    <label for="pm-e">Estoque (opcional)<input type="number" id="pm-e" min="0" placeholder="Deixe vazio se não tiver limite" value="${ep&&ep.estoque!=null?esc(ep.estoque):''}"></label>
+    ${photoField('pm-ft','Foto (opcional)',ep?ep.foto:'')}
+    <div class="row"><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>${ep?'Salvar prêmio':'Adicionar prêmio'}</button>${ep?`<button type="button" class="btn" data-action="pm-cancel">Cancelar edição</button>`:''}</div></form>
+    <div class="card">${S.premios.length?[...S.premios].sort((a,b)=>(a.folhas||0)-(b.folhas||0)).map(p=>`<div class="adm-item"><div><b class="small">${esc(p.nome)}</b><div class="muted small num">${fmtF(p.folhas)} folhas${p.custo?' · custo R$ '+esc(String(p.custo).replace('.',',')):''}${p.estoque!=null&&p.estoque!==''?' · estoque '+esc(p.estoque):''}${p.ativo===false?' · pausado':''}</div></div><div class="row" style="flex-wrap:nowrap"><button class="btn small" data-action="pm-edit" data-id="${esc(p.id)}">Editar</button><button class="btn small" data-action="toggle" data-col="premios" data-id="${esc(p.id)}" data-f="ativo">${p.ativo===false?'Ativar':'Pausar'}</button><button class="btn small danger ${S.armed==='premios'+p.id?'armed':''}" data-action="del" data-col="premios" data-id="${esc(p.id)}">${S.armed==='premios'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join(''):`<p class="muted small" style="margin:0">Nenhum prêmio cadastrado.</p>`}</div></section>
+  <section class="section"><h2 class="sec">Regras das folhas</h2><form class="card" data-form="regras-folhas">
+    <div class="grid2"><label for="rf-m">Meta semanal (km)<input type="text" inputmode="decimal" id="rf-m" value="${esc(String(c.metaSemanal).replace('.',','))}"></label><label for="rf-b">Bônus ao bater a meta<input type="number" id="rf-b" min="0" value="${c.folhasMeta}"></label></div>
+    <label for="rf-k">Folhas por km aprovado<input type="text" inputmode="decimal" id="rf-k" value="${esc(String(c.folhasKm).replace('.',','))}"></label>
+    <p class="eyebrow" style="margin:4px 0 0">Pódio do desafio da semana</p><div class="grid3"><label for="rf-p1">1º<input type="number" id="rf-p1" min="0" value="${c.podio[0]}"></label><label for="rf-p2">2º<input type="number" id="rf-p2" min="0" value="${c.podio[1]}"></label><label for="rf-p3">3º<input type="number" id="rf-p3" min="0" value="${c.podio[2]}"></label></div>
+    <p class="eyebrow" style="margin:4px 0 0">Pódio do jogo da semana</p><div class="grid3"><label for="rf-j1">1º<input type="number" id="rf-j1" min="0" value="${c.jogo[0]}"></label><label for="rf-j2">2º<input type="number" id="rf-j2" min="0" value="${c.jogo[1]}"></label><label for="rf-j3">3º<input type="number" id="rf-j3" min="0" value="${c.jogo[2]}"></label></div>
+    <label for="rf-c">Folhas padrão do check-in<input type="number" id="rf-c" min="0" value="${c.checkin}"></label>
+    <p class="small muted" style="margin:0">Os pódios são pagos sozinhos toda segunda às 8h, com os km aprovados até lá. Aprovem as corridas até domingo à noite.</p>
+    <div><button class="btn primary" type="submit">Salvar regras</button></div></form></section>
+  <section class="section"><h2 class="sec">Dar folhas manualmente</h2><form class="card" data-form="ajuste-folhas">
+    <label for="af-u">Pessoa<select id="af-u" required><option value="">Escolha</option>${ms.map(u=>`<option value="${esc(u)}">${esc(nome(u))}</option>`).join('')}</select></label>
+    <div class="grid2"><label for="af-q">Folhas (use − para tirar)<input type="number" id="af-q" required placeholder="Ex.: 100"></label><label for="af-m">Motivo<input type="text" id="af-m" maxlength="60" required placeholder="Ex.: Indicou um aluno novo"></label></div>
+    <div><button class="btn primary" type="submit">Dar folhas</button></div></form></section>`;
+}
+async function resOk(id){
+  const r=S.resgates.find(x=>x.id===id);if(!r)return;
+  const st=await darFolhas('resg-'+id,r.uid,-Math.abs(r.folhas||0),'Troca: '+r.premio,'resgate');
+  if(st==='erro'){toast('Não deu para descontar as folhas.');return}
+  try{await updateDoc(doc(fs,'resgates',id),{status:'entregue',entregue:Date.now()});
+    const p=S.premios.find(x=>x.id===r.premioId);if(p&&p.estoque!=null&&p.estoque!==''&&Number(p.estoque)>0)await updateDoc(doc(fs,'premios',p.id),{estoque:Number(p.estoque)-1}).catch(()=>{});
+    toast('Entregue! Folhas descontadas.')}catch(e){toast('Não deu para salvar.')}
+}
+async function resX(id){const k='re'+id;if(S.armed!==k){arm(k);return}S.armed=null;try{await updateDoc(doc(fs,'resgates',id),{status:'cancelado'});toast('Troca cancelada. As folhas voltaram para o saldo.')}catch(e){toast('Não deu para cancelar.')}}
+/* ---------- QR do cartão e leitor ---------- */
+const LIBS={};
+function libJs(url){if(!LIBS[url])LIBS[url]=new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.async=true;s.onload=res;s.onerror=()=>{delete LIBS[url];rej(new Error('lib'))};document.head.appendChild(s)});return LIBS[url]}
+const QR_LIB='https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+const JSQR_LIB='https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+const qrTexto=()=>`pv1:${S.uid}:${Math.floor(Date.now()/60000)}`;
+let qrUlt='';
+async function desenharQR(){
+  const c=document.getElementById('mqr');if(!c||!S.uid)return;const t=qrTexto();if(t===qrUlt&&c.dataset.ok)return;
+  try{await libJs(QR_LIB)}catch(e){const b=document.querySelector('.qrbox span');if(b)b.textContent='Sem internet para gerar o QR agora.';return}
+  const q=window.qrcode(0,'M');q.addData(t);q.make();const n=q.getModuleCount();const px=8,m=3;const W=(n+2*m)*px;
+  c.width=W;c.height=W;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,W,W);g.fillStyle='#050505';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(q.isDark(r,k))g.fillRect((k+m)*px,(r+m)*px,px,px);
+  qrUlt=t;c.dataset.ok='1';
+}
+const CK={on:false,stream:null,raf:0,ult:'',ultT:0,det:null,busy:false};
+function ckBeep(ok){try{const a=new (window.AudioContext||window.webkitAudioContext)();const o=a.createOscillator(),g=a.createGain();o.frequency.value=ok?880:220;o.connect(g);g.connect(a.destination);g.gain.setValueAtTime(.18,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+(ok?.25:.4));o.start();o.stop(a.currentTime+(ok?.25:.4))}catch(e){}try{navigator.vibrate&&navigator.vibrate(ok?80:[60,60,60])}catch(e){}}
+function ckMsg(html,cls){const el=document.getElementById('ck-res');if(el){el.className='ckres '+(cls||'');el.innerHTML=html}}
+async function ckAbrir(){
+  const ev=document.getElementById('ck-ev')?.value;if(!ev){toast('Escolha o evento.');return}
+  S.ckEv=ev;S.ckQtd=Number(document.getElementById('ck-q')?.value)||cfgF().checkin;S.ckMot=document.getElementById('ck-m')?.value||'Check-in';
+  const e=S.eventos.find(x=>x.id===ev)||{};
+  const el=$('#scan');el.innerHTML=`<div class="scwrap"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><p class="eyebrow" style="margin:0">Check-in · +${fmtF(S.ckQtd)} folhas</p><b>${esc(e.titulo||'Evento')}</b></div><button class="btn small" data-action="ck-close">Fechar</button></div>
+    <div class="scvid"><video id="ck-v" playsinline muted autoplay></video><i class="scmira"></i></div><div id="ck-res" class="ckres">Aponte para o QR do cartão de membro</div><canvas id="ck-c" hidden></canvas></div>`;
+  el.hidden=false;document.body.style.overflow='hidden';CK.on=true;
+  try{CK.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+    const v=document.getElementById('ck-v');v.srcObject=CK.stream;await v.play().catch(()=>{});
+    if('BarcodeDetector' in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes('qr_code'))CK.det=new BarcodeDetector({formats:['qr_code']})}catch(err){}}
+    if(!CK.det)await libJs(JSQR_LIB);
+    ckLoop();
+  }catch(err){console.warn(err);ckMsg('Não deu para abrir a câmera. Libere o acesso à câmera ou use a busca pelo nome.','no')}
+}
+function ckFechar(){CK.on=false;cancelAnimationFrame(CK.raf);if(CK.stream){CK.stream.getTracks().forEach(t=>t.stop());CK.stream=null}const el=$('#scan');el.hidden=true;el.innerHTML='';document.body.style.overflow='';render()}
+async function ckLoop(){
+  if(!CK.on)return;const v=document.getElementById('ck-v');
+  if(v&&v.readyState>=2&&!CK.busy){
+    let txt=null;
+    try{if(CK.det){const r=await CK.det.detect(v);if(r&&r[0])txt=r[0].rawValue}
+      else if(window.jsQR){const c=document.getElementById('ck-c');const w=Math.min(640,v.videoWidth),h=Math.round(v.videoHeight*w/v.videoWidth);c.width=w;c.height=h;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(v,0,0,w,h);const r=window.jsQR(g.getImageData(0,0,w,h).data,w,h,{inversionAttempts:'dontInvert'});if(r)txt=r.data}}catch(e){}
+    if(txt&&!(txt===CK.ult&&Date.now()-CK.ultT<4000)){CK.ult=txt;CK.ultT=Date.now();await ckProcessar(txt)}
+  }
+  CK.raf=requestAnimationFrame(()=>setTimeout(ckLoop,120));
+}
+async function ckProcessar(txt){
+  const m=String(txt).match(/^pv1:([A-Za-z0-9_-]{1,128}):(\d+)$/);
+  if(!m){ckBeep(false);ckMsg('Esse QR não é de um cartão Passos Verdes.','no');return}
+  const uid=m[1],slot=Number(m[2]),agora=Math.floor(Date.now()/60000);
+  if(Math.abs(agora-slot)>3){ckBeep(false);ckMsg('QR vencido. Peça para abrir o cartão no app de novo (print não vale).','no');return}
+  if(!S.membros[uid]){ckBeep(false);ckMsg('Pessoa não encontrada no app.','no');return}
+  await ckDar(uid,true);
+}
+async function ckDar(uid,scan){
+  CK.busy=true;const ev=S.ckEv||document.getElementById('ck-ev')?.value;const q=S.ckQtd||Number(document.getElementById('ck-q')?.value)||cfgF().checkin;const mot=S.ckMot||document.getElementById('ck-m')?.value||'Check-in';
+  const st=await darFolhas('ck-'+ev+'-'+uid,uid,q,mot,'checkin');
+  const quem=`${avatar(uid,44).replace(/ data-action="ver"[^>]*?title="[^"]*"/,'')}<b>${esc(nome(uid))}</b>`;
+  if(st==='ok'){ckBeep(true);if(scan)ckMsg(`${quem}<span class="okf">+${fmtF(q)} folhas ✓</span>`,'ok');else toast(nome(uid)+': +'+q+' folhas ✓')}
+  else if(st==='existe'){ckBeep(false);if(scan)ckMsg(`${quem}<span>Já fez check-in neste evento</span>`,'ja');else toast('Já fez check-in neste evento.')}
+  else{ckBeep(false);if(scan)ckMsg('Não deu para salvar. Confira a internet.','no');else toast('Não deu para salvar.')}
+  CK.busy=false;if(!scan)render();
+}
+document.addEventListener('input',e=>{
+  const el=e.target;if(!el.dataset)return;
+  if(el.dataset.ck==='b'){S.ckBusca=el.value;const pos=el.selectionStart;render();const n=document.getElementById('ck-b');if(n){n.focus();try{n.setSelectionRange(pos,pos)}catch(err){}}}
+  else if(el.dataset.ck==='q')S.ckQtd=Number(el.value)||0;
+  else if(el.dataset.ck==='m')S.ckMot=el.value;
+  else if(el.dataset.sug){const c=parseFloat(String(el.value).replace(',','.'));const s=document.getElementById('pm-sug');if(s)s.innerHTML=c>0?`Sugestão: <b>${fmtF(Math.round(c*25/5)*5)} folhas</b> (custo × 25).`:'Dica: folhas = custo × 25. Assim cada aluno ativo ganha uns R$ 7 por mês em prêmios.'}
+});
+document.addEventListener('change',e=>{if(e.target.dataset&&e.target.dataset.ck==='ev'){S.ckEv=e.target.value;render()}});
+document.addEventListener('submit',async e=>{
+  const f=e.target.closest('form[data-form]');if(!f)return;const k=f.dataset.form;
+  if(!['premio','regras-folhas','ajuste-folhas'].includes(k))return;e.preventDefault();e.stopImmediatePropagation();
+  const v=id=>(document.getElementById(id)?.value||'').trim();const num=id=>parseFloat(v(id).replace(',','.'));
+  if(k==='premio'){
+    const d={nome:v('pm-n'),descricao:v('pm-d'),custo:num('pm-c')||0,folhas:Math.round(num('pm-f')||0),estoque:v('pm-e')===''?null:Math.max(0,Math.round(num('pm-e'))),foto:S.pending['pm-ft']!==undefined?S.pending['pm-ft']:(S.editPremio?(S.premios.find(p=>p.id===S.editPremio)||{}).foto||'':'')};
+    if(!d.nome||!(d.folhas>0)){toast('Preencha o nome e o preço em folhas.');return}
+    try{if(S.editPremio)await updateDoc(doc(fs,'premios',S.editPremio),d);else await addDoc(collection(fs,'premios'),{...d,ativo:true,criado:Date.now()});
+      S.editPremio=null;delete S.pending['pm-ft'];f.querySelectorAll('input:not([type=file])').forEach(i=>i.value='');render();toast('Prêmio salvo.')}catch(err){toast('Não deu para salvar o prêmio.')}
+  }else if(k==='regras-folhas'){
+    const d={metaSemanal:Math.max(0,num('rf-m')||0),folhasKm:Math.max(0,num('rf-k')||0),folhasMeta:Math.max(0,Math.round(num('rf-b')||0)),podio:['rf-p1','rf-p2','rf-p3'].map(i=>Math.max(0,Math.round(num(i)||0))),jogo:['rf-j1','rf-j2','rf-j3'].map(i=>Math.max(0,Math.round(num(i)||0))),checkin:Math.max(0,Math.round(num('rf-c')||0))};
+    try{await setDoc(doc(fs,'projeto','folhas'),d);toast('Regras salvas.')}catch(err){toast('Não deu para salvar.')}
+  }else if(k==='ajuste-folhas'){
+    const uid=v('af-u'),q=Math.round(num('af-q')||0),m=v('af-m');if(!uid||!q||!m){toast('Escolha a pessoa, a quantidade e o motivo.');return}
+    const st=await darFolhas('aj-'+newId('folhas'),uid,q,m,'ajuste');
+    if(st==='ok'){['af-q','af-m'].forEach(i=>{const el=document.getElementById(i);if(el)el.value=''});toast(`${q>0?'+':''}${q} folhas para ${nome(uid)}.`)}else toast('Não deu para salvar.');
+  }
 },true);
-// voltando da autorização: reabre a lista do desafio
-function stvRetomar(){let did=null,volta=null;try{did=sessionStorage.getItem('pv-stv-did');volta=sessionStorage.getItem('pv-stv-volta');sessionStorage.removeItem('pv-stv-did');sessionStorage.removeItem('pv-stv-volta')}catch(e){}if(!S.uid||!me().stravaConectado)return;if(did){go('desafios');stvAbrir(did)}else if(volta==='perfil'){go('perfil');toast('Strava conectado! Agora é só importar suas corridas em Desafios.')}}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action,id=b.dataset.id;
+  if(!['resgatar','res-ok','res-x','pm-edit','pm-cancel','ck-scan','ck-close','ck-manual'].includes(a))return;e.stopImmediatePropagation();
+  if(a==='resgatar')resgatar(id);
+  else if(a==='res-ok')resOk(id);
+  else if(a==='res-x')resX(id);
+  else if(a==='pm-edit'){S.editPremio=id;delete S.pending['pm-ft'];render();document.getElementById('pm-n')?.scrollIntoView({block:'center'})}
+  else if(a==='pm-cancel'){S.editPremio=null;delete S.pending['pm-ft'];render()}
+  else if(a==='ck-scan')ckAbrir();
+  else if(a==='ck-close')ckFechar();
+  else if(a==='ck-manual'){S.ckEv=document.getElementById('ck-ev')?.value;S.ckQtd=Number(document.getElementById('ck-q')?.value)||cfgF().checkin;S.ckMot=document.getElementById('ck-m')?.value||'Check-in';ckDar(b.dataset.uid,false)}
+},true);
 
 async function login(){
   const p=new GoogleAuthProvider();
@@ -2275,21 +2429,24 @@ async function login(){
   }
 }
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
+onSnapshot(doc(fs,'projeto','folhas'),s=>{S.cfgFolhas=s.exists()?s.data():null;schedule()},()=>{});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
+let unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
 onAuthStateChanged(auth,async u=>{
-  for(const u of [unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];
+  for(const u of [unsubF,unsubRs,unsubTF,unsubTR,unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubF=unsubRs=unsubTF=unsubTR=unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];S.minhasFolhas=[];S.meusResgates=[];S.todasFolhas=[];S.resgates=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
   if(u){
     getDoc(doc(fs,'admins',(u.email||'').toLowerCase())).then(a=>{if(S.uid!==u.uid)return;S.admin=a.exists();if(S.admin)ligarAdmin();render()}).catch(()=>{});
     pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
     unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
+    unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubRs=onSnapshot(query(collection(fs,'resgates'),where('uid','==',u.uid)),s=>{S.meusResgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubX=onSnapshot(collection(fs,'reacoes'),s=>{const r={};s.docs.forEach(d=>{r[d.id]=d.data()});S.reacoes=r;schedule()},()=>{});
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
       if(S.uid&&m[S.uid])S.confirmed={...BLANK(),...JSON.parse(JSON.stringify(m[S.uid]))};
       if(S.uid&&writing===0&&m[S.uid])S.me=JSON.parse(JSON.stringify(S.confirmed));
-      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first){marcarVisto();migrarFoto();setTimeout(stvRetomar,300)}schedule()},()=>{});
+      if(S.uid&&S.me&&(m[S.uid]||writing>0))m[S.uid]=S.me;S.membros=m;const first=!S.loaded.membros;S.loaded.membros=true;if(first){marcarVisto();migrarFoto()}schedule()},()=>{});
     unsubJ=onSnapshot(query(collection(fs,'jogo',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placar=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubJ2=onSnapshot(query(collection(fs,'jogo',semanaKey(-1),'placar'),orderBy('pontos','desc'),limit(1)),s=>{S.campeao=s.docs[0]?s.docs[0].data():null;schedule()},()=>{});
     unsubK=DB.collection('campeoes').onSnapshot(s=>{S.campeoes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
@@ -2304,6 +2461,8 @@ function ligarAdmin(){
       unsubP=onSnapshot(collection(fs,'provas'),s=>{const p={};s.docs.forEach(d=>{p[d.id]=d.data()});
         for(const l of S.lancamentos)if(l.status==='pendente'&&!(l.id in p))p[l.id]=null;S.provas=p;schedule()},()=>{});
       unsubR=DB.collection('reportes').onSnapshot(s=>{S.reportes=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+      unsubTF=onSnapshot(collection(fs,'folhas'),s=>{S.todasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+      unsubTR=onSnapshot(collection(fs,'resgates'),s=>{S.resgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
   }
 }
