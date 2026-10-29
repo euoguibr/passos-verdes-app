@@ -2379,7 +2379,7 @@ function selHtml(u){
   const hs=S.todasFolhas.filter(f=>f.uid===u).sort((a,b)=>(b.criado||0)-(a.criado||0));
   return `<div class="afsel">
     <button type="button" class="btn small ${ehAluno(u)?'':'primary'}" data-action="af-aluno" data-uid="${esc(u)}">${ehAluno(u)?'✓ Aluno da assessoria · desmarcar':'Marcar como aluno da assessoria'}</button>
-    <form data-form="ajuste-folhas" class="afform"><input type="hidden" id="af-u" value="${esc(u)}">
+    <form data-form="ajuste-folhas" class="afform" data-uid="${esc(u)}">
       <div class="row" style="gap:8px">${[[50,'Bem-vindo ao app!'],[100,'Indicou um aluno novo']].map(([n,t])=>`<button type="button" class="btn small" data-action="af-rapido" data-q="${n}" data-m="${esc(t)}">+${n} · ${esc(t)}</button>`).join('')}</div>
       <div class="grid2"><label for="af-q">Folhas (use − para tirar)<input type="number" id="af-q" required placeholder="Ex.: 50"></label><label for="af-m">Motivo<input type="text" id="af-m" maxlength="60" required placeholder="Ex.: Bem-vindo ao app!"></label></div>
       <button class="btn primary" type="submit">Dar folhas para ${esc(nome(u))}</button></form>
@@ -2618,7 +2618,7 @@ document.addEventListener('submit',async e=>{
     const d={metaSemanal:Math.max(0,num('rf-m')||0),folhasKm:Math.max(0,num('rf-k')||0),folhasMeta:Math.max(0,Math.round(num('rf-b')||0)),podio:['rf-p1','rf-p2','rf-p3'].map(i=>Math.max(0,Math.round(num(i)||0))),jogo:['rf-j1','rf-j2','rf-j3'].map(i=>Math.max(0,Math.round(num(i)||0))),checkin:Math.max(0,Math.round(num('rf-c')||0))};
     try{await setDoc(doc(fs,'projeto','folhas'),d);toast('Regras salvas.')}catch(err){toast('Não deu para salvar.')}
   }else if(k==='ajuste-folhas'){
-    const uid=v('af-u'),q=Math.round(num('af-q')||0),m=v('af-m');if(!uid||!q||!m){toast('Escolha a pessoa, a quantidade e o motivo.');return}
+    const uid=e.target.dataset.uid||'',q=Math.round(num('af-q')||0),m=v('af-m');if(!uid||!q||!m){toast('Escolha a pessoa, a quantidade e o motivo.');return}
     const rep=ajustesDe(uid).find(f=>semAc(f.motivo)===semAc(m));const k='afdup'+uid+semAc(m);
     if(rep&&S.armed!==k){S.armed=k;toast(`${nome(uid)} já recebeu “${rep.motivo}” em ${dm(rep.criado)}. Toque de novo para dar outra vez.`);return}
     S.armed=null;
