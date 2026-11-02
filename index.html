@@ -486,6 +486,15 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 .g3c{position:absolute;left:10px;top:10px;background:rgba(0,0,0,.5);color:#fff;border-radius:14px;padding:6px 12px 7px;display:flex;flex-direction:column;line-height:1.15;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .g3c .g3m{font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:24px}
 .g3c .g3f{font-size:13px;font-weight:700;color:#C8F560}
+.g3c .g3ps{font-size:12px;font-weight:700;color:#e8ece6;font-variant-numeric:tabular-nums}
+.g3km{position:absolute;left:50%;top:22%;transform:translateX(-50%);background:#C8F560;color:#0B1200;border-radius:18px;padding:10px 20px;text-align:center;display:flex;flex-direction:column;animation:g3km .35s cubic-bezier(.3,1.6,.5,1)}
+.g3km[hidden]{display:none}
+.g3km b{font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:34px;line-height:1}
+.g3km span{font-size:13px;font-weight:800}
+@keyframes g3km{from{transform:translateX(-50%) scale(.4);opacity:0}}
+.g3res{display:flex;justify-content:center;gap:18px}
+.g3res span{display:flex;flex-direction:column;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.g3res b{font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:24px;color:var(--ink);letter-spacing:0}
 .g3r{position:absolute;right:12px;top:14px;color:#fff;font-size:12px;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 .g3pw{position:absolute;left:10px;top:72px;color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 4px rgba(0,0,0,.6)}
 #g3st .gover{z-index:4}
@@ -1683,9 +1692,7 @@ const GR=2300,JUMP=-780,MAXSP=840;
 function gameScore(){return Math.min(100000,Math.floor(G.dist/20)+G.folhas*10)}
 function weekBest(){const r=(S.placar||[]).find(p=>p.uid===S.uid);return r?Number(r.pontos)||0:0}
 /* Jogo 3D (estilo corrida de frente). Se não carregar, abre a versão 2D. */
-const G3={mod:null,ctrl:null,cfg:null,costas:false};
-function g3Salvo(){const m=me();if(m.boneco&&typeof m.boneco==='object')return m.boneco;try{const j=JSON.parse(localStorage.getItem('pv-boneco')||'null');if(j)return j}catch(e){}return null}
-function g3Padrao(){const nm=(me().apelido||S.myName||'').trim().split(/\s+/)[0]||'';return G3.mod.padrao(nm,S.uid?bibNum():0)}
+const G3={mod:null,ctrl:null};
 async function openGame(){
   const el=$('#game');G.modo='3d';G.on=false;
   el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Corre, Verde!</p><b class="small muted">Deslize: ← → troca de pista · ↑ pula · ↓ rola</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
@@ -1697,54 +1704,15 @@ async function openGame(){
     const t=document.createElement('canvas');if(!(t.getContext('webgl2')||t.getContext('webgl')))throw new Error('sem webgl');
   }catch(e){console.warn('jogo 3D indisponível',e);if(!$('#game').hidden)openGame2D();return}
   if($('#game').hidden)return;
-  const sv=g3Salvo();G3.cfg=G3.mod.limpar(sv||g3Padrao());
-  if(sv)g3Capa();else g3Editor();
+  g3Iniciar();
 }
-function g3Painel(){const st=document.getElementById('g3st');if(!st)return null;st.querySelector('.g3load')?.remove();let sel=st.querySelector('.g3sel');if(!sel){sel=document.createElement('div');sel.className='g3sel';st.appendChild(sel)}sel.hidden=false;return sel}
-function g3Capa(){
-  const sel=g3Painel();if(!sel)return;sel.classList.remove('ed');
-  sel.innerHTML=`<p class="eyebrow" style="margin:0;color:#C8F560">Seu corredor</p><img class="g3prev" src="${G3.mod.retrato(G3.cfg,240,300,0.15)}" alt="Seu boneco">
-  <button type="button" class="btn primary" data-action="g3-ir">Correr</button><button type="button" class="btn" data-action="g3-editar">Editar meu boneco</button>`;
-}
-function g3Editor(){
-  const sel=g3Painel();if(!sel)return;sel.classList.add('ed');const c=G3.cfg,O=G3.mod.OPCOES;
-  const cores=(k,l)=>`<div class="g3sw">${l.map(v=>`<button type="button" data-action="g3-set" data-k="${k}" data-v="${v}" aria-pressed="${c[k]===v}" style="background:${v}" aria-label="${k} ${v}"></button>`).join('')}</div>`;
-  const chips=(k,l)=>`<div class="g3ch">${l.map(([v,t])=>`<button type="button" data-action="g3-set" data-k="${k}" data-v="${esc(v)}" aria-pressed="${c[k]===v}">${esc(t)}</button>`).join('')}</div>`;
-  const y=sel.scrollTop;
-  sel.innerHTML=`<div class="g3top"><img class="g3prev" id="g3img" src="${G3.mod.retrato(c,240,300,G3.costas?Math.PI+0.2:0.15)}" alt="Seu boneco"><button type="button" class="btn small" data-action="g3-girar">${G3.costas?'Ver de frente':'Ver de costas'}</button></div>
-  <div class="g3form">
-    <p class="eyebrow">Número de peito</p>
-    <div class="grid2"><label>Nome<input type="text" id="g3-nome" maxlength="10" value="${esc(c.nome)}" placeholder="Seu nome"></label><label>Número<input type="number" id="g3-num" min="0" max="9999" inputmode="numeric" value="${esc(c.numero)}"></label></div>
-    <p class="eyebrow">Pele</p>${cores('pele',O.pele)}
-    <p class="eyebrow">Cabelo</p>${chips('cabelo',O.cabelo)}${cores('corCabelo',O.corCabelo)}
-    <p class="eyebrow">Rosto</p>${chips('barba',O.barba)}${chips('oculos',O.oculos)}
-    <p class="eyebrow">Boné</p>${chips('bone',O.bone)}
-    <p class="eyebrow">Camisa</p>${chips('manga',O.manga)}${cores('camisa',O.camisa)}
-    <p class="eyebrow">Bermuda ou legging</p>${chips('perna',O.perna)}${cores('short',O.short)}
-    <p class="eyebrow">Tênis</p>${cores('tenis',O.tenis)}
-  </div>
-  <div class="g3acoes"><button type="button" class="btn primary" data-action="g3-salvar">Salvar e correr</button></div>`;
-  sel.scrollTop=y;
-}
-function g3Prev(){const i=document.getElementById('g3img');if(i)i.src=G3.mod.retrato(G3.cfg,240,300,G3.costas?Math.PI+0.2:0.15)}
-function g3Guardar(){const c=G3.mod.limpar(G3.cfg);G3.cfg=c;try{localStorage.setItem('pv-boneco',JSON.stringify(c))}catch(e){}if(S.uid)saveMe(m=>{m.boneco=c})}
 function g3Iniciar(){
-  const st=document.getElementById('g3st');if(!st)return;st.querySelector('.g3sel')?.remove();try{G3.mod.liberarRetrato()}catch(e){}
+  const st=document.getElementById('g3st');if(!st)return;st.querySelector('.g3load')?.remove();
   const noite=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
-  if(G3.ctrl){G3.ctrl.reiniciar(G3.cfg);G3.ctrl.recorde(G.best);return}
-  try{G3.ctrl=G3.mod.criar(st,{noite,boneco:G3.cfg,recorde:G.best,onOver:r=>{G.dist=r.metros*20;G.folhas=r.folhas;gameOver()}})}
+  try{G3.ctrl=G3.mod.criar(st,{noite,recorde:G.best,onOver:r=>{G.dist=r.metros*20;G.folhas=r.folhas;G.tempo=r.tempo;G.pace=r.pace;gameOver()}})}
   catch(e){console.warn('jogo 3D',e);openGame2D()}
 }
 function g3Recomecar(){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}Object.assign(G,{saved:false,newBest:false,dist:0,folhas:0});if(G3.ctrl){G3.ctrl.reiniciar();G3.ctrl.recorde(G.best)}}
-document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;if(!a.startsWith('g3-'))return;e.stopImmediatePropagation();
-  if(a==='g3-set'){G3.cfg[b.dataset.k]=b.dataset.v;g3Editor()}
-  else if(a==='g3-girar'){G3.costas=!G3.costas;g3Editor()}
-  else if(a==='g3-editar'){G3.costas=false;g3Editor()}
-  else if(a==='g3-salvar'){g3Guardar();g3Iniciar()}
-  else if(a==='g3-ir')g3Iniciar();
-  else if(a==='g3-trocar'){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}Object.assign(G,{saved:false,newBest:false});G3.costas=false;g3Editor()}
-});
-document.addEventListener('input',e=>{const t=e.target;if(t.id==='g3-nome'){G3.cfg.nome=t.value.slice(0,10);clearTimeout(G3.tm);G3.tm=setTimeout(g3Prev,250)}else if(t.id==='g3-num'){G3.cfg.numero=Math.max(0,Math.min(9999,Math.round(Number(t.value)||0)));clearTimeout(G3.tm);G3.tm=setTimeout(g3Prev,250)}});
 function openGame2D(){
   G.modo='2d';
   if(!S.uid){toast('Entre com sua conta para jogar e entrar no ranking.')}
@@ -1824,9 +1792,9 @@ function gameOver(){
   const o=document.getElementById('gover');if(!o)return;
   const wb=weekBest();
   o.innerHTML=`<div class="gcard"><p class="eyebrow" style="margin:0">${G.newBest?'Novo recorde!':'Fim de corrida'}</p><div class="gscore num">${sc.toLocaleString('pt-BR')}</div>
-  <p class="small muted" style="margin:0"><span class="num">${Math.floor(G.dist/20).toLocaleString('pt-BR')} m</span> corridos · <span class="num">${G.folhas}</span> ${G.folhas===1?'folha':'folhas'}</p>
+  <p class="small muted" style="margin:0"><span class="num">${Math.floor(G.dist/20).toLocaleString('pt-BR')} m</span> corridos · <span class="num">${G.folhas}</span> ${G.folhas===1?'folha':'folhas'}</p>${G.modo==='3d'&&G.tempo?`<div class="g3res num"><span><b>${(Math.floor(G.dist/20)/1000).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</b>km</span><span><b>${Math.floor(G.tempo/60)}:${String(Math.round(G.tempo)%60).padStart(2,'0')}</b>tempo</span><span><b>${G.pace?Math.floor(G.pace/60)+':'+String(Math.round(G.pace)%60).padStart(2,'0'):'--'}</b>pace médio</span></div>`:''}
   ${S.uid?`<p class="small" style="margin:0">Seu melhor da semana: <b class="num">${Math.max(wb,sc).toLocaleString('pt-BR')}</b></p>`:`<p class="small" style="margin:0">Entre com sua conta para entrar no ranking.</p>`}
-  <div class="row" style="justify-content:center"><button class="btn primary" data-action="game-again">Correr de novo</button><button class="btn" data-action="game-close">Ver ranking</button></div>${G.modo==='3d'?`<button class="linkbtn small" data-action="g3-trocar">Editar meu boneco</button>`:''}${S.uid&&sc>0?`<button class="btn story" data-action="sh-jogo">${STORYI}Postar no story</button>`:''}</div>`;
+  <div class="row" style="justify-content:center"><button class="btn primary" data-action="game-again">Correr de novo</button><button class="btn" data-action="game-close">Ver ranking</button></div>${S.uid&&sc>0?`<button class="btn story" data-action="sh-jogo">${STORYI}Postar no story</button>`:''}</div>`;
   setTimeout(()=>{o.hidden=false},450);
 }
 async function saveScore(sc){
@@ -1977,7 +1945,7 @@ function jogoCard(){
   const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(r.uid===S.uid?(me().apelido||S.myName||r.nome):(nome(r.uid)!=='Corredor(a)'?nome(r.uid):(r.nome||'Corredor(a)')))}${r.uid===S.uid?' (você)':''}</span><span class="num">${(r.pontos||0).toLocaleString('pt-BR')}</span></li>`;
   let rows=pl.slice(0,S.rankAll?50:5).map(li).join('');if(!S.rankAll&&pos>=5)rows+=li(pl[pos],pos);
   return `<section class="section"><div class="card gamecard"><div class="gbanner"><canvas id="gmini" width="640" height="220" aria-hidden="true"></canvas><div class="gtitle"><span>Jogo da semana</span><b>Corre, Verde!</b></div></div><div class="gbody">
-  <p class="small" style="margin:0">Monte seu boneco, corra pelas ruas de Magé, desvie dos obstáculos e junte folhas. Ranking zera toda segunda.${pr?` <b>Prêmio da semana:</b> ${esc(pr)}`:''}</p>
+  <p class="small" style="margin:0">Corra pelas ruas de Magé, passe pelas cachoeiras, desvie dos obstáculos e junte folhas. Ranking zera toda segunda.${pr?` <b>Prêmio da semana:</b> ${esc(pr)}`:''}</p>
   <button class="btn primary" data-action="game">Jogar agora</button>
   <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankall">${S.rankAll?'Ver menos':'Ver todos'}</button>`:''}</div>
   ${pl.length?`<ol class="rank">${rows}</ol>`:`<p class="muted small" style="margin:0">Ninguém jogou esta semana ainda. Seja o primeiro.</p>`}</div>

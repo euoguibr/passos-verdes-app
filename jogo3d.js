@@ -2,99 +2,85 @@
 // Carregado só quando alguém abre o jogo. Usa three.js pelo CDN.
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
 
-/* ---------- boneco personalizável ---------- */
-export const OPCOES = {
-  pele: ['#f3d2b5', '#e6b58f', '#c98e63', '#a86c44', '#7d4a2b', '#4f2e1b'],
-  cabelo: [['careca', 'Careca'], ['curto', 'Curto'], ['black', 'Black'], ['rabo', 'Rabo de cavalo'], ['coque', 'Coque'], ['longo', 'Longo']],
-  corCabelo: ['#15100c', '#4a2e1c', '#8a5a2b', '#d9b26a', '#a8442a', '#bdbdbd'],
-  barba: [['nenhuma', 'Sem barba'], ['cavanhaque', 'Cavanhaque'], ['cheia', 'Barba cheia']],
-  bone: [['', 'Sem boné'], ['#111111', 'Preto'], ['#c8f560', 'Verde'], ['#f4f4f0', 'Branco']],
-  oculos: [['nenhum', 'Sem óculos'], ['escuro', 'Óculos escuros']],
-  camisa: ['#c8f560', '#111111', '#f4f4f0', '#1f6b3b', '#ff8fbf', '#2f6fd6', '#ff7a1a', '#7b3fd6'],
-  manga: [['camiseta', 'Camiseta'], ['regata', 'Regata']],
-  short: ['#111111', '#2b2b2b', '#1f3a5f', '#1f6b3b', '#ff8fbf', '#f4f4f0'],
-  perna: [['short', 'Bermuda'], ['legging', 'Legging']],
-  tenis: ['#f2f2f2', '#111111', '#c8f560', '#ff8fbf', '#2f6fd6', '#ff7a1a']
-};
-export function padrao(nome = '', numero = 0) {
-  return { pele: '#c98e63', cabelo: 'curto', corCabelo: '#15100c', barba: 'nenhuma', bone: '', oculos: 'nenhum', camisa: '#c8f560', manga: 'camiseta', short: '#111111', perna: 'short', tenis: '#f2f2f2', nome: String(nome || '').slice(0, 10), numero: Number(numero) || 0 };
-}
-export function limpar(c) { // garante valores válidos
-  const p = padrao(); const o = { ...p, ...(c || {}) }; const em = (k, l) => (l.some(x => (Array.isArray(x) ? x[0] : x) === o[k]) ? o[k] : p[k]);
-  for (const k of ['pele', 'cabelo', 'corCabelo', 'barba', 'bone', 'oculos', 'camisa', 'manga', 'short', 'perna', 'tenis']) o[k] = em(k, OPCOES[k]);
-  o.nome = String(o.nome || '').replace(/[<>]/g, '').slice(0, 10); o.numero = Math.max(0, Math.min(9999, Math.round(Number(o.numero) || 0)));
-  return o;
-}
-
+/* ---------- o corredor Passos Verdes ---------- */
 const LANES = [-2.4, 0, 2.4];
 const mat = (c, o = {}) => new THREE.MeshLambertMaterial({ color: c, flatShading: true, ...o });
+let GRAD = null;
+function toon(c) {
+  if (!GRAD) { GRAD = new THREE.DataTexture(new Uint8Array([90, 90, 90, 255, 170, 170, 170, 255, 255, 255, 255, 255]), 3, 1); GRAD.minFilter = GRAD.magFilter = THREE.NearestFilter; GRAD.needsUpdate = true; }
+  return new THREE.MeshToonMaterial({ color: c, gradientMap: GRAD });
+}
+const CONTORNO = new THREE.MeshBasicMaterial({ color: 0x0b1200, side: THREE.BackSide });
+function contorno(m, k = 1.07) { const o = new THREE.Mesh(m.geometry, CONTORNO); o.scale.setScalar(k); o.raycast = () => {}; m.add(o); return m; }
 
-function texPeito(nome, numero) { // número de peito de corrida
-  const c = document.createElement('canvas'); c.width = 256; c.height = 220; const g = c.getContext('2d');
-  g.fillStyle = '#ffffff'; g.beginPath(); g.roundRect ? g.roundRect(4, 4, 248, 212, 18) : g.rect(4, 4, 248, 212); g.fill();
-  g.fillStyle = '#0b1200'; g.fillRect(4, 4, 248, 40); g.fillStyle = '#c8f560'; g.font = '900 24px Archivo, "Arial Narrow", Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('PASSOS VERDES', 128, 25);
-  g.fillStyle = '#0b1200'; let fs = 110; const num = String(numero || 0); g.font = `900 ${fs}px Archivo, "Arial Narrow", Arial, sans-serif`; while (g.measureText(num).width > 220 && fs > 50) { fs -= 6; g.font = `900 ${fs}px Archivo, "Arial Narrow", Arial, sans-serif`; } g.fillText(num, 128, 112);
-  const nm = String(nome || '').toUpperCase(); fs = 38; g.font = `900 ${fs}px Archivo, "Arial Narrow", Arial, sans-serif`; while (g.measureText(nm).width > 225 && fs > 18) { fs -= 2; g.font = `900 ${fs}px Archivo, "Arial Narrow", Arial, sans-serif`; }
-  g.fillStyle = '#1f6b3b'; g.fillText(nm, 128, 182);
-  for (const [x, y] of [[18, 56], [238, 56], [18, 204], [238, 204]]) { g.fillStyle = '#bbb'; g.beginPath(); g.arc(x, y, 5, 0, 7); g.fill(); }
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+function texCostas() { // logo nas costas da camisa preta
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256; const g = c.getContext('2d');
+  g.fillStyle = '#121412'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#c8f560'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '900 64px Archivo, "Arial Narrow", Arial, sans-serif'; g.fillText('PASSOS', 128, 92); g.fillText('VERDES', 128, 152);
+  g.strokeStyle = '#c8f560'; g.lineWidth = 6; g.beginPath(); g.moveTo(40, 196); g.lineTo(216, 196); g.stroke();
+  g.font = '700 22px Figtree, Arial, sans-serif'; g.fillStyle = '#f5f7f2'; g.fillText('MAGÉ · RJ', 128, 222);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const img = new Image(); img.onload = () => { g.fillStyle = '#121412'; g.fillRect(0, 0, 256, 256); g.drawImage(img, 28, 20, 200, 200); g.font = '700 22px Figtree, Arial, sans-serif'; g.fillStyle = '#c8f560'; g.fillText('MAGÉ · RJ', 128, 236); t.needsUpdate = true; };
+  img.src = '/icons/logo.png';
+  return t;
 }
 
-function boneco(cfg) {
-  const p = limpar(cfg);
+function boneco() {
+  const NEON = 0xc8f560, PRETO = 0x161816, PELE = 0xb57650, CABELO = 0x141010;
   const root = new THREE.Group(); const piv = new THREE.Group(); piv.position.y = 1; root.add(piv); const corpo = new THREE.Group(); corpo.position.y = -1; piv.add(corpo);
-  const pele = mat(p.pele), camisa = mat(p.camisa), short = mat(p.short), tenis = mat(p.tenis), sola = mat(p.tenis === '#f2f2f2' ? '#c8f560' : '#f2f2f2'), cabelo = mat(p.corCabelo);
-  const cap = (r, l, m) => new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 3, 8), m);
-  const regata = p.manga === 'regata';
-  // tronco
-  const tronco = cap(0.25, 0.42, camisa); tronco.scale.set(regata ? 1.08 : 1.18, 1, 0.78); tronco.position.y = 1.38; corpo.add(tronco);
-  const peito = new THREE.MeshBasicMaterial({ map: texPeito(p.nome, p.numero) });
-  const nf = new THREE.Mesh(new THREE.PlaneGeometry(0.36, 0.31), peito); nf.position.set(0, 1.4, -0.205); nf.rotation.y = Math.PI; corpo.add(nf);
-  const nc = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.34), peito); nc.position.set(0, 1.38, 0.206); corpo.add(nc);
-  const quadril = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.24, 0.3, 10), short); quadril.scale.z = 0.8; quadril.position.y = 0.98; corpo.add(quadril);
-  // cabeça
-  const pesc = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.09, 0.14, 8), pele); pesc.position.y = 1.78; corpo.add(pesc);
-  const cab = new THREE.Group(); cab.position.y = 1.97; corpo.add(cab);
-  cab.add(new THREE.Mesh(new THREE.SphereGeometry(0.19, 12, 10), pele));
-  const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 5), pele); nariz.position.set(0, -0.01, -0.19); cab.add(nariz);
-  for (const sx of [-1, 1]) { const or = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 5), pele); or.position.set(0.19 * sx, 0, 0); or.scale.set(0.6, 1, 1); cab.add(or); }
-  const topo = () => { const h = new THREE.Mesh(new THREE.SphereGeometry(0.2, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.36), cabelo); h.position.set(0, 0.02, 0.02); h.scale.set(1.05, 1, 1.06); cab.add(h);
-    const nuca = new THREE.Mesh(new THREE.SphereGeometry(0.2, 12, 8, 0, Math.PI, Math.PI * 0.3, Math.PI * 0.32), cabelo); nuca.position.set(0, 0.0, 0.015); nuca.scale.set(1.05, 1, 1.06); cab.add(nuca); };
-  if (p.cabelo === 'curto') topo();
-  else if (p.cabelo === 'black') { const a = new THREE.Mesh(new THREE.IcosahedronGeometry(0.27, 1), cabelo); a.position.set(0, 0.1, 0.05); a.scale.set(1.05, 0.85, 1); cab.add(a); }
-  else if (p.cabelo === 'rabo') { topo(); const pr = cap(0.07, 0.3, cabelo); pr.position.set(0, -0.02, 0.26); pr.rotation.x = 0.6; cab.add(pr); cab.userData.rabo = pr; }
-  else if (p.cabelo === 'coque') { topo(); const cq = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), cabelo); cq.position.set(0, 0.19, 0.12); cab.add(cq); }
-  else if (p.cabelo === 'longo') { topo(); const l = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.42, 0.12), cabelo); l.position.set(0, -0.14, 0.15); cab.add(l); cab.userData.rabo = l; }
-  if (p.bone) {
-    const b = new THREE.Mesh(new THREE.SphereGeometry(0.205, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat(p.bone)); b.position.y = 0.03; cab.add(b);
-    const aba = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.025, 0.2), mat(p.bone)); aba.position.set(0, 0.04, -0.24); cab.add(aba);
+  const pele = toon(PELE), camisa = toon(PRETO), neon = toon(NEON), short = toon(PRETO), branco = toon(0xf4f4f0), cabelo = toon(CABELO);
+  const cap = (r, l, m, seg = 10) => contorno(new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, seg), m));
+  const esf = (r, m, w = 16, h = 12) => contorno(new THREE.Mesh(new THREE.SphereGeometry(r, w, h), m));
+  // tronco: camisa preta com detalhes neon
+  const tronco = cap(0.27, 0.38, camisa, 14); tronco.scale.set(1.15, 1, 0.8); tronco.position.y = 1.38; corpo.add(tronco);
+  const gola = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 16), neon); gola.rotation.x = Math.PI / 2; gola.position.y = 1.73; corpo.add(gola);
+  for (const sx of [-1, 1]) { const lt = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.5, 0.36), neon); lt.position.set(0.305 * sx, 1.38, 0); corpo.add(lt); }
+  const costas = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: texCostas() })); costas.position.set(0, 1.42, 0.222); corpo.add(costas);
+  const pv = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: NEON })); pv.position.set(-0.12, 1.55, -0.222); pv.rotation.y = Math.PI; corpo.add(pv);
+  const quadril = contorno(new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 0.32, 14), short)); quadril.scale.z = 0.82; quadril.position.y = 0.98; corpo.add(quadril);
+  const cint = new THREE.Mesh(new THREE.CylinderGeometry(0.285, 0.285, 0.05, 14), neon); cint.scale.z = 0.82; cint.position.y = 1.12; corpo.add(cint);
+  // cabeça (um pouco maior, estilo desenho)
+  const pesc = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.095, 0.14, 10), pele); pesc.position.y = 1.78; corpo.add(pesc);
+  const cab = new THREE.Group(); cab.position.y = 2.0; corpo.add(cab);
+  cab.add(esf(0.23, pele, 20, 16));
+  const cb = new THREE.Mesh(new THREE.SphereGeometry(0.236, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.42), cabelo); cb.position.set(0, 0.01, 0.015); cab.add(cb);
+  const nuca = new THREE.Mesh(new THREE.SphereGeometry(0.234, 16, 10, 0, Math.PI, Math.PI * 0.3, Math.PI * 0.3), cabelo); nuca.position.z = 0.01; cab.add(nuca);
+  const faixa = new THREE.Mesh(new THREE.CylinderGeometry(0.242, 0.242, 0.07, 20, 1, true), neon); faixa.position.y = 0.07; cab.add(faixa);
+  const no = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.12, 0.05), neon); no.position.set(0.05, 0.03, 0.25); no.rotation.z = 0.5; cab.add(no);
+  for (const sx of [-1, 1]) {
+    const or = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), pele); or.position.set(0.225 * sx, -0.01, 0.01); or.scale.set(0.55, 1, 0.9); cab.add(or);
+    const ol = new THREE.Mesh(new THREE.SphereGeometry(0.045, 10, 8), branco); ol.position.set(0.085 * sx, -0.005, -0.205); ol.scale.z = 0.5; cab.add(ol);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 6), toon(0x101010)); pu.position.set(0.085 * sx, -0.005, -0.228); cab.add(pu);
+    const sb = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.018, 0.02), cabelo); sb.position.set(0.085 * sx, 0.06, -0.218); sb.rotation.z = -0.15 * sx; cab.add(sb);
   }
-  if (p.barba === 'cheia') { const bb = new THREE.Mesh(new THREE.SphereGeometry(0.196, 12, 8, Math.PI * 1.18, Math.PI * 0.64, Math.PI * 0.6, Math.PI * 0.3), cabelo); cab.add(bb); }
-  else if (p.barba === 'cavanhaque') { const bb = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), cabelo); bb.position.set(0, -0.15, -0.13); bb.scale.set(1, 1.2, 0.7); cab.add(bb); }
-  if (p.oculos === 'escuro') { const o = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.06, 0.04), mat(0x0a0a0a)); o.position.set(0, 0.03, -0.18); cab.add(o); }
-  for (const sx of [-1, 1]) { const ol = new THREE.Mesh(new THREE.SphereGeometry(0.025, 5, 4), mat(0x111111)); ol.position.set(0.07 * sx, 0.04, -0.178); cab.add(ol); }
+  const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6), pele); nariz.position.set(0, -0.06, -0.228); cab.add(nariz);
+  const boca = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 4, 10, Math.PI), toon(0x5a2318)); boca.position.set(0, -0.12, -0.215); boca.rotation.z = Math.PI; cab.add(boca);
   // braços
   const bracos = [];
   for (const sx of [-1, 1]) {
-    const om = new THREE.Group(); om.position.set(0.33 * sx, 1.62, 0); corpo.add(om);
-    if (!regata) { const manga = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), camisa); om.add(manga); }
-    const sup = cap(0.07, 0.22, pele); sup.position.y = -0.18; om.add(sup);
-    const cot = new THREE.Group(); cot.position.y = -0.33; om.add(cot);
-    const ant = cap(0.065, 0.2, pele); ant.position.y = -0.14; cot.add(ant);
-    const mao = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 6), pele); mao.position.y = -0.3; cot.add(mao);
+    const om = new THREE.Group(); om.position.set(0.35 * sx, 1.6, 0); corpo.add(om);
+    om.add(esf(0.12, neon, 12, 10)); // manga neon
+    const sup = cap(0.075, 0.2, pele); sup.position.y = -0.18; om.add(sup);
+    const cot = new THREE.Group(); cot.position.y = -0.32; om.add(cot);
+    const ant = cap(0.07, 0.18, pele); ant.position.y = -0.13; cot.add(ant);
+    const pulso = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.078, 0.06, 10), neon); pulso.position.y = -0.24; cot.add(pulso);
+    const mao = esf(0.09, pele, 10, 8); mao.position.y = -0.31; cot.add(mao);
     bracos.push({ om, cot });
   }
   // pernas
-  const pernas = []; const leg = p.perna === 'legging';
+  const pernas = [];
   for (const sx of [-1, 1]) {
-    const qd = new THREE.Group(); qd.position.set(0.13 * sx, 0.92, 0); corpo.add(qd);
-    const cx = cap(0.105, 0.3, leg ? short : pele); cx.position.y = -0.22; qd.add(cx);
-    const barra = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.16, 8), short); barra.position.y = -0.04; qd.add(barra);
+    const qd = new THREE.Group(); qd.position.set(0.14 * sx, 0.92, 0); corpo.add(qd);
+    const cx = cap(0.11, 0.28, pele); cx.position.y = -0.22; qd.add(cx);
+    const barra = contorno(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.135, 0.18, 12), short)); barra.position.y = -0.04; qd.add(barra);
+    const fx = new THREE.Mesh(new THREE.CylinderGeometry(0.142, 0.142, 0.035, 12), neon); fx.position.y = -0.12; qd.add(fx);
     const jo = new THREE.Group(); jo.position.y = -0.44; qd.add(jo);
-    const can = cap(0.085, 0.3, leg ? short : pele); can.position.y = -0.2; jo.add(can);
-    const pe = new THREE.Group(); pe.position.y = -0.42; jo.add(pe);
-    const t = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.3), tenis); t.position.set(0, -0.02, -0.06); pe.add(t);
-    const so = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.31), sola); so.position.set(0, -0.08, -0.06); pe.add(so);
+    const can = cap(0.09, 0.26, pele); can.position.y = -0.19; jo.add(can);
+    const meia = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.09, 0.12, 10), branco); meia.position.y = -0.36; jo.add(meia);
+    const pe = new THREE.Group(); pe.position.y = -0.43; jo.add(pe);
+    const t = contorno(new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.13, 0.36), neon), 1.08); t.position.set(0, -0.02, -0.07); pe.add(t);
+    const so = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.05, 0.37), branco); so.position.set(0, -0.1, -0.07); pe.add(so);
     pernas.push({ qd, jo, pe });
   }
   root.userData = { corpo: piv, bracos, pernas, cab };
@@ -232,8 +218,7 @@ export function criar(el, opt = {}) {
   }
 
   /* jogador */
-  let pers = limpar(opt.boneco);
-  let jog = boneco(pers); scene.add(jog);
+  const jog = boneco(); scene.add(jog);
   const sombra = new THREE.Mesh(new THREE.CircleGeometry(0.55, 16), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.3, depthWrite: false })); sombra.rotation.x = -Math.PI / 2; scene.add(sombra);
 
   /* peças reaproveitáveis */
@@ -245,13 +230,20 @@ export function criar(el, opt = {}) {
   };
   const M = {
     cone: mat(0xff6a1a), branco: mat(0xffffff), folha: new THREE.MeshLambertMaterial({ color: 0x8fe05c, emissive: noite ? 0x4f8f20 : 0x2b5a10, side: THREE.DoubleSide }),
-    tronco: mat(0x6b4a2f), copa: [mat(0x3f8c45), mat(0x2f7a3e), mat(0x58a24d)], palm: mat(0x3d9a4a), buraco: new THREE.MeshBasicMaterial({ color: 0x0b0b0b }), borda: mat(0x3a3a38),
+    tronco: mat(0x6b4a2f), copa: [mat(0x3f8c45), mat(0x2f7a3e), mat(0x58a24d)], palm: mat(0x3d9a4a), buraco: new THREE.MeshBasicMaterial({ color: noite ? 0x000000 : 0x0b0b0b }), borda: mat(noite ? 0x9a978c : 0x7a776e, noite ? { emissive: 0x2a2a26 } : {}), anel: new THREE.MeshBasicMaterial({ color: 0xf4c430 }),
     cav: mat(0xffffff), cavL: mat(0xe23b2e), van: [mat(0xf2f2f2), mat(0xf4c430), mat(0x2f6fd6), mat(0x1f8f5a)], vidro: mat(0x1d2a33), pneu: mat(0x111111),
     poste: mat(0x55595c), luz: new THREE.MeshBasicMaterial({ color: noite ? 0xffe2a0 : 0xdddddd }), agua: null, grade: mat(0xd8d8d0), casa: [0xf7d26a, 0xf29e8e, 0x9ed7c8, 0xf4f1e8, 0xb9d77c, 0x8fb6e6].map(c => mat(c)), telhado: mat(0xb3532f), porta: mat(0x6b3f25), janela: mat(noite ? 0xffd88a : 0x3c5566, noite ? { emissive: 0x8a6420 } : {}),
     ima: mat(0xe23b2e), imaP: mat(0xdddddd), tenis: mat(0xc8f560), arb: mat(0x3d8b44)
   };
   const texAgua = canvasTex(128, 128, (g, w, h) => { g.fillStyle = noite ? '#0f2a3a' : '#3b8fb5'; g.fillRect(0, 0, w, h); g.strokeStyle = noite ? 'rgba(160,200,255,.25)' : 'rgba(255,255,255,.35)'; g.lineWidth = 2; for (let i = 0; i < 14; i++) { const y = Math.random() * h, x = Math.random() * w; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 10, y - 4, x + 20, y); g.stroke(); } }, [8, 8]);
   M.agua = new THREE.MeshLambertMaterial({ map: texAgua });
+  const texQueda = canvasTex(64, 256, (g, w, h) => { g.fillStyle = noite ? '#5f86a3' : '#bfe6f5'; g.fillRect(0, 0, w, h); for (let i = 0; i < 40; i++) { g.fillStyle = noite ? 'rgba(220,235,255,.55)' : 'rgba(255,255,255,.9)'; g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 4, 20 + Math.random() * 60); } }, [1, 1]);
+  M.queda = new THREE.MeshBasicMaterial({ map: texQueda, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
+  M.espuma = new THREE.MeshBasicMaterial({ color: noite ? 0xb9cde0 : 0xffffff, transparent: true, opacity: 0.8 });
+  M.pedra = [mat(noite ? 0x3d4440 : 0x7d867a), mat(noite ? 0x353b37 : 0x6b7468), mat(noite ? 0x2c332f : 0x8a9386)];
+  M.morro = [mat(noite ? 0x173524 : 0x3f7d4a), mat(noite ? 0x12301f : 0x4f8f55), mat(noite ? 0x1b3b28 : 0x35703f)];
+  G.pedra = new THREE.IcosahedronGeometry(1, 0); G.morro = new THREE.IcosahedronGeometry(1, 1);
+  const TX = {};
   const halo = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,220,150,.9)'); r.addColorStop(1, 'rgba(255,220,150,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
 
   function add(m, s, x, extra = {}) { scene.add(m); const o = { m, s, x, y: 0, vivo: true, ...extra }; objs.push(o); colocar(o); return o; }
@@ -263,21 +255,23 @@ export function criar(el, opt = {}) {
     return add(g, s, x, { tipo: 'baixo', h: 0.85, len: 0.7 });
   }
   function buraco(s, x) {
-    const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CircleGeometry(1, 9), M.buraco); b.rotation.x = -Math.PI / 2; b.scale.set(1, 1.3, 1); b.position.y = 0.02; g.add(b);
-    for (let i = 0; i < 6; i++) { const p = new THREE.Mesh(G.caixa, M.borda); const a = i / 6 * 6.28; p.position.set(Math.cos(a) * 1.05, 0.04, Math.sin(a) * 1.3); p.scale.set(0.35, 0.08, 0.25); p.rotation.y = a; g.add(p); }
+    const g = new THREE.Group(); const b = new THREE.Mesh(new THREE.CircleGeometry(1, 12), M.buraco); b.rotation.x = -Math.PI / 2; b.scale.set(1, 1.3, 1); b.position.y = 0.03; g.add(b);
+    const anel = new THREE.Mesh(new THREE.RingGeometry(1.02, 1.22, 24), M.anel); anel.rotation.x = -Math.PI / 2; anel.scale.set(1, 1.3, 1); anel.position.y = 0.035; g.add(anel);
+    for (let i = 0; i < 7; i++) { const p = new THREE.Mesh(G.caixa, M.borda); const a = i / 7 * 6.28; p.position.set(Math.cos(a) * 1.08, 0.06, Math.sin(a) * 1.38); p.scale.set(0.32, 0.12, 0.22); p.rotation.y = a; g.add(p); }
+    for (const sx of [-1.15, 1.15]) { const c = new THREE.Mesh(G.cone, M.cone); c.scale.setScalar(0.55); c.position.set(sx, 0.25, -1.45); g.add(c); }
     return add(g, s, x, { tipo: 'buraco', h: 0.4, len: 2.2 });
   }
   function cavalete(s, x) { // barreira de obra alta: passa rolando
     const g = new THREE.Group();
     for (const sx of [-0.95, 0.95]) { const p = new THREE.Mesh(G.caixa, M.cav); p.scale.set(0.12, 2.4, 0.12); p.position.set(sx, 1.2, 0); g.add(p); }
-    const tex = canvasTex(256, 64, (gc, w, h) => { for (let i = -2; i < 10; i++) { gc.fillStyle = i % 2 ? '#e23b2e' : '#ffffff'; gc.beginPath(); gc.moveTo(i * 32, 0); gc.lineTo(i * 32 + 32, 0); gc.lineTo(i * 32 + 16, h); gc.lineTo(i * 32 - 16, h); gc.fill(); } gc.fillStyle = '#111'; gc.font = '900 30px Arial'; gc.textAlign = 'center'; gc.fillText('OBRAS', w / 2, 42); });
+    const tex = TX.obras ||= canvasTex(256, 64, (gc, w, h) => { for (let i = -2; i < 10; i++) { gc.fillStyle = i % 2 ? '#e23b2e' : '#ffffff'; gc.beginPath(); gc.moveTo(i * 32, 0); gc.lineTo(i * 32 + 32, 0); gc.lineTo(i * 32 + 16, h); gc.lineTo(i * 32 - 16, h); gc.fill(); } gc.fillStyle = '#111'; gc.font = '900 30px Arial'; gc.textAlign = 'center'; gc.fillText('OBRAS', w / 2, 42); });
     const placa = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.5, 0.1), [M.cav, M.cav, M.cav, M.cav, new THREE.MeshLambertMaterial({ map: tex }), new THREE.MeshLambertMaterial({ map: tex })]); placa.position.y = 2.05; g.add(placa);
     const pl2 = placa.clone(); pl2.position.y = 1.45; pl2.scale.y = 0.6; g.add(pl2);
     return add(g, s, x, { tipo: 'alto', h: 2.4, len: 0.4 });
   }
   function barreira(s, x) { // barreira baixa listrada: pula
     const g = new THREE.Group();
-    const tex = canvasTex(256, 64, (gc, w, h) => { for (let i = -2; i < 10; i++) { gc.fillStyle = i % 2 ? '#f4c430' : '#111'; gc.beginPath(); gc.moveTo(i * 32, 0); gc.lineTo(i * 32 + 32, 0); gc.lineTo(i * 32 + 16, h); gc.lineTo(i * 32 - 16, h); gc.fill(); } });
+    const tex = TX.listra ||= canvasTex(256, 64, (gc, w, h) => { for (let i = -2; i < 10; i++) { gc.fillStyle = i % 2 ? '#f4c430' : '#111'; gc.beginPath(); gc.moveTo(i * 32, 0); gc.lineTo(i * 32 + 32, 0); gc.lineTo(i * 32 + 16, h); gc.lineTo(i * 32 - 16, h); gc.fill(); } });
     const b = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.45, 0.2), new THREE.MeshLambertMaterial({ map: tex })); b.position.y = 0.75; g.add(b);
     for (const sx of [-0.9, 0.9]) { const p = new THREE.Mesh(G.caixa, M.borda); p.scale.set(0.1, 0.8, 0.5); p.position.set(sx, 0.4, 0); g.add(p); }
     return add(g, s, x, { tipo: 'baixo', h: 1.0, len: 0.5 });
@@ -338,14 +332,41 @@ export function criar(el, opt = {}) {
     add(placa, s0 - 6, 7.4, { tipo: 'deco' });
   }
 
+  function rocha(s, x, k) { const m = new THREE.Mesh(G.pedra, M.pedra[Math.floor(Math.random() * 3)]); m.scale.set(k * (1 + Math.random() * .5), k * (0.8 + Math.random() * .7), k * (1 + Math.random() * .5)); return add(m, s, x, { tipo: 'deco', y: k * 0.35, rot: Math.random() * 6 }); }
+  function morro(s, lado) { const k = 16 + Math.random() * 22; const x = lado * (k * 1.8 + 16 + Math.random() * 25); const m = new THREE.Mesh(G.morro, M.morro[Math.floor(Math.random() * 3)]); m.scale.set(k * (1.2 + Math.random() * .6), k * (0.55 + Math.random() * .45), k); return add(m, s, x, { tipo: 'deco', y: -k * 0.15, len: k }); }
+  function cachoeira(s, lado) {
+    const g = new THREE.Group(); const x = lado * (13 + Math.random() * 3); const alt = 11 + Math.random() * 6;
+    // paredão de pedra atrás da queda
+    for (let i = 0; i < 7; i++) { const p = new THREE.Mesh(G.pedra, M.pedra[i % 3]); const k = 3 + Math.random() * 3.5; p.scale.set(k, k * (1.2 + Math.random()), k); p.position.set(lado * (3 + Math.random() * 3), alt * (0.2 + Math.random() * 0.75), (Math.random() - .5) * 14); p.rotation.set(Math.random(), Math.random() * 6, Math.random()); g.add(p); }
+    const topo = new THREE.Mesh(G.morro, M.morro[0]); topo.scale.set(9, 4, 9); topo.position.set(lado * 5, alt + 1, 0); g.add(topo);
+    // a queda d'água
+    const q = new THREE.Mesh(new THREE.PlaneGeometry(4.6, alt, 1, 6), M.queda); q.position.set(-lado * 0.4, alt / 2, 0); q.rotation.y = -lado * 0.45; g.add(q);
+    const q2 = new THREE.Mesh(new THREE.PlaneGeometry(2.2, alt * 0.75, 1, 4), M.queda); q2.position.set(lado * 1.2, alt * 0.38, 3.2); q2.rotation.y = -lado * 0.3; g.add(q2);
+    // poço e espuma
+    const poco = new THREE.Mesh(new THREE.CircleGeometry(4.5, 18), M.agua); poco.rotation.x = -Math.PI / 2; poco.position.set(-lado * 1, 0.12, 0); g.add(poco);
+    for (let i = 0; i < 6; i++) { const e = new THREE.Mesh(G.pedra, M.espuma); e.scale.set(0.9 + Math.random(), 0.25, 0.9 + Math.random()); e.position.set(lado * 0.2 + (Math.random() - .5) * 2.4, 0.2, (Math.random() - .5) * 3); g.add(e); }
+    for (let i = 0; i < 5; i++) { const a = new THREE.Mesh(G.arbusto, M.arb); a.scale.setScalar(1 + Math.random()); a.position.set(-lado * (3 + Math.random() * 2), 0.4, (Math.random() - .5) * 10); g.add(a); }
+    return add(g, s, x, { tipo: 'deco', len: 8 });
+  }
+  function trechoSerra(s0, len) {
+    st.serra = { a: s0, b: s0 + len };
+    const placa = new THREE.Group(); const pp = new THREE.Mesh(G.caixa, M.poste); pp.scale.set(0.1, 2.6, 0.1); pp.position.y = 1.3; placa.add(pp);
+    const tx = TX.serra ||= canvasTex(256, 96, (g, w, h) => { g.fillStyle = '#7a4a22'; g.fillRect(0, 0, w, h); g.strokeStyle = '#f4e3c0'; g.lineWidth = 5; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = '#f4e3c0'; g.font = '900 30px Arial'; g.textAlign = 'center'; g.fillText('CACHOEIRAS', w / 2, 42); g.font = '700 22px Arial'; g.fillText('SANTO ALEIXO', w / 2, 74); });
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 0.08), new THREE.MeshLambertMaterial({ map: tx })); pl.position.y = 2.9; pl.rotation.y = Math.PI; placa.add(pl);
+    add(placa, s0 - 8, -7.4, { tipo: 'deco' });
+    let lado = Math.random() < .5 ? -1 : 1;
+    for (let z = 12; z < len - 8; z += 30 + Math.random() * 18) { cachoeira(s0 + z, lado); lado = -lado; }
+    for (let z = 0; z < len; z += 6) for (const l of [-1, 1]) if (Math.random() < .7) rocha(s0 + z + Math.random() * 4, l * (7.5 + Math.random() * 3), 0.8 + Math.random() * 1.4);
+  }
+
   /* geração da pista */
   function linhaFolhas(s, faixa, n, arco) { for (let i = 0; i < n; i++) { const y = arco ? 1 + Math.sin(i / (n - 1) * Math.PI) * 2.3 : 1; folha(s + i * 2.2, LANES[faixa], y); } }
   function gerarLinha() {
-    const s = st.proxLinha; const dif = Math.min(1, st.s / 2500);
+    const s = st.proxLinha; const dif = Math.min(1, st.s / 3500);
     const r = Math.random(); const livres = [0, 1, 2];
     const tira = () => livres.splice(Math.floor(Math.random() * livres.length), 1)[0];
     const tipoBaixo = () => [cone, buraco, barreira][Math.floor(Math.random() * 3)];
-    let gap = Math.max(16, st.vel * (1.25 - dif * 0.3));
+    let gap = Math.max(15, st.vel * (1.22 - dif * 0.3));
     if (st.s > 60 && Math.random() < 0.06) { bonus(s, LANES[Math.floor(Math.random() * 3)], Math.random() < .5 ? 'ima' : 'tenis'); st.proxLinha = s + gap * 0.6; return; }
     if (r < 0.32) { // um obstáculo baixo + folhas em arco por cima
       const f = tira(); tipoBaixo()(s, LANES[f]); linhaFolhas(s - 5, f, 5, true);
@@ -367,7 +388,10 @@ export function criar(el, opt = {}) {
   function gerarDeco(lado) {
     const s = st.proxDeco[lado]; const sg = lado ? 1 : -1;
     const noRio = st.rio && s > st.rio.a - 4 && s < st.rio.b + 4;
-    if (!noRio) {
+    const naSerra = st.serra && s > st.serra.a - 6 && s < st.serra.b + 6;
+    if (Math.random() < 0.09) morro(s, sg);
+    if (naSerra) { if (Math.random() < .6) arvore(s, sg * (24 + Math.random() * 20)); }
+    else if (!noRio) {
       const r = Math.random();
       if (r < 0.28) palmeira(s, sg * (8 + Math.random() * 4));
       else if (r < 0.55) arvore(s, sg * (8 + Math.random() * 10));
@@ -386,8 +410,8 @@ export function criar(el, opt = {}) {
     if (st.estado !== 'jogo') return;
     if (a === 'esq' && st.faixa > 0) { st.faixaAnt = st.faixa; st.faixa--; }
     else if (a === 'dir' && st.faixa < 2) { st.faixaAnt = st.faixa; st.faixa++; }
-    else if (a === 'cima' || a === 'tap') { if (st.chao) { st.vy = st.tenis > 0 ? 15.5 : 11.2; st.chao = false; st.rolando = 0; } }
-    else if (a === 'baixo') { if (!st.chao) st.vy = -24; st.rolando = 0.7; }
+    else if (a === 'cima' || a === 'tap') { if (st.chao) { const kv = 1 + Math.max(0, st.vel - 14) / 30; st.vy = (st.tenis > 0 ? 15.5 : 11.2) * Math.sqrt(kv); st.chao = false; st.rolando = 0; } }
+    else if (a === 'baixo') { if (!st.chao) st.vy = -28; st.rolando = Math.max(0.45, 0.7 - Math.max(0, st.vel - 14) * 0.008); }
   };
   const pd = e => { e.preventDefault(); toque = { x: e.clientX, y: e.clientY, t: performance.now(), feito: false }; };
   const pm = e => { if (!toque || toque.feito) return; const dx = e.clientX - toque.x, dy = e.clientY - toque.y; if (Math.hypot(dx, dy) > 28) { toque.feito = true; acao(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'dir' : 'esq') : (dy > 0 ? 'baixo' : 'cima')); } };
@@ -398,28 +422,29 @@ export function criar(el, opt = {}) {
 
   /* placar na tela */
   const hud = document.createElement('div'); hud.className = 'g3hud';
-  hud.innerHTML = `<div class="g3c"><b class="g3m">0 m</b><span class="g3f">🍃 0</span></div><div class="g3r"></div><div class="g3pw"></div>`;
+  hud.innerHTML = `<div class="g3c"><b class="g3m">0,00 km</b><span class="g3ps"><span class="g3tm">00:00</span> · <span class="g3pc">--:--</span>/km</span><span class="g3f">🍃 0</span></div><div class="g3r"></div><div class="g3pw"></div><div class="g3km" hidden></div>`;
   el.appendChild(hud);
   const dica = document.createElement('div'); dica.className = 'g3dica';
   dica.innerHTML = `<b>Deslize para correr</b><div class="g3setas"><span>← →<i>trocar de pista</i></span><span>↑<i>pular</i></span><span>↓<i>rolar</i></span></div><small>Pule cones, buracos e barreiras · role sob as placas de OBRAS · desvie das vans</small>`;
   el.appendChild(dica);
-  const hm = hud.querySelector('.g3m'), hf = hud.querySelector('.g3f'), hr = hud.querySelector('.g3r'), hp = hud.querySelector('.g3pw');
+  const hm = hud.querySelector('.g3m'), hf = hud.querySelector('.g3f'), hr = hud.querySelector('.g3r'), hp = hud.querySelector('.g3pw'), htm = hud.querySelector('.g3tm'), hpc = hud.querySelector('.g3pc'), hkm = hud.querySelector('.g3km');
+  const mmss = sg => { sg = Math.max(0, Math.round(sg)); return String(Math.floor(sg / 60)).padStart(2, '0') + ':' + String(sg % 60).padStart(2, '0'); };
+  const ritmo = v => 1000 / (2.56 + Math.max(0, v - 14) / 22 * 3.0); // segundos por km: 6:30 no início, até ~3:00 no máximo
   hr.textContent = opt.recorde ? 'Recorde ' + Number(opt.recorde).toLocaleString('pt-BR') : '';
 
   function limparObjs() { for (const o of objs) scene.remove(o.m); objs.length = 0; }
-  function reiniciar(novoId) {
-    if (novoId) { scene.remove(jog); pers = limpar(novoId); jog = boneco(pers); scene.add(jog); }
-    limparObjs(); Object.assign(st, { estado: 'pronto', s: 0, vel: 14, t: 0, faixa: 1, faixaAnt: 1, px: 0, py: 0, vy: 0, chao: true, rolando: 0, tropeco: 0, ultTropeco: -9, folhas: 0, ima: 0, tenis: 0, curva: 0, curvaAlvo: 0, ph: 0, tremor: 0, fim: 0, proxLinha: 34, proxDeco: [-10, -10], proxRio: 380 + Math.random() * 200, rio: null });
+  function reiniciar() {
+    limparObjs(); Object.assign(st, { estado: 'pronto', s: 0, vel: 14, t: 0, faixa: 1, faixaAnt: 1, px: 0, py: 0, vy: 0, chao: true, rolando: 0, tropeco: 0, ultTropeco: -9, folhas: 0, ima: 0, tenis: 0, curva: 0, curvaAlvo: 0, ph: 0, tremor: 0, fim: 0, proxLinha: 34, proxDeco: [-10, -10], proxRio: 380 + Math.random() * 200, rio: null, proxSerra: 180, serra: null, tv: 0, proxKm: 1000, tKm: 0 }); hkm.hidden = true;
     proxPoste = 4; jog.userData.corpo.rotation.set(0, 0, 0); jog.userData.corpo.position.set(0, 1, 0);
     while (st.proxDeco[0] < 170) gerarDeco(0); while (st.proxDeco[1] < 170) gerarDeco(1);
     while (proxPoste < 170) { poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
     dica.hidden = false; hp.textContent = ''; atualizarHud();
   }
   function comecar() { st.estado = 'jogo'; dica.hidden = true; }
-  function atualizarHud() { hm.textContent = Math.floor(st.s).toLocaleString('pt-BR') + ' m'; hf.textContent = '🍃 ' + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
+  function atualizarHud() { hm.textContent = (st.s / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km'; htm.textContent = mmss(st.tv); hpc.textContent = st.estado === 'jogo' ? mmss(ritmo(st.vel)).replace(/^0/, '') : '--:--'; hf.textContent = '🍃 ' + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
   function bater() {
     st.estado = 'caiu'; st.tremor = 0.5; try { navigator.vibrate && navigator.vibrate(140); } catch (e) {}
-    setTimeout(() => { if (st.estado === 'caiu') { st.estado = 'fim'; opt.onOver && opt.onOver({ metros: Math.floor(st.s), folhas: st.folhas }); } }, 900);
+    setTimeout(() => { if (st.estado === 'caiu') { st.estado = 'fim'; opt.onOver && opt.onOver({ metros: Math.floor(st.s), folhas: st.folhas, tempo: st.tv, pace: st.s > 1 ? st.tv / (st.s / 1000) : 0 }); } }, 900);
   }
 
   /* laço */
@@ -429,24 +454,27 @@ export function criar(el, opt = {}) {
     const dt = Math.min(0.033, (agora - ult) / 1000); ult = agora;
     const jogo = st.estado === 'jogo';
     if (jogo) {
-      st.t += dt; st.vel = Math.min(31, 14 + st.t * 0.22); st.s += st.vel * dt;
+      st.t += dt; st.vel = 14 + 22 * (1 - Math.exp(-st.t / 90)); st.s += st.vel * dt; st.tv += st.vel * dt * ritmo(st.vel) / 1000; // relógio da corrida: tempo real que levaria nesse pace
+      if (st.s >= st.proxKm) { const kmT = st.tv - st.tKm; st.tKm = st.tv; hkm.innerHTML = `<b>${Math.round(st.proxKm / 1000)} km</b><span>${mmss(kmT)} · pace ${mmss(ritmo(st.vel)).replace(/^0/, '')}/km</span>`; hkm.hidden = false; hkm.style.animation = 'none'; void hkm.offsetWidth; hkm.style.animation = ''; clearTimeout(st.kmTo); st.kmTo = setTimeout(() => { hkm.hidden = true; }, 2200); st.proxKm += 1000; try { navigator.vibrate && navigator.vibrate([40, 60, 40]); } catch (e) {} }
       if (st.ima > 0) st.ima -= dt; if (st.tenis > 0) st.tenis -= dt;
       // curvas suaves que mudam de tempos em tempos
       if (Math.random() < dt * 0.12) st.curvaAlvo = (Math.random() - 0.5) * 0.0042;
     }
     st.curva += (st.curvaAlvo - st.curva) * Math.min(1, dt * 0.6);
     // pulo e rolamento
-    if (!st.chao) { st.vy -= (st.tenis > 0 ? 26 : 32) * dt; st.py += st.vy * dt; if (st.py <= 0) { st.py = 0; st.vy = 0; st.chao = true; } }
+    const kv = 1 + Math.max(0, st.vel - 14) / 30;
+    if (!st.chao) { st.vy -= (st.tenis > 0 ? 26 : 32) * kv * dt; st.py += st.vy * dt; if (st.py <= 0) { st.py = 0; st.vy = 0; st.chao = true; } }
     if (st.rolando > 0) st.rolando -= dt;
-    const alvoX = LANES[st.faixa]; st.px += (alvoX - st.px) * Math.min(1, dt * 14);
+    const alvoX = LANES[st.faixa]; st.px += (alvoX - st.px) * Math.min(1, dt * (14 + Math.max(0, st.vel - 14) * 0.3));
     if (jogo || st.estado === 'pronto') st.ph += dt * (st.estado === 'pronto' ? 7 : 7 + st.vel * 0.42);
     // gerar
     if (jogo) {
       while (st.proxLinha < st.s + 150) gerarLinha();
       if (st.s + 160 > st.proxRio) { trechoRio(st.proxRio, 70); st.proxRio += 650 + Math.random() * 450; }
+      if (st.s + 165 > st.proxSerra) { trechoSerra(st.proxSerra, 140); st.proxSerra += 700 + Math.random() * 400; if (Math.abs(st.proxSerra - st.proxRio) < 220) st.proxSerra += 260; }
     }
     while (st.proxDeco[0] < st.s + 170) gerarDeco(0); while (st.proxDeco[1] < st.s + 170) gerarDeco(1);
-    while (proxPoste < st.s + 170) { if (!(st.rio && proxPoste > st.rio.a - 3 && proxPoste < st.rio.b + 3)) poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
+    while (proxPoste < st.s + 170) { if (!(st.rio && proxPoste > st.rio.a - 3 && proxPoste < st.rio.b + 3) && !(st.serra && proxPoste > st.serra.a - 3 && proxPoste < st.serra.b + 3)) poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
     // objetos
     const rolando = st.rolando > 0 && st.chao;
     for (const o of objs) {
@@ -486,7 +514,7 @@ export function criar(el, opt = {}) {
       for (let i = 0; i < p.length; i += 3) { const d = Math.max(0, -b[i + 2]); p[i] = b[i] + offX(d); p[i + 1] = b[i + 1] + offY(d); }
       t.geo.attributes.position.needsUpdate = true;
     }
-    texRua.offset.y = (st.s / 12) % 1; texCal.offset.y = (st.s / 3) % 1; texGrama.offset.y = (st.s / 10) % 1; texAgua.offset.x += dt * 0.03;
+    texRua.offset.y = (st.s / 12) % 1; texCal.offset.y = (st.s / 3) % 1; texGrama.offset.y = (st.s / 10) % 1; texAgua.offset.x += dt * 0.03; texQueda.offset.y += dt * 1.6;
     // serras acompanham a curva
     for (const sr of serras) { sr.m.position.x = -st.curva * 9000 * sr.par; sr.m.material.map.offset.x = (sr.m.material.map.userData.o0 ??= sr.m.material.map.offset.x) + (st.s * 0.00002 * sr.par) % 1; }
     // jogador
@@ -502,15 +530,16 @@ export function criar(el, opt = {}) {
     // câmera
     const sh = st.tremor > 0 ? (Math.random() - .5) * st.tremor : 0; if (st.tremor > 0) st.tremor -= dt;
     const cy = 4.0 + st.py * 0.35, cz = 7.2;
+    const fovA = cam.userData.fov0 + Math.max(0, st.vel - 14) * 0.35; if (Math.abs(cam.fov - fovA) > 0.05) { cam.fov += (fovA - cam.fov) * Math.min(1, dt * 2); cam.updateProjectionMatrix(); }
     cam.position.set(st.px * 0.65 + sh, cy + sh, cz); cam.lookAt(st.px * 0.65 + offX(18) * 0.5, 1.2 + st.py * 0.2 + offY(18), -18);
     renderer.render(scene, cam);
     hudT -= dt; if (hudT <= 0) { hudT = 0.1; atualizarHud(); }
   }
-  function ajustar() { renderer.setSize(W(), H()); cam.aspect = W() / H(); cam.fov = W() / H() < 0.7 ? 66 : 58; cam.updateProjectionMatrix(); }
+  function ajustar() { renderer.setSize(W(), H()); cam.aspect = W() / H(); cam.fov = cam.userData.fov0 = W() / H() < 0.7 ? 64 : 56; cam.updateProjectionMatrix(); }
   window.addEventListener('resize', ajustar); ajustar();
   const vis = () => { ult = performance.now(); }; document.addEventListener('visibilitychange', vis);
   reiniciar(); raf = requestAnimationFrame(quadro);
-  if (opt.debug) window.__g3 = { st, objs };
+  if (opt.debug) window.__g3 = { st, objs, buraco, cachoeira };
 
   return {
     reiniciar,
@@ -522,18 +551,3 @@ export function criar(el, opt = {}) {
   };
 }
 
-/* retrato do boneco (para o editor) */
-let RT = null;
-export function retrato(cfg, w = 240, h = 300, giro = 0.15) {
-  if (!RT) {
-    const r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1)); r.outputColorSpace = THREE.SRGBColorSpace;
-    const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x445544, 1.3)); const d = new THREE.DirectionalLight(0xffffff, 1.4); d.position.set(2, 3, -3); sc.add(d);
-    const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 50); RT = { r, sc, cam };
-  }
-  const { r, sc, cam } = RT; r.setSize(w, h, false); cam.aspect = w / h; cam.updateProjectionMatrix(); cam.position.set(1.6, 1.7, -5.6); cam.lookAt(0, 1.12, 0);
-  const b = boneco(cfg); b.rotation.y = giro; pose(b, 0.9, 'corre', 0.6); sc.add(b);
-  r.render(sc, cam); const url = r.domElement.toDataURL('image/png'); sc.remove(b);
-  b.traverse(o => { if (o.geometry) o.geometry.dispose(); });
-  return url;
-}
-export function liberarRetrato() { if (RT) { RT.r.dispose(); try { RT.r.forceContextLoss(); } catch (e) {} RT = null; } }
