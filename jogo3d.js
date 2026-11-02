@@ -362,22 +362,22 @@ export function criar(el, opt = {}) {
   /* geração da pista */
   function linhaFolhas(s, faixa, n, arco) { for (let i = 0; i < n; i++) { const y = arco ? 1 + Math.sin(i / (n - 1) * Math.PI) * 2.3 : 1; folha(s + i * 2.2, LANES[faixa], y); } }
   function gerarLinha() {
-    const s = st.proxLinha; const dif = Math.min(1, st.s / 3500);
+    const s = st.proxLinha; const dif = Math.min(1, st.s / 2200);
     const r = Math.random(); const livres = [0, 1, 2];
     const tira = () => livres.splice(Math.floor(Math.random() * livres.length), 1)[0];
     const tipoBaixo = () => [cone, buraco, barreira][Math.floor(Math.random() * 3)];
-    let gap = Math.max(15, st.vel * (1.22 - dif * 0.3));
-    if (st.s > 60 && Math.random() < 0.06) { bonus(s, LANES[Math.floor(Math.random() * 3)], Math.random() < .5 ? 'ima' : 'tenis'); st.proxLinha = s + gap * 0.6; return; }
-    if (r < 0.32) { // um obstáculo baixo + folhas em arco por cima
+    let gap = Math.max(13, st.vel * (1.05 - dif * 0.32));
+    if (st.s > 60 && Math.random() < 0.04) { bonus(s, LANES[Math.floor(Math.random() * 3)], Math.random() < .5 ? 'ima' : 'tenis'); st.proxLinha = s + gap * 0.6; return; }
+    if (r < 0.32 - dif * 0.14) { // um obstáculo baixo + folhas em arco por cima
       const f = tira(); tipoBaixo()(s, LANES[f]); linhaFolhas(s - 5, f, 5, true);
       if (Math.random() < 0.5) linhaFolhas(s - 4, livres[Math.floor(Math.random() * livres.length)], 4);
     } else if (r < 0.52) { // cavalete alto
       const f = tira(); cavalete(s, LANES[f]);
-      if (dif > 0.25 && Math.random() < .6) { const f2 = tira(); tipoBaixo()(s, LANES[f2]); }
+      if (dif > 0.12 && Math.random() < .5 + dif * .4) { const f2 = tira(); tipoBaixo()(s, LANES[f2]); }
       linhaFolhas(s - 3, livres[0], 4);
     } else if (r < 0.8) { // van parada ou vindo
-      const f = tira(); const mov = st.s > 700 && Math.random() < 0.35 + dif * 0.25; van(s + 4, LANES[f], mov);
-      if (dif > 0.15 && Math.random() < .55) { const f2 = tira(); if (Math.random() < .5) van(s + 10, LANES[f2], false); else tipoBaixo()(s + 4, LANES[f2]); }
+      const f = tira(); const mov = st.s > 350 && Math.random() < 0.4 + dif * 0.35; van(s + 4, LANES[f], mov);
+      if (dif > 0.08 && Math.random() < .55 + dif * .35) { const f2 = tira(); if (Math.random() < .5) van(s + 10, LANES[f2], false); else tipoBaixo()(s + 4, LANES[f2]); }
       linhaFolhas(s - 2, livres[0], 6);
       gap += mov ? 14 : 8;
     } else { // dois baixos, um livre
@@ -410,8 +410,8 @@ export function criar(el, opt = {}) {
     if (st.estado !== 'jogo') return;
     if (a === 'esq' && st.faixa > 0) { st.faixaAnt = st.faixa; st.faixa--; }
     else if (a === 'dir' && st.faixa < 2) { st.faixaAnt = st.faixa; st.faixa++; }
-    else if (a === 'cima' || a === 'tap') { if (st.chao) { const kv = 1 + Math.max(0, st.vel - 14) / 30; st.vy = (st.tenis > 0 ? 15.5 : 11.2) * Math.sqrt(kv); st.chao = false; st.rolando = 0; } }
-    else if (a === 'baixo') { if (!st.chao) st.vy = -28; st.rolando = Math.max(0.45, 0.7 - Math.max(0, st.vel - 14) * 0.008); }
+    else if (a === 'cima' || a === 'tap') { if (st.chao) { const kv = 1 + Math.max(0, st.vel - 16) / 30; st.vy = (st.tenis > 0 ? 15.5 : 11.2) * Math.sqrt(kv); st.chao = false; st.rolando = 0; } }
+    else if (a === 'baixo') { if (!st.chao) st.vy = -28; st.rolando = Math.max(0.45, 0.7 - Math.max(0, st.vel - 16) * 0.007); }
   };
   const pd = e => { e.preventDefault(); toque = { x: e.clientX, y: e.clientY, t: performance.now(), feito: false }; };
   const pm = e => { if (!toque || toque.feito) return; const dx = e.clientX - toque.x, dy = e.clientY - toque.y; if (Math.hypot(dx, dy) > 28) { toque.feito = true; acao(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'dir' : 'esq') : (dy > 0 ? 'baixo' : 'cima')); } };
@@ -429,12 +429,12 @@ export function criar(el, opt = {}) {
   el.appendChild(dica);
   const hm = hud.querySelector('.g3m'), hf = hud.querySelector('.g3f'), hr = hud.querySelector('.g3r'), hp = hud.querySelector('.g3pw'), htm = hud.querySelector('.g3tm'), hpc = hud.querySelector('.g3pc'), hkm = hud.querySelector('.g3km');
   const mmss = sg => { sg = Math.max(0, Math.round(sg)); return String(Math.floor(sg / 60)).padStart(2, '0') + ':' + String(sg % 60).padStart(2, '0'); };
-  const ritmo = v => 1000 / (2.56 + Math.max(0, v - 14) / 22 * 3.0); // segundos por km: 6:30 no início, até ~3:00 no máximo
+  const ritmo = v => 1000 / (2.56 + Math.max(0, v - 16) / 32 * 3.4); // segundos por km: 6:30 no início, perto de 2:50 no máximo
   hr.textContent = opt.recorde ? 'Recorde ' + Number(opt.recorde).toLocaleString('pt-BR') : '';
 
   function limparObjs() { for (const o of objs) scene.remove(o.m); objs.length = 0; }
   function reiniciar() {
-    limparObjs(); Object.assign(st, { estado: 'pronto', s: 0, vel: 14, t: 0, faixa: 1, faixaAnt: 1, px: 0, py: 0, vy: 0, chao: true, rolando: 0, tropeco: 0, ultTropeco: -9, folhas: 0, ima: 0, tenis: 0, curva: 0, curvaAlvo: 0, ph: 0, tremor: 0, fim: 0, proxLinha: 34, proxDeco: [-10, -10], proxRio: 380 + Math.random() * 200, rio: null, proxSerra: 180, serra: null, tv: 0, proxKm: 1000, tKm: 0 }); hkm.hidden = true;
+    limparObjs(); Object.assign(st, { estado: 'pronto', s: 0, vel: 16, t: 0, faixa: 1, faixaAnt: 1, px: 0, py: 0, vy: 0, chao: true, rolando: 0, tropeco: 0, ultTropeco: -9, folhas: 0, ima: 0, tenis: 0, curva: 0, curvaAlvo: 0, ph: 0, tremor: 0, fim: 0, proxLinha: 30, proxDeco: [-10, -10], proxRio: 380 + Math.random() * 200, rio: null, proxSerra: 180, serra: null, tv: 0, proxKm: 1000, tKm: 0 }); hkm.hidden = true;
     proxPoste = 4; jog.userData.corpo.rotation.set(0, 0, 0); jog.userData.corpo.position.set(0, 1, 0);
     while (st.proxDeco[0] < 170) gerarDeco(0); while (st.proxDeco[1] < 170) gerarDeco(1);
     while (proxPoste < 170) { poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
@@ -454,7 +454,7 @@ export function criar(el, opt = {}) {
     const dt = Math.min(0.033, (agora - ult) / 1000); ult = agora;
     const jogo = st.estado === 'jogo';
     if (jogo) {
-      st.t += dt; st.vel = 14 + 22 * (1 - Math.exp(-st.t / 90)); st.s += st.vel * dt; st.tv += st.vel * dt * ritmo(st.vel) / 1000; // relógio da corrida: tempo real que levaria nesse pace
+      st.t += dt; st.vel = Math.min(50, 16 + 24 * (1 - Math.exp(-st.t / 50)) + st.t * 0.04); st.s += st.vel * dt; st.tv += st.vel * dt * ritmo(st.vel) / 1000; // relógio da corrida: tempo real que levaria nesse pace
       if (st.s >= st.proxKm) { const kmT = st.tv - st.tKm; st.tKm = st.tv; hkm.innerHTML = `<b>${Math.round(st.proxKm / 1000)} km</b><span>${mmss(kmT)} · pace ${mmss(ritmo(st.vel)).replace(/^0/, '')}/km</span>`; hkm.hidden = false; hkm.style.animation = 'none'; void hkm.offsetWidth; hkm.style.animation = ''; clearTimeout(st.kmTo); st.kmTo = setTimeout(() => { hkm.hidden = true; }, 2200); st.proxKm += 1000; try { navigator.vibrate && navigator.vibrate([40, 60, 40]); } catch (e) {} }
       if (st.ima > 0) st.ima -= dt; if (st.tenis > 0) st.tenis -= dt;
       // curvas suaves que mudam de tempos em tempos
@@ -462,10 +462,10 @@ export function criar(el, opt = {}) {
     }
     st.curva += (st.curvaAlvo - st.curva) * Math.min(1, dt * 0.6);
     // pulo e rolamento
-    const kv = 1 + Math.max(0, st.vel - 14) / 30;
+    const kv = 1 + Math.max(0, st.vel - 16) / 30;
     if (!st.chao) { st.vy -= (st.tenis > 0 ? 26 : 32) * kv * dt; st.py += st.vy * dt; if (st.py <= 0) { st.py = 0; st.vy = 0; st.chao = true; } }
     if (st.rolando > 0) st.rolando -= dt;
-    const alvoX = LANES[st.faixa]; st.px += (alvoX - st.px) * Math.min(1, dt * (14 + Math.max(0, st.vel - 14) * 0.3));
+    const alvoX = LANES[st.faixa]; st.px += (alvoX - st.px) * Math.min(1, dt * (14 + Math.max(0, st.vel - 16) * 0.3));
     if (jogo || st.estado === 'pronto') st.ph += dt * (st.estado === 'pronto' ? 7 : 7 + st.vel * 0.42);
     // gerar
     if (jogo) {
@@ -503,7 +503,7 @@ export function criar(el, opt = {}) {
       const trocando = Math.abs(st.px - LANES[st.faixa]) > 0.35 && st.faixaAnt !== undefined && LANES[st.faixaAnt] !== o.x && st.s > a0 + 0.3;
       if (trocando) { // bateu de lado: volta e tropeça
         st.faixa = st.faixaAnt; st.tremor = 0.25; o.ignorar = true;
-        if (st.t - st.ultTropeco < 4) { bater(); break; }
+        if (st.t - st.ultTropeco < 6) { bater(); break; }
         st.ultTropeco = st.t; try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
       } else { bater(); break; }
     }
@@ -530,7 +530,7 @@ export function criar(el, opt = {}) {
     // câmera
     const sh = st.tremor > 0 ? (Math.random() - .5) * st.tremor : 0; if (st.tremor > 0) st.tremor -= dt;
     const cy = 4.0 + st.py * 0.35, cz = 7.2;
-    const fovA = cam.userData.fov0 + Math.max(0, st.vel - 14) * 0.35; if (Math.abs(cam.fov - fovA) > 0.05) { cam.fov += (fovA - cam.fov) * Math.min(1, dt * 2); cam.updateProjectionMatrix(); }
+    const fovA = cam.userData.fov0 + Math.max(0, st.vel - 16) * 0.35; if (Math.abs(cam.fov - fovA) > 0.05) { cam.fov += (fovA - cam.fov) * Math.min(1, dt * 2); cam.updateProjectionMatrix(); }
     cam.position.set(st.px * 0.65 + sh, cy + sh, cz); cam.lookAt(st.px * 0.65 + offX(18) * 0.5, 1.2 + st.py * 0.2 + offY(18), -18);
     renderer.render(scene, cam);
     hudT -= dt; if (hudT <= 0) { hudT = 0.1; atualizarHud(); }
