@@ -1,6 +1,22 @@
 {
   "crons": [
-    { "path": "/api/cron-manha", "schedule": "0 11 * * *" },
-    { "path": "/api/cron-vespera", "schedule": "0 21 * * *" }
+    {
+      "path": "/api/cron-manha",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron-vespera",
+      "schedule": "0 21 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/__/auth/:path*",
+      "destination": "https://passos-verdes-app.firebaseapp.com/__/auth/:path*"
+    },
+    {
+      "source": "/__/firebase/:path*",
+      "destination": "https://passos-verdes-app.firebaseapp.com/__/firebase/:path*"
+    }
   ]
 }

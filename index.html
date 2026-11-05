@@ -642,11 +642,13 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged, reauthenticateWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, reauthenticateWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCumaJKVTwag1FhGoOKFvgm5eLh6PlIi_A",
-  authDomain: "passos-verdes-app.firebaseapp.com",
+  // No endereço oficial, o login passa pelo próprio domínio do app (a Vercel repassa /__/auth para o Firebase).
+  // Isso evita a tela branca e o erro "missing initial state" no app instalado no iPhone.
+  authDomain: location.hostname === "passos-verdes-app.vercel.app" ? "passos-verdes-app.vercel.app" : "passos-verdes-app.firebaseapp.com",
   projectId: "passos-verdes-app",
   storageBucket: "passos-verdes-app.firebasestorage.app",
   messagingSenderId: "237395782308",
@@ -661,7 +663,7 @@ const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banner
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
-  lancamentos:[],provas:{},banners:[],depoimentos:[],avatares:{},reacoes:{},campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],sel:{},editProd:null,zoom:null,cfgFolhas:null,minhasFolhas:[],meusResgates:[],todasFolhas:[],resgates:[],premios:[],editPremio:null,ckEv:null,ckQtd:null,ckMot:null,ckBusca:''};
+  lancamentos:[],provas:{},banners:[],depoimentos:[],avatares:{},reacoes:{},campeoes:[],verUid:null,prevView:'inicio',edit:null,reportes:[],installHide:false,bip:null,nDisp:null,nDispAt:0,placar:[],campeao:null,rankAll:false,openCom:{},coms:{},popLike:null,bnIdx:0,push:'checking',pushBusy:false,parceiros:[],editPar:null,cardOpen:false,onbDone:false,produtos:[],pedidos:[],meusPedidos:[],sel:{},editProd:null,zoom:null,cfgFolhas:null,minhasFolhas:[],meusResgates:[],todasFolhas:[],resgates:[],premios:[],editPremio:null,ckEv:null,ckQtd:null,ckMot:null,ckBusca:''};
 function getTheme(){try{const t=localStorage.getItem('pv-theme');return t==='light'||t==='auto'?t:'dark'}catch(e){return 'dark'}}
 function applyTheme(t){
   try{localStorage.setItem('pv-theme',t)}catch(e){}
@@ -743,7 +745,7 @@ function loading(c,txt){return !S.loaded[c]&&!S.offline?`<div class="skel" role=
 
 function vInicio(){
   const m=me();const nm=m.apelido||S.myName||'';
-  let h=recadoHtml()+statusHtml()+installHtml()+bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
+  let h=recadoHtml()+pedPendHtml()+statusHtml()+installHtml()+bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
    <h1 class="h-display">Bora correr junto?</h1>
    <p class="lede">Treino, corrida e resenha. A comunidade que corre em Magé.</p></section>`;
   h+=visitante();
@@ -899,36 +901,103 @@ function selPedido(p){
   if(tem<q){toast(tem>0?`Só tem ${tem} nessa opção.`:'Essa opção acabou. Escolha outra.');return null}
   return {sel,q,total:(Number(p.preco)||0)*q};
 }
-const PIX={ped:null,busy:false};
+const PIX={ped:null,busy:false,prod:null,r:null,etapa:null};
+const pedCurto=o=>String((o&&o.id)||'').slice(-5).toUpperCase();
+const pedDescr=o=>`${o.qtd}x ${o.produto}${o.tamanho?' · '+o.tamanho:''}${o.cor?' · '+o.cor:''}`;
+function getWhats(){try{return localStorage.getItem('pv-whats')||''}catch(e){return ''}}
+function telDig(v){let d=String(v||'').replace(/\D/g,'');if(d.length>11&&d.startsWith('55'))d=d.slice(2);return d.slice(0,11)}
+function fmtTel(v){const d=telDig(v);if(d.length<3)return d;if(d.length<7)return `(${d.slice(0,2)}) ${d.slice(2)}`;return `(${d.slice(0,2)}) ${d.slice(2,d.length-4)}-${d.slice(-4)}`}
+function waCliente(v){const d=telDig(v);return d.length>=10?'55'+d:''}
 function pixRender(){
-  const el=$('#pixsheet');const o=PIX.ped;if(!o){el.hidden=true;el.innerHTML='';return}
-  const code=pixPayload(o.total,'PV'+o.id);const curto=o.id.slice(-5).toUpperCase();
-  const msg=`Olá! Paguei pelo Pix o pedido #${curto} da loja Passos Verdes:\n\n${o.qtd}x ${o.produto}${o.tamanho?` · tamanho ${o.tamanho}`:''}${o.cor?` · cor ${o.cor}`:''}\nTotal: ${brl(o.total)}${o.nome?`\n\nNome: ${o.nome}`:''}\n\nSegue o comprovante:`;
-  const wa=waNumber();
-  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Pedido #${esc(curto)}</p><h2 class="sec">Pagar com Pix</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="pix-x" aria-label="Fechar">×</button></div>
-  <div class="card" style="gap:6px"><b>${esc(o.qtd)}x ${esc(o.produto)}${o.tamanho?' · '+esc(o.tamanho):''}${o.cor?' · '+esc(o.cor):''}</b><span class="price num" style="font-size:26px">${brl(o.total)}</span></div>
-  <div class="card" style="gap:10px"><label for="pix-code" class="small"><b>Pix copia e cola</b></label><textarea id="pix-code" class="pixcode" readonly>${esc(code)}</textarea>
+  const el=$('#pixsheet');
+  if(PIX.etapa==='dados'&&PIX.prod){
+    const p=PIX.prod,r=PIX.r,nome=me().apelido||S.myName||'';
+    el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Loja Passos Verdes</p><h2 class="sec">Confirmar pedido</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="pix-x" aria-label="Fechar">×</button></div>
+    <div class="card" style="gap:6px"><b>${esc(r.q)}x ${esc(p.nome)}${r.sel.t?' · '+esc(r.sel.t):''}${r.sel.c?' · '+esc(r.sel.c):''}</b><span class="price num" style="font-size:26px">${brl(r.total)}</span></div>
+    <div class="card" style="gap:12px">
+      <label for="pd-n">Seu nome<input type="text" id="pd-n" maxlength="60" autocomplete="name" value="${esc(PIX.nome!=null?PIX.nome:nome)}"></label>
+      <label for="pd-w">Seu WhatsApp<input type="tel" id="pd-w" inputmode="tel" autocomplete="tel" placeholder="(21) 99999-9999" value="${esc(fmtTel(PIX.whats!=null?PIX.whats:getWhats()))}"></label>
+      <p class="small muted" style="margin:0">A gente usa esse número só para falar do seu pedido.</p>
+      <button class="btn primary" data-action="pix-ok" ${PIX.busy?'disabled':''}>${PIX.busy?'Registrando…':'Confirmar pedido'}</button></div></div>`;
+    el.hidden=false;return;
+  }
+  const o=PIX.ped;if(!o){el.hidden=true;el.innerHTML='';return}
+  const pk=pixKey(),code=pk?pixPayload(o.total,'PV'+o.id):'';const curto=pedCurto(o);const wa=waNumber();
+  const msgPix=`Olá! Paguei pelo Pix o pedido #${curto} da loja Passos Verdes:\n\n${pedDescr(o)}\nTotal: ${brl(o.total)}${o.nome?`\n\nNome: ${o.nome}`:''}\n\nSegue o comprovante:`;
+  const msgPed=`Olá! Fiz o pedido #${curto} na loja Passos Verdes:\n\n${pedDescr(o)}\nTotal: ${brl(o.total)}${o.nome?`\n\nNome: ${o.nome}`:''}\n\nComo faço o pagamento?`;
+  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Pedido #${esc(curto)} · registrado ✓</p><h2 class="sec">${pk?'Agora é só pagar no Pix':'Falta só um passo'}</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="pix-x" aria-label="Fechar">×</button></div>
+  <div class="card" style="gap:6px"><b>${esc(pedDescr(o))}</b><span class="price num" style="font-size:26px">${brl(o.total)}</span></div>
+  ${pk?`<div class="card" style="gap:10px"><label for="pix-code" class="small"><b>Pix copia e cola</b></label><textarea id="pix-code" class="pixcode" readonly>${esc(code)}</textarea>
   <button class="btn primary" data-action="pix-copy">Copiar código Pix</button>
-  <ol class="pixsteps small muted"><li>Copie o código acima.</li><li>No app do seu banco, vá em Pix → Pix copia e cola e cole. O valor já vem preenchido.</li><li>Mande o comprovante no WhatsApp. A equipe confirma e separa a sua peça.</li></ol></div>
-  ${wa?`<a class="btn" href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">Enviar comprovante no WhatsApp</a>`:''}
-  <p class="small muted" style="margin:0;text-align:center">Pedido registrado. Se mudar de ideia, é só avisar a gente.</p></div>`;
+  <ol class="pixsteps small muted"><li>Copie o código acima.</li><li>No app do seu banco, vá em Pix → Pix copia e cola e cole. O valor já vem preenchido.</li><li>Toque em "Já paguei" e mande o comprovante. A equipe confirma e separa a sua peça.</li></ol></div>
+  ${wa?`<a class="btn" href="https://wa.me/${wa}?text=${encodeURIComponent(msgPix)}" target="_blank" rel="noopener">Já paguei · enviar comprovante</a>`:''}`
+  :`<div class="card" style="gap:10px"><p class="small" style="margin:0">Mande o pedido no WhatsApp da equipe para receber os dados de pagamento. A mensagem já vai pronta, é só tocar em <b>enviar</b>.</p>
+  ${wa?`<a class="btn primary" href="https://wa.me/${wa}?text=${encodeURIComponent(msgPed)}" target="_blank" rel="noopener">Enviar pedido no WhatsApp</a>`:''}</div>`}
+  <p class="small muted" style="margin:0;text-align:center">${o.whats?`Se precisar, a equipe te chama no ${esc(o.whats)}. `:''}Acompanhe em Loja → Meus pedidos. Sem pagamento em 3 dias, o pedido é cancelado sozinho.</p></div>`;
   el.hidden=false;
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
   if(!a.startsWith('pix'))return;e.stopImmediatePropagation();
-  if(a==='pix-x'){PIX.ped=null;pixRender()}
+  if(a==='pix-x'){PIX.ped=null;PIX.prod=null;PIX.etapa=null;PIX.nome=PIX.whats=null;pixRender()}
   else if(a==='pix-copy'){const t=$('#pix-code');try{await navigator.clipboard.writeText(t.value);toast('Código copiado! Agora é colar no app do banco.')}catch(err){t.select();toast('Selecione e copie o código.')}}
-  else if(a==='pix'){
+  else if(a==='pix'||a==='pix-pedir'){
     if(!S.uid){login();return}
-    const p=S.produtos.find(x=>x.id===b.dataset.id);if(!p||PIX.busy)return;const r=selPedido(p);if(!r)return;
-    const quem=me().apelido||S.myName||'';PIX.busy=true;b.disabled=true;
-    const ped={uid:S.uid,nome:quem,produtoId:p.id,produto:p.nome,tamanho:r.sel.t||'',cor:r.sel.c||'',qtd:r.q,total:r.total,status:'novo',criado:Date.now(),canal:'app',pix:true};
-    try{const ref=await S.db.collection('pedidos').add(ped);PIX.ped={...ped,id:ref.id};pixRender()}
+    const p=S.produtos.find(x=>x.id===b.dataset.id);if(!p)return;const r=selPedido(p);if(!r)return;
+    PIX.prod=p;PIX.r=r;PIX.etapa='dados';PIX.ped=null;PIX.nome=PIX.whats=null;pixRender();
+  }
+  else if(a==='pix-ok'){
+    if(PIX.busy||!PIX.prod)return;
+    const nome=($('#pd-n').value||'').trim(),wd=telDig($('#pd-w').value);PIX.nome=nome;PIX.whats=wd;
+    if(!nome){toast('Coloque seu nome.');return}
+    if(wd.length<10){toast('Coloque seu WhatsApp com DDD.');return}
+    const p=PIX.prod,r=PIX.r;try{localStorage.setItem('pv-whats',wd)}catch(err){}
+    PIX.busy=true;pixRender();
+    const ped={uid:S.uid,nome,whats:fmtTel(wd),produtoId:p.id,produto:p.nome,tamanho:r.sel.t||'',cor:r.sel.c||'',qtd:r.q,total:r.total,status:'novo',criado:Date.now(),canal:'app',pix:!!pixKey()};
+    try{const ref=await S.db.collection('pedidos').add(ped);PIX.ped={...ped,id:ref.id};PIX.etapa='pagar';PIX.prod=null}
     catch(err){toast('Não deu para registrar o pedido. Tente de novo.')}
-    PIX.busy=false;b.disabled=false;
+    PIX.busy=false;pixRender();
+  }
+  else if(a==='pix-ver'){
+    const o=(S.meusPedidos||[]).find(x=>x.id===b.dataset.id);if(!o)return;PIX.ped=o;PIX.etapa='pagar';pixRender();
   }
 },true);
+/* meus pedidos (cliente) */
+const MST={novo:['wait','Aguardando pagamento'],pago:['ok','Pago · retire no treino'],concluido:['ok','Entregue'],cancelado:['no','Cancelado']};
+function meusPedidosHtml(){
+  if(!S.uid)return '';const lim=Date.now()-30*864e5;
+  const ps=(S.meusPedidos||[]).filter(p=>(p.status||'novo')==='novo'||(p.status==='pago')||(p.criado||0)>lim).sort((a,b)=>(b.criado||0)-(a.criado||0)).slice(0,5);
+  if(!ps.length)return '';
+  return `<section class="section"><h2 class="sec">Meus pedidos</h2><div class="card">${ps.map(p=>{const st=p.status||'novo';const l=st==='cancelado'&&p.expirado?['no','Expirou']:(MST[st]||MST.novo);
+    return `<div class="pedido"><div><b class="small">${esc(pedDescr(p))}</b><div class="muted small num">#${esc(pedCurto(p))} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</div></div>
+    <div class="row" style="flex-wrap:nowrap"><span class="st ${l[0]}">${l[1]}</span>${st==='novo'?`<button class="btn small primary" data-action="pix-ver" data-id="${esc(p.id)}">Pagar</button>`:''}</div></div>`}).join('')}</div></section>`;
+}
+function pedPendHtml(){
+  const ps=(S.meusPedidos||[]).filter(p=>(p.status||'novo')==='novo');if(!ps.length)return '';const p=ps.sort((a,b)=>(b.criado||0)-(a.criado||0))[0];
+  return `<section class="section"><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between;gap:12px;border-color:var(--neon,#C8F560)"><span class="stack" style="gap:2px"><b>👕 Seu pedido tá te esperando</b><span class="small muted">${esc(pedDescr(p))} · ${brl(p.total)} · aguardando pagamento</span></span><button class="btn small primary" data-action="pix-ver" data-id="${esc(p.id)}">Pagar</button></div></section>`;
+}
+/* lembrete (24h) e expiração (72h) automáticos, rodando no celular de quem é da equipe */
+async function avisoPessoal(uid,titulo,texto,url){
+  try{if(!auth.currentUser||!uid)return;const tok=await auth.currentUser.getIdToken();
+    await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({uid,tipo:'loja',titulo,texto,url:url||'/#loja'})})}
+  catch(e){console.warn('aviso pessoal',e)}
+}
+const PAUTO={busy:false,t:null};
+async function pedidosAuto(){
+  if(!S.admin||!auth.currentUser||PAUTO.busy)return;PAUTO.busy=true;const now=Date.now(),H=36e5;
+  try{for(const p of S.pedidos){
+    if((p.status||'novo')!=='novo'||p.canal!=='app'||!p.criado)continue;const age=now-p.criado;
+    if(age>72*H&&p.lembrete&&now-p.lembrete>48*H){
+      await S.db.doc('pedidos/'+p.id).update({status:'cancelado',expirado:true,canceladoEm:new Date().toISOString()});
+      avisoPessoal(p.uid,'Seu pedido expirou',`O pedido #${pedCurto(p)} (${p.produto}) foi cancelado por falta de pagamento. Ainda quer? É só pedir de novo.`);
+    }else if(age>24*H&&!p.lembrete){
+      await S.db.doc('pedidos/'+p.id).update({lembrete:now});
+      avisoPessoal(p.uid,'👕 Sua camisa tá te esperando',`Pedido #${pedCurto(p)} · ${brl(p.total)}. Toque para ${pixKey()?'pagar no Pix':'finalizar'} e garantir a sua.`);
+    }}}
+  catch(e){console.warn('pedidos auto',e)}
+  PAUTO.busy=false;
+}
+setInterval(pedidosAuto,10*60*1000);
 function waNumber(){let d=String((S.info&&S.info.whatsapp)||'').replace(/\D/g,'');if(!d)return '';if(!d.startsWith('55'))d='55'+d;return d}
 function prodCard(p){
   const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
@@ -951,16 +1020,16 @@ function prodCard(p){
   <label for="pq-${esc(p.id)}">Quantidade<select id="pq-${esc(p.id)}" data-sel="${esc(p.id)}" data-k="q">${[1,2,3,4,5].map(n=>`<option ${Number(sel.q||1)===n?'selected':''}>${n}</option>`).join('')}</select></label>
   ${resta!==null&&resta<=3?`<span class="ult">${resta>0?(resta===1?'Última peça nessa opção':`Últimas ${resta} nessa opção`):'Essa opção acabou'}</span>`:''}
   ${p.encomenda?`<span class="muted small">Feito sob encomenda: o prazo a gente combina depois do pagamento.</span>`:''}
-  ${pk?`<button class="btn primary" data-action="pix" data-id="${esc(p.id)}">Pagar com Pix</button>`:''}
-  ${wa?`<a class="btn ${pk?'':'primary'}" href="https://wa.me/${wa}" target="_blank" rel="noopener" data-buy="${esc(p.id)}">${pk?'Pedir pelo WhatsApp':'Quero o meu'}</a>`:(pk?'':`<span class="muted small">Pedidos em breve.</span>`)}
+  ${pk||wa?`<button class="btn primary" data-action="pix-pedir" data-id="${esc(p.id)}">Quero o meu</button>`:`<span class="muted small">Pedidos em breve.</span>`}
   ${/^https?:\/\//.test(p.linkPagamento||'')?`<a class="btn" href="${esc(p.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a>`:''}`}
   </div></article>`;
 }
 function vLoja(){
-  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Paga no Pix aqui mesmo ou fecha o pedido no WhatsApp.</p>
+  let h=`<section class="section"><p class="eyebrow">Loja</p><h1 class="h-display">Vista o verde</h1><p class="lede">Camisa, regata e boné de quem corre com a gente. Escolheu? Toca em "Quero o meu", paga no Pix aqui mesmo e retira no treino.</p>
   <div class="trust"><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 4a2 2 0 1 0 0 .1"/><path d="M8 21l3-6 3 2v4M6 12l3-3 4 1 3 3 3 1"/></svg><b>Retire no treino</b>Sem frete, entregue na mão</div>
   <div><svg viewBox="0 0 24 24" fill="currentColor">${WAICON.replace(/^<svg[^>]*>|<\/svg>$/g,'')}</svg><b>Pedido no Zap</b>Atendimento direto com a gente</div>
   <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c4 3 6 6 6 10a6 6 0 0 1-12 0c0-4 2-7 6-10z"/><path d="M12 21v-7"/></svg><b>Feito em Magé</b>Cada compra fortalece o projeto</div></div></section>`;
+  h+=meusPedidosHtml();
   const l=loading('produtos','Carregando a loja…');if(l)return h+l;
   const ps=[...S.produtos].sort((a,b)=>(a.esgotado?1:0)-(b.esgotado?1:0)||(a.ordem??a.criado??0)-(b.ordem??b.criado??0));
   if(!ps.length)return h+`<div class="empty">A loja está sendo montada. Já já tem novidade aqui.</div>`;
@@ -968,8 +1037,12 @@ function vLoja(){
   for(const g of secs)h+=`<section class="section loja-sec">${secs.length>1?`<h2 class="sec">${esc(g.k)}</h2>`:''}<div class="prod-grid">${g.ps.map(prodCard).join('')}</div></section>`;
   return h;
 }
+function msgCliente(p){const pk=pixKey();const st=p.status||'novo';const n=String(p.nome||'').split(' ')[0];
+  return st==='novo'?`Oi${n?' '+n:''}! Aqui é do Passos Verdes 💚 Vi seu pedido #${pedCurto(p)} na loja do app:\n\n${pedDescr(p)}\nTotal: ${brl(p.total)}\n\n${pk?`Pode pagar no Pix pela chave: ${pk}\nDepois manda o comprovante aqui que a gente separa a sua.`:'Quer que eu te passe os dados para pagamento?'}`
+  :`Oi${n?' '+n:''}! Aqui é do Passos Verdes 💚 Sobre o seu pedido #${pedCurto(p)} (${pedDescr(p)}):`}
 function pendCount(){return S.admin?S.lancamentos.filter(l=>l.status==='pendente').length+S.pedidos.filter(p=>(p.status||'novo')==='novo').length+S.reportes.filter(r=>r.status!=='resolvido').length+S.resgates.filter(r=>r.status==='pendente').length:0}
 document.addEventListener('input',e=>{const el=e.target;if(!el.id)return;
+  if(el.id==='pd-w'){el.value=fmtTel(el.value);return}
   if(el.id==='pf-a'){let d=el.value.replace(/\D/g,'').slice(0,4);if(d.length===1&&Number(d)>3)d='0'+d;el.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d}
   else if(el.id==='pf-p'){let d=el.value.replace(/\D/g,'').slice(0,4);el.value=d.length>2?d.slice(0,d.length-2)+':'+d.slice(-2):d}
 });
@@ -1468,9 +1541,10 @@ function vAdmin(){
 <!--T:folhas-->  ${adminFolhasHtml()}
 <!--T:loja-->  <section class="section"><div class="sec-head"><h2 class="sec">Pedidos da loja</h2><span class="muted small num">${(n=>n+(n===1?' novo':' novos'))(S.pedidos.filter(p=>(p.status||'novo')==='novo').length)}</span></div><div class="card">
   ${peds.length?peds.map(p=>`<div class="pedido"><div><b class="small">${esc(p.qtd)}x ${esc(p.produto)}${p.tamanho?' · '+esc(p.tamanho):''}${p.cor?' · '+esc(p.cor):''}</b>
-    <div class="muted small">${esc(p.nome||'Sem nome')} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</div></div>
+    <div class="muted small">${esc(p.nome||'Sem nome')} · ${brl(p.total)} · ${p.criado?new Date(p.criado).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}${p.whats?` · <span class="num">${esc(p.whats)}</span>`:''}${(p.status||'novo')==='novo'&&p.lembrete?' · lembrete enviado':''}</div>
+    ${waCliente(p.whats)?`<a class="small" style="font-weight:600" href="https://wa.me/${waCliente(p.whats)}?text=${encodeURIComponent(msgCliente(p))}" target="_blank" rel="noopener">Chamar no WhatsApp</a>`:''}</div>
     <div class="row" style="flex-wrap:nowrap">${(s=>`<span class="st ${s[0]}">${s[1]}</span>`)(PST[p.status||'novo']||PST.novo)}<button class="btn small danger ${S.armed==='pedidos'+p.id?'armed':''}" data-action="del" data-col="pedidos" data-id="${esc(p.id)}">${S.armed==='pedidos'+p.id?'Confirmar':'Apagar'}</button></div></div>`).join('')
-  :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Pedir pelo WhatsApp", o pedido aparece aqui.</p>`}
+  :`<p class="muted small" style="margin:0">Nenhum pedido ainda. Cada vez que alguém toca em "Quero o meu", o pedido aparece aqui com nome e WhatsApp.</p>`}
   <p class="muted small" style="margin:0">Confirme pagamentos, dê baixa no estoque e lance no caixa pela <a href="/gestao.html#vendas">Gestão → Vendas</a>. O WhatsApp e a chave Pix da loja ficam no formulário "Sobre o projeto", mais abaixo.</p></div></section>
 
 <!--T:resumo-->  <section class="section"><div class="sec-head"><h2 class="sec">Problemas reportados</h2><span class="muted small num">${(n=>n+(n===1?' aberto':' abertos'))(S.reportes.filter(r=>r.status!=='resolvido').length)}</span></div><div class="card">
@@ -2703,8 +2777,12 @@ document.addEventListener('click',async e=>{
   else if(a==='ck-manual'){S.ckEv=document.getElementById('ck-ev')?.value;S.ckQtd=Number(document.getElementById('ck-q')?.value)||cfgF().checkin;S.ckMot=document.getElementById('ck-m')?.value||'Check-in';ckDar(b.dataset.uid,false)}
 },true);
 
+getRedirectResult(auth).catch(e=>{console.warn('login redirect',e);if(e&&e.code&&e.code!=='auth/no-auth-event')setTimeout(()=>toast('Não deu para entrar. Feche o app e tente de novo.'),800)});
+const APP_INSTALADO=(()=>{try{return matchMedia('(display-mode: standalone)').matches||navigator.standalone===true}catch(e){return false}})();
 async function login(){
-  const p=new GoogleAuthProvider();
+  const p=new GoogleAuthProvider();p.setCustomParameters({prompt:'select_account'});
+  // No app instalado (principalmente iPhone), janela pop-up costuma abrir em branco: vai direto pelo redirecionamento.
+  if(APP_INSTALADO){try{await signInWithRedirect(auth,p)}catch(err){toast('Não deu para entrar. Tente de novo.')}return}
   try{await signInWithPopup(auth,p)}
   catch(e){
     if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment')){try{await signInWithRedirect(auth,p)}catch(err){toast('Não deu para entrar. Tente de novo.')}}
@@ -2714,8 +2792,9 @@ async function login(){
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 onSnapshot(doc(fs,'projeto','folhas'),s=>{S.cfgFolhas=s.exists()?s.data():null;schedule()},()=>{});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
+let unsubMP=null,unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
 onAuthStateChanged(auth,async u=>{
+  if(unsubMP){unsubMP();unsubMP=null}S.meusPedidos=[];
   for(const u of [unsubF,unsubRs,unsubTF,unsubTR,unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubF=unsubRs=unsubTF=unsubTR=unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];S.minhasFolhas=[];S.meusResgates=[];S.todasFolhas=[];S.resgates=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
@@ -2724,6 +2803,7 @@ onAuthStateChanged(auth,async u=>{
     pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
     unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
     unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule();setTimeout(checarGanhos,600)},()=>{});
+    unsubMP=onSnapshot(query(collection(fs,'pedidos'),where('uid','==',u.uid)),s=>{S.meusPedidos=s.docs.map(d=>({id:d.id,...d.data()}));if(PIX.ped&&PIX.etapa==='pagar'){const n=S.meusPedidos.find(x=>x.id===PIX.ped.id);if(n&&n.status!==PIX.ped.status){PIX.ped=null;PIX.etapa=null;pixRender();toast(n.status==='pago'?'Pagamento confirmado! Retire no treino 💚':'Pedido atualizado.')}}schedule()},()=>{});
     unsubRs=onSnapshot(query(collection(fs,'resgates'),where('uid','==',u.uid)),s=>{S.meusResgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubX=onSnapshot(collection(fs,'reacoes'),s=>{const r={};s.docs.forEach(d=>{r[d.id]=d.data()});S.reacoes=r;schedule()},()=>{});
     unsubM=DB.collection('membros').onSnapshot(s=>{const m={};s.docs.forEach(d=>{m[d.id]=d.data()});
@@ -2747,7 +2827,7 @@ function ligarAdmin(){
       unsubTF=onSnapshot(collection(fs,'folhas'),s=>{S.todasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       if(!window.__unsubAl)window.__unsubAl=onSnapshot(doc(fs,'projeto','alunos'),s=>{const d=s.exists&&(typeof s.exists==='function'?s.exists():s.exists)?s.data():null;S.alunosApp=(d&&d.lista)||{};schedule()},()=>{});
       unsubTR=onSnapshot(collection(fs,'resgates'),s=>{S.resgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
-      unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+      unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule();clearTimeout(PAUTO.t);PAUTO.t=setTimeout(pedidosAuto,4000)},()=>{});
   }
 }
 render();
