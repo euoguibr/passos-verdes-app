@@ -149,6 +149,7 @@ function serra(noite, camada) {
 export function criar(el, opt = {}) {
   const noite = !!opt.noite;
   const PROVA = opt.modo === 'prova';
+  const RIO = opt.percurso === 'rio' && !PROVA; // percurso do rio: pedras, lixo pra recolher, cobras
   const W = () => el.clientWidth || 360, H = () => el.clientHeight || 600;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
@@ -198,14 +199,28 @@ export function criar(el, opt = {}) {
     const geo = new THREE.PlaneGeometry(x1 - x0, LEN, nx, NZ); geo.rotateX(-Math.PI / 2); geo.translate((x0 + x1) / 2, y, Z0 - LEN / 2);
     const base = Float32Array.from(geo.attributes.position.array); const m = new THREE.Mesh(geo, material); scene.add(m); tiras.push({ geo, base }); return m;
   }
-  const texRua = canvasTex(256, 512, (g, w, h) => {
+  const texRua = RIO ? canvasTex(256, 512, (g, w, h) => {
+    const ag = g.createLinearGradient(0, 0, w, 0);
+    ag.addColorStop(0, noite ? '#0d2633' : '#2f7fa3'); ag.addColorStop(0.5, noite ? '#123445' : '#3c95bb'); ag.addColorStop(1, noite ? '#0d2633' : '#2f7fa3');
+    g.fillStyle = ag; g.fillRect(0, 0, w, h);
+    g.strokeStyle = noite ? 'rgba(150,200,255,.18)' : 'rgba(255,255,255,.35)'; g.lineWidth = 2;
+    for (let i = 0; i < 40; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + 6, y + 8, x, y + 18); g.stroke(); }
+    [57, 128, 199].forEach((cx, k) => {
+      for (let j = 0; j < 4; j++) {
+        const cy = j * 128 + 64 + (k % 2 ? 40 : 0), rx = 24 + Math.random() * 5, ry = 30 + Math.random() * 6;
+        g.fillStyle = noite ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.45)'; g.beginPath(); g.ellipse(cx, cy % h + 4, rx + 6, ry + 6, 0, 0, 7); g.fill();
+        g.fillStyle = noite ? '#4a4f4a' : '#8d9289'; g.beginPath(); g.ellipse(cx, cy % h, rx, ry, (Math.random() - .5) * .5, 0, 7); g.fill();
+        g.fillStyle = noite ? '#5b615a' : '#a7ab9f'; g.beginPath(); g.ellipse(cx - 5, (cy % h) - 6, rx * .6, ry * .55, 0, 0, 7); g.fill();
+      }
+    });
+  }, [1, LEN / 12]) : canvasTex(256, 512, (g, w, h) => {
     g.fillStyle = noite ? '#2a2d30' : '#4b4f53'; g.fillRect(0, 0, w, h);
     ruido(g, w, h, 1400, noite ? ['#34383c', '#232629', '#3a3e42'] : ['#575b60', '#3f4347', '#5f6368']);
     g.fillStyle = noite ? '#d9d6c8' : '#f4f1e6'; for (const x of [w / 3, w * 2 / 3]) g.fillRect(x - 3, 40, 6, 180);
     g.fillStyle = '#e8c547'; g.fillRect(6, 0, 6, h); g.fillRect(w - 12, 0, 6, h);
   }, [1, LEN / 12]);
-  const texCal = canvasTex(128, 128, (g, w, h) => { g.fillStyle = noite ? '#5a5d58' : '#b9b5aa'; g.fillRect(0, 0, w, h); g.strokeStyle = noite ? '#44463f' : '#98948a'; g.lineWidth = 3; for (let y = 0; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke(); }, [1, LEN / 3]);
-  const texGrama = canvasTex(256, 256, (g, w, h) => { g.fillStyle = noite ? '#17331f' : '#5aa04f'; g.fillRect(0, 0, w, h); ruido(g, w, h, 2200, noite ? ['#1d3d26', '#122a19', '#21452b'] : ['#68b05a', '#4c8f44', '#77bb63', '#3f8040']); }, [10, LEN / 10]);
+  const texCal = RIO ? canvasTex(128, 128, (g, w, h) => { g.fillStyle = noite ? '#3a3a32' : '#8a7a5c'; g.fillRect(0, 0, w, h); ruido(g, w, h, 500, noite ? ['#4a4a40', '#2c2c26', '#55554a'] : ['#9a8a6a', '#6f6248', '#b0a27e', '#7d8a86']); }, [1, LEN / 3]) : canvasTex(128, 128, (g, w, h) => { g.fillStyle = noite ? '#5a5d58' : '#b9b5aa'; g.fillRect(0, 0, w, h); g.strokeStyle = noite ? '#44463f' : '#98948a'; g.lineWidth = 3; for (let y = 0; y < h; y += 32) { g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); } g.beginPath(); g.moveTo(w / 2, 0); g.lineTo(w / 2, h); g.stroke(); }, [1, LEN / 3]);
+  const texGrama = canvasTex(256, 256, (g, w, h) => { g.fillStyle = RIO ? (noite ? '#10261a' : '#3f7f3c') : noite ? '#17331f' : '#5aa04f'; g.fillRect(0, 0, w, h); ruido(g, w, h, 2200, noite ? ['#1d3d26', '#122a19', '#21452b'] : ['#68b05a', '#4c8f44', '#77bb63', '#3f8040']); }, [10, LEN / 10]);
   tira(-4.3, 4.3, 3, new THREE.MeshLambertMaterial({ map: texRua }), 0);
   tira(-6.4, -4.3, 1, new THREE.MeshLambertMaterial({ map: texCal }), 0.12);
   tira(4.3, 6.4, 1, new THREE.MeshLambertMaterial({ map: texCal }), 0.12);
@@ -251,6 +266,16 @@ export function criar(el, opt = {}) {
   M.pedra = [mat(noite ? 0x3d4440 : 0x7d867a), mat(noite ? 0x353b37 : 0x6b7468), mat(noite ? 0x2c332f : 0x8a9386)];
   M.morro = [mat(noite ? 0x173524 : 0x3f7d4a), mat(noite ? 0x12301f : 0x4f8f55), mat(noite ? 0x1b3b28 : 0x35703f)];
   G.pedra = new THREE.IcosahedronGeometry(1, 0); G.morro = new THREE.IcosahedronGeometry(1, 1);
+  if (RIO) {
+    Object.assign(G, { bola: new THREE.SphereGeometry(0.2, 10, 8), tora: new THREE.CylinderGeometry(0.32, 0.34, 2.2, 10), anelTora: new THREE.CylinderGeometry(0.31, 0.31, 0.02, 12),
+      garrafa: new THREE.CylinderGeometry(0.13, 0.15, 0.55, 10), tampa: new THREE.CylinderGeometry(0.06, 0.06, 0.08, 8), rotulo: new THREE.CylinderGeometry(0.152, 0.152, 0.16, 10, 1, true),
+      lata: new THREE.CylinderGeometry(0.13, 0.13, 0.32, 12), lataT: new THREE.CylinderGeometry(0.125, 0.125, 0.02, 12), sacola: new THREE.IcosahedronGeometry(0.3, 0) });
+    Object.assign(M, { cobra: toon(0x3d8f2a), cobraF: toon(0xe8c547), toraC: mat(0xc9a06a), musgo: mat(0x4f9a3c), cipo: mat(0x2f7a3e),
+      pet: new THREE.MeshLambertMaterial({ color: 0x9fd8ff, transparent: true, opacity: 0.8, emissive: noite ? 0x24506a : 0x000000 }), rotulo: mat(0xe23b2e), lata: mat(0xd8312a, noite ? { emissive: 0x5a1010 } : {}),
+      sacola: new THREE.MeshLambertMaterial({ color: 0xf4f4ee, flatShading: true, emissive: noite ? 0x555555 : 0x000000 }) });
+    const texC = canvasTex(64, 128, (g, w, h) => { g.fillStyle = noite ? '#123a4f' : '#4aa3c9'; g.fillRect(0, 0, w, h); g.strokeStyle = 'rgba(255,255,255,.6)'; g.lineWidth = 2; for (let i = 0; i < 18; i++) { const x = Math.random() * w, y = Math.random() * h; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 3, y + 14); g.stroke(); } }, [1, 2]);
+    M.correnteza = new THREE.MeshBasicMaterial({ map: texC });
+  }
   const TX = {};
   const halo = canvasTex(64, 64, (g) => { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, 'rgba(255,220,150,.9)'); r.addColorStop(1, 'rgba(255,220,150,0)'); g.fillStyle = r; g.fillRect(0, 0, 64, 64); });
 
@@ -294,6 +319,50 @@ export function criar(el, opt = {}) {
     if (noite || mov) for (const sx of [-0.7, 0.7]) { const f = new THREE.Mesh(new THREE.CircleGeometry(0.16, 8), new THREE.MeshBasicMaterial({ color: 0xfff3c4 })); f.position.set(sx, 0.95, -3.91); f.rotation.y = Math.PI; g.add(f); }
     const mv = mov ? 7 + Math.random() * 3 : 0; const s2 = mv ? s + mv * Math.max(0, s - st.s) / Math.max(10, st.vel) : s;
     return add(g, s2, x, { tipo: 'bloco', h: 2.4, len: 6.5, desloc: -3.9, mov: mv, rot: Math.PI });
+  }
+  /* ---------- rio ---------- */
+  function vao(s, x) { // trecho sem pedra: pula a correnteza
+    const g = new THREE.Group(); const a = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 2.8), M.correnteza); a.rotation.x = -Math.PI / 2; a.position.y = 0.05; g.add(a);
+    for (const z of [-1.4, 1.4]) { const e = new THREE.Mesh(G.caixa, M.espuma); e.scale.set(2.3, 0.08, 0.22); e.position.set(0, 0.08, z); g.add(e); }
+    for (let i = 0; i < 4; i++) { const e = new THREE.Mesh(G.pedra, M.espuma); e.scale.set(0.25, 0.06, 0.15); e.position.set((Math.random() - .5) * 1.8, 0.09, (Math.random() - .5) * 2); g.add(e); }
+    return add(g, s, x, { tipo: 'buraco', h: 0.4, len: 2.8, anim: (o, dt) => { a.material.map.offset.y -= dt * 0.8; } });
+  }
+  function cobra(s, x) {
+    const g = new THREE.Group(); const seg = [];
+    for (let i = 0; i < 11; i++) { const m = new THREE.Mesh(G.bola, i % 3 === 1 ? M.cobraF : M.cobra); const k = 0.17 - Math.abs(i - 4) * 0.008; m.scale.setScalar(k / 0.2); m.position.set(-0.95 + i * 0.19, 0.16, 0); g.add(m); seg.push(m); }
+    const cab = new THREE.Group(); cab.position.set(1.15, 0.36, 0); g.add(cab);
+    const c = new THREE.Mesh(G.bola, M.cobra); c.scale.set(1.25, 0.9, 1.05); cab.add(c);
+    for (const sz of [-0.11, 0.11]) { const o = new THREE.Mesh(G.bola, M.branco); o.scale.setScalar(0.28); o.position.set(0.12, 0.08, sz); cab.add(o); const pu = new THREE.Mesh(G.bola, M.pneu); pu.scale.setScalar(0.14); pu.position.set(0.16, 0.09, sz); cab.add(pu); }
+    const lg = new THREE.Mesh(G.caixa, M.ima); lg.scale.set(0.22, 0.02, 0.04); lg.position.set(0.32, -0.03, 0); cab.add(lg);
+    return add(g, s, x, { tipo: 'baixo', h: 0.55, len: 1.4, rot: Math.PI / 2 * 0, anim: (o, dt) => { const t = st.t * 7 + o.s; seg.forEach((m, i) => { m.position.z = Math.sin(t - i * 0.7) * 0.22; }); cab.position.z = Math.sin(t - 11 * 0.7) * 0.22; cab.position.y = 0.36 + Math.sin(t * 1.3) * 0.05; lg.visible = Math.sin(t * 2.2) > 0.3; } });
+  }
+  function tronco(s, x) {
+    const g = new THREE.Group(); const t = new THREE.Mesh(G.tora, M.tronco); t.rotation.z = Math.PI / 2; t.position.y = 0.33; t.rotation.y = (Math.random() - .5) * 0.25; g.add(t);
+    for (const sx of [-1.12, 1.12]) { const c = new THREE.Mesh(G.anelTora, M.toraC); c.rotation.z = Math.PI / 2; c.position.set(sx, 0.33, 0); g.add(c); }
+    for (let i = 0; i < 4; i++) { const m = new THREE.Mesh(G.arbusto, M.musgo); m.scale.set(0.22, 0.12, 0.22); m.position.set(-0.8 + i * 0.5, 0.6, (Math.random() - .5) * 0.3); g.add(m); }
+    return add(g, s, x, { tipo: 'baixo', h: 0.72, len: 0.7 });
+  }
+  function galho(s, x) { // galho baixo atravessado: passa rolando
+    const g = new THREE.Group();
+    for (const sx of [-1.15, 1.15]) { const p = new THREE.Mesh(G.tronco, M.tronco); p.scale.set(0.8, 1.15, 0.8); p.position.set(sx, 1.35, 0); g.add(p); }
+    const h = new THREE.Mesh(G.tora, M.tronco); h.scale.set(0.65, 1.1, 0.65); h.rotation.z = Math.PI / 2 + 0.06; h.position.y = 1.85; g.add(h);
+    for (let i = 0; i < 6; i++) { const c = new THREE.Mesh(G.copa, M.copa[i % 3]); c.scale.setScalar(0.32 + Math.random() * 0.15); c.position.set(-1 + i * 0.4, 2.15 + Math.random() * 0.2, (Math.random() - .5) * 0.4); g.add(c); }
+    for (let i = 0; i < 5; i++) { const v = new THREE.Mesh(G.caixa, M.cipo); const l = 0.4 + Math.random() * 0.4; v.scale.set(0.04, l, 0.04); v.position.set(-0.9 + i * 0.45, 1.75 - l / 2, 0); g.add(v); }
+    return add(g, s, x, { tipo: 'alto', h: 2.4, len: 0.5 });
+  }
+  function pedrao(s, x) { // pedra grande: troca de lado
+    const g = new THREE.Group();
+    const p = new THREE.Mesh(G.pedra, M.pedra[Math.floor(Math.random() * 3)]); p.scale.set(1.15, 1.25, 1.05); p.position.y = 1.0; p.rotation.set(Math.random(), Math.random() * 6, Math.random() * .3); g.add(p);
+    const p2 = new THREE.Mesh(G.pedra, M.pedra[(Math.floor(Math.random() * 3) + 1) % 3]); p2.scale.set(0.7, 0.6, 0.7); p2.position.set(0.55, 0.45, 0.5); g.add(p2);
+    const ms = new THREE.Mesh(G.arbusto, M.musgo); ms.scale.set(0.6, 0.25, 0.6); ms.position.set(-0.1, 2.05, 0); g.add(ms);
+    return add(g, s, x, { tipo: 'bloco', h: 2.3, len: 1.8, desloc: -0.9 });
+  }
+  function lixo(s, x, y = 1) {
+    const k = Math.floor(Math.random() * 3); let m;
+    if (k === 0) { m = new THREE.Group(); const c = new THREE.Mesh(G.garrafa, M.pet); m.add(c); const t = new THREE.Mesh(G.tampa, M.ima); t.position.y = 0.3; m.add(t); const r = new THREE.Mesh(G.rotulo, M.rotulo); m.add(r); m.rotation.z = 0.5; }
+    else if (k === 1) { m = new THREE.Group(); const c = new THREE.Mesh(G.lata, M.lata); m.add(c); const t = new THREE.Mesh(G.lataT, M.imaP); t.position.y = 0.17; m.add(t); m.rotation.z = -0.4; }
+    else { m = new THREE.Mesh(G.sacola, M.sacola); }
+    return add(m, s, x, { tipo: 'folha', y, len: 0.6, giro: Math.random() * 6 });
   }
   function folha(s, x, y = 1) { const m = new THREE.Mesh(G.folha, M.folha); return add(m, s, x, { tipo: 'folha', y, len: 0.6, giro: Math.random() * 6 }); }
   function bonus(s, x, k) {
@@ -356,6 +425,12 @@ export function criar(el, opt = {}) {
     for (let i = 0; i < 5; i++) { const a = new THREE.Mesh(G.arbusto, M.arb); a.scale.setScalar(1 + Math.random()); a.position.set(-lado * (3 + Math.random() * 2), 0.4, (Math.random() - .5) * 10); g.add(a); }
     return add(g, s, x, { tipo: 'deco', len: 8 });
   }
+  function placaRio() {
+    const placa = new THREE.Group(); const pp = new THREE.Mesh(G.caixa, M.tronco); pp.scale.set(0.14, 2.6, 0.14); pp.position.y = 1.3; placa.add(pp);
+    const tx = TX.rio ||= canvasTex(256, 112, (g, w, h) => { g.fillStyle = '#1f6b3b'; g.fillRect(0, 0, w, h); g.strokeStyle = '#c8f560'; g.lineWidth = 5; g.strokeRect(5, 5, w - 10, h - 10); g.fillStyle = '#fff'; g.font = '900 30px Arial'; g.textAlign = 'center'; g.fillText('RIO SANTO ALEIXO', w / 2, 46); g.fillStyle = '#c8f560'; g.font = '800 20px Arial'; g.fillText('AÇÃO AMBIENTAL · PV', w / 2, 82); });
+    const pl = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.1, 0.08), new THREE.MeshLambertMaterial({ map: tx })); pl.position.y = 2.9; pl.rotation.y = Math.PI; placa.add(pl);
+    add(placa, 16, -6.2, { tipo: 'deco' });
+  }
   function trechoSerra(s0, len) {
     st.serra = { a: s0, b: s0 + len };
     const placa = new THREE.Group(); const pp = new THREE.Mesh(G.caixa, M.poste); pp.scale.set(0.1, 2.6, 0.1); pp.position.y = 1.3; placa.add(pp);
@@ -369,7 +444,22 @@ export function criar(el, opt = {}) {
 
   /* geração da pista */
   function linhaFolhas(s, faixa, n, arco) { for (let i = 0; i < n; i++) { const y = arco ? 1 + Math.sin(i / (n - 1) * Math.PI) * 2.3 : 1; folha(s + i * 2.2, LANES[faixa], y); } }
+  function linhaLixo(s, faixa, n, arco) { for (let i = 0; i < n; i++) { const y = arco ? 1 + Math.sin(i / (n - 1) * Math.PI) * 2.3 : 1; lixo(s + i * 2.2, LANES[faixa], y); } }
+  function gerarLinhaRio() {
+    const s = st.proxLinha; const dif = Math.min(1, st.s / 2200);
+    const r = Math.random(); const livres = [0, 1, 2];
+    const tira = () => livres.splice(Math.floor(Math.random() * livres.length), 1)[0];
+    const baixo = () => [vao, cobra, tronco, vao][Math.floor(Math.random() * 4)];
+    let gap = Math.max(13, st.vel * (1.05 - dif * 0.32));
+    if (st.s > 60 && Math.random() < 0.04) { bonus(s, LANES[Math.floor(Math.random() * 3)], Math.random() < .5 ? 'ima' : 'tenis'); st.proxLinha = s + gap * 0.6; return; }
+    if (r < 0.32 - dif * 0.14) { const f = tira(); baixo()(s, LANES[f]); linhaLixo(s - 5, f, 5, true); if (Math.random() < 0.5) linhaLixo(s - 4, livres[Math.floor(Math.random() * livres.length)], 4); }
+    else if (r < 0.52) { const f = tira(); galho(s, LANES[f]); if (dif > 0.12 && Math.random() < .5 + dif * .4) { const f2 = tira(); baixo()(s, LANES[f2]); } linhaLixo(s - 3, livres[0], 4); }
+    else if (r < 0.8) { const f = tira(); pedrao(s + 2, LANES[f]); if (dif > 0.08 && Math.random() < .55 + dif * .35) { const f2 = tira(); if (Math.random() < .5) pedrao(s + 7, LANES[f2]); else baixo()(s + 3, LANES[f2]); } linhaLixo(s - 2, livres[0], 6); gap += 6; }
+    else { const f = tira(), f2 = tira(); baixo()(s, LANES[f]); baixo()(s, LANES[f2]); linhaLixo(s - 5, f, 5, true); linhaLixo(s - 3, livres[0], 4); }
+    st.proxLinha = s + gap;
+  }
   function gerarLinha() {
+    if (RIO) return gerarLinhaRio();
     const s = st.proxLinha; const dif = Math.min(1, st.s / 2200);
     const r = Math.random(); const livres = [0, 1, 2];
     const tira = () => livres.splice(Math.floor(Math.random() * livres.length), 1)[0];
@@ -395,6 +485,17 @@ export function criar(el, opt = {}) {
   }
   function gerarDeco(lado) {
     const s = st.proxDeco[lado]; const sg = lado ? 1 : -1;
+    if (RIO) {
+      if (Math.random() < 0.08) morro(s, sg);
+      const r = Math.random();
+      if (Math.random() < 0.65) rocha(s, sg * (6.6 + Math.random() * 1.6), 0.5 + Math.random() * 0.9);
+      if (r < 0.06 && s > 40) cachoeira(s, sg);
+      else if (r < 0.4) arvore(s, sg * (9 + Math.random() * 8));
+      else if (r < 0.62) palmeira(s, sg * (9 + Math.random() * 5));
+      else arbusto(s, sg * (7.8 + Math.random() * 2.5));
+      if (Math.random() < 0.6) arvore(s + 3, sg * (16 + Math.random() * 22));
+      st.proxDeco[lado] = s + 5 + Math.random() * 6; return;
+    }
     const noRio = st.rio && s > st.rio.a - 4 && s < st.rio.b + 4;
     const naSerra = st.serra && s > st.serra.a - 6 && s < st.serra.b + 6;
     if (Math.random() < 0.09) morro(s, sg);
@@ -433,7 +534,7 @@ export function criar(el, opt = {}) {
   hud.innerHTML = `<div class="g3c"><b class="g3m">0,00 km</b><span class="g3ps"><span class="g3tm">00:00</span> · <span class="g3pc">--:--</span>/km</span><span class="g3f">🍃 0</span></div><div class="g3r"></div><div class="g3pw"></div><div class="g3km" hidden></div>`;
   el.appendChild(hud);
   const dica = document.createElement('div'); dica.className = 'g3dica';
-  dica.innerHTML = `<b>Deslize para correr</b><div class="g3setas"><span>← →<i>trocar de pista</i></span><span>↑<i>pular</i></span><span>↓<i>rolar</i></span></div><small>Pule cones, buracos e barreiras · role sob as placas de OBRAS · desvie das vans</small>`;
+  dica.innerHTML = RIO ? `<b>Corrida no rio</b><div class="g3setas"><span>← →<i>trocar de pedra</i></span><span>↑<i>pular</i></span><span>↓<i>rolar</i></span></div><small>Recolha o lixo do rio · pule a correnteza, as cobras e os troncos · role sob os galhos · desvie das pedras grandes</small>` : `<b>Deslize para correr</b><div class="g3setas"><span>← →<i>trocar de pista</i></span><span>↑<i>pular</i></span><span>↓<i>rolar</i></span></div><small>Pule cones, buracos e barreiras · role sob as placas de OBRAS · desvie das vans</small>`;
   el.appendChild(dica);
   if (PROVA) {
     dica.innerHTML = `<b>${opt.titulo || 'Prova'}</b><div class="g3setas"><span>👆<i>toque pra correr</i></span><span>⚡<i>mais toques, mais rápido</i></span><span>🫁<i>cuide do fôlego</i></span></div><small>Toque na tela pra ir pra largada. Os adversários aceleram no fim, guarde energia!</small>`;
@@ -547,13 +648,14 @@ export function criar(el, opt = {}) {
     limparObjs(); Object.assign(st, { estado: 'pronto', s: 0, vel: 16, t: 0, faixa: 1, faixaAnt: 1, px: 0, py: 0, vy: 0, chao: true, rolando: 0, tropeco: 0, ultTropeco: -9, folhas: 0, ima: 0, tenis: 0, curva: 0, curvaAlvo: 0, ph: 0, tremor: 0, fim: 0, proxLinha: 30, proxDeco: [-10, -10], proxRio: 380 + Math.random() * 200, rio: null, proxSerra: 180, serra: null, tv: 0, proxKm: 1000, tKm: 0 }); hkm.hidden = true;
     proxPoste = 4; jog.userData.corpo.rotation.set(0, 0, 0); jog.userData.corpo.position.set(0, 1, 0);
     while (st.proxDeco[0] < 170) gerarDeco(0); while (st.proxDeco[1] < 170) gerarDeco(1);
-    while (proxPoste < 170) { poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
+    if (!RIO) while (proxPoste < 170) { poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
+    if (RIO) placaRio();
     dica.hidden = false; hp.textContent = '';
     if (PROVA) { Object.assign(P, { v: 0, f: 100, km: 0, T: 0, ult: -1, quebrou: false, fimT: 0 }); montarNpcs(); hgo.hidden = true; for (const n of npcs) { n.b.position.set(n.x, 0, 0); } }
     atualizarHud();
   }
   function comecar() { if (PROVA) { st.estado = 'largada'; st.t = 0; dica.hidden = true; return; } st.estado = 'jogo'; dica.hidden = true; }
-  function atualizarHud() { if (PROVA) { hudProva(); return; } hm.textContent = (st.s / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km'; htm.textContent = mmss(st.tv); hpc.textContent = st.estado === 'jogo' ? mmss(ritmo(st.vel)).replace(/^0/, '') : '--:--'; hf.textContent = '🍃 ' + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
+  function atualizarHud() { if (PROVA) { hudProva(); return; } hm.textContent = (st.s / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km'; htm.textContent = mmss(st.tv); hpc.textContent = st.estado === 'jogo' ? mmss(ritmo(st.vel)).replace(/^0/, '') : '--:--'; hf.textContent = (RIO ? '🗑️ ' : '🍃 ') + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
   function bater() {
     st.estado = 'caiu'; st.tremor = 0.5; try { navigator.vibrate && navigator.vibrate(140); } catch (e) {}
     setTimeout(() => { if (st.estado === 'caiu') { st.estado = 'fim'; opt.onOver && opt.onOver({ metros: Math.floor(st.s), folhas: st.folhas, tempo: st.tv, pace: st.s > 1 ? st.tv / (st.s / 1000) : 0 }); } }, 900);
@@ -585,11 +687,11 @@ export function criar(el, opt = {}) {
     if (jogo || (PROVA && st.estado !== 'pronto')) {
       if (!PROVA) 
 while (st.proxLinha < st.s + 150) gerarLinha();
-      if (st.s + 160 > st.proxRio) { trechoRio(st.proxRio, 70); st.proxRio += 650 + Math.random() * 450; }
+      if (!RIO && st.s + 160 > st.proxRio) { trechoRio(st.proxRio, 70); st.proxRio += 650 + Math.random() * 450; }
       if (st.s + 165 > st.proxSerra) { trechoSerra(st.proxSerra, 140); st.proxSerra += 700 + Math.random() * 400; if (Math.abs(st.proxSerra - st.proxRio) < 220) st.proxSerra += 260; }
     }
     while (st.proxDeco[0] < st.s + 170) gerarDeco(0); while (st.proxDeco[1] < st.s + 170) gerarDeco(1);
-    while (proxPoste < st.s + 170) { if (!(st.rio && proxPoste > st.rio.a - 3 && proxPoste < st.rio.b + 3) && !(st.serra && proxPoste > st.serra.a - 3 && proxPoste < st.serra.b + 3)) poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
+    while (!RIO && proxPoste < st.s + 170) { if (!(st.rio && proxPoste > st.rio.a - 3 && proxPoste < st.rio.b + 3) && !(st.serra && proxPoste > st.serra.a - 3 && proxPoste < st.serra.b + 3)) poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
     // objetos
     const rolando = st.rolando > 0 && st.chao;
     for (const o of objs) {
@@ -597,7 +699,7 @@ while (st.proxLinha < st.s + 150) gerarLinha();
       if (o.mov && jogo) o.s -= o.mov * dt;
       const fim = o.s + (o.len || 0) - (o.desloc || 0);
       if (fim < st.s - 12) { o.vivo = false; scene.remove(o.m); continue; }
-      colocar(o); if (o.desloc) o.m.position.z += 0;
+      colocar(o); if (o.anim) o.anim(o, dt);
       if (o.tipo === 'folha' || o.tipo === 'bonus') { o.giro += dt * 3; o.m.rotation.y += o.giro; o.m.position.y += Math.sin(st.t * 4 + o.s) * 0.08; }
       if (!jogo) continue;
       // ímã puxa folhas

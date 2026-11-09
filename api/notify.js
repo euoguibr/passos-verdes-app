@@ -29,18 +29,23 @@ async function avisoSocial(db, eu, body) {
     const para = String(body.uid || ''); if (!ID.test(para) || para === eu) return null;
     const v = await marcar(db, db.doc('seguidores/' + eu + '_' + para), 'avisado', v => v.de === eu && v.para === para);
     if (!v) return null;
-    return { para, titulo: (await nomeDe(db, eu)) + ' começou a te seguir', texto: 'Veja o perfil e siga de volta 💚', url: '/#mural' };
+    return { para, titulo: (await nomeDe(db, eu)) + ' começou a te seguir', texto: 'Toque pra ver o perfil e seguir de volta 💚', url: '/#p=' + eu };
   }
   const id = String(body.id || ''); if (!ID.test(id)) return null;
+  if (body.acao === 'curtida') { // só vai pra caixa de notificações, sem push
+    const p = (await db.doc('mural/' + id).get()).data();
+    if (!p || p.uid === eu || !(p.curtidas || {})[eu]) return null;
+    return { para: p.uid, semPush: true, docId: 'curtida_' + id + '_' + eu, titulo: (await nomeDe(db, eu)) + ' curtiu seu treino 💚', texto: corta(p.texto || (p.km ? p.km + ' km' : 'Seu post no Mural'), 80), url: '/#mural' };
+  }
   const ref = db.doc('duelos/' + id);
   if (body.acao === 'duelo') {
     const v = await marcar(db, ref, 'avisoDe', v => v.de === eu && v.status === 'aberto'); if (!v) return null;
-    return { para: v.para, titulo: '⚡ ' + (await nomeDe(db, eu)) + ' te desafiou: prova de ' + v.dist + ' km', texto: 'Tempo pra bater: ' + fmtT(v.tempoDe) + '. Aceita o duelo?', url: '/#galera' };
+    return { para: v.para, titulo: '⚡ ' + (await nomeDe(db, eu)) + (v.jogo === 'mandala' ? ' te desafiou na Mandala PV' : ' te desafiou: Prova PV ' + v.dist + ' km'), texto: v.jogo === 'mandala' ? 'Passe de ' + v.alvo + ' medalhas seguidas pra vencer. Aceita o duelo?' : 'Tempo pra bater: ' + fmtT(v.tempoDe) + '. Aceita o duelo?', url: '/#galera' };
   }
   if (body.acao === 'duelo-res') {
     const v = await marcar(db, ref, 'avisoRes', v => v.para === eu && v.status === 'feito'); if (!v) return null;
     const ganhou = v.vencedor === v.de, nm = await nomeDe(db, eu);
-    return { para: v.de, titulo: ganhou ? '🏆 Você venceu o duelo contra ' + nm : '😤 ' + nm + ' venceu o seu duelo', texto: 'Prova de ' + v.dist + ' km: você ' + fmtT(v.tempoDe) + ' × ' + fmtT(v.tempoPara) + ' ' + nm + (ganhou ? '' : '. Revanche?'), url: '/#galera' };
+    return { para: v.de, titulo: ganhou ? '🏆 Você venceu o duelo contra ' + nm : '😤 ' + nm + ' venceu o seu duelo', texto: (v.jogo === 'mandala' ? 'Mandala PV: você ' + v.alvo + ' × ' + v.resposta + ' ' : 'Prova ' + v.dist + ' km: você ' + fmtT(v.tempoDe) + ' × ' + fmtT(v.tempoPara) + ' ') + nm + (ganhou ? '' : '. Revanche?'), url: '/#galera' };
   }
   return null;
 }
@@ -70,6 +75,17 @@ module.exports = async (req, res) => {
     const text = corta(social ? social.texto : body.texto, 180);
     const url = social ? social.url : (typeof body.url === 'string' && body.url.startsWith('/') ? body.url.slice(0, 100) : '/');
     if (!title) return res.status(400).json({ erro: 'Escreva um título.' });
+
+    // caixa de notificações do app (o sininho): pessoal ou para todo mundo
+    const inbox = { tipo, titulo: title, texto: text, url, criado: Date.now() };
+    const paraInbox = social ? social.para : (typeof body.uid === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(body.uid) ? body.uid : '');
+    try {
+      if (paraInbox) {
+        const d = { ...inbox, para: paraInbox, de: social ? user.uid : '' };
+        if (social && social.docId) await db.doc('notificacoes/' + social.docId).create(d); else await db.collection('notificacoes').add(d);
+      } else await db.collection('avisos').add(inbox);
+    } catch (e) { if (social && social.docId) return res.status(200).json({ enviados: 0, repetido: true }); console.warn('inbox', e.message); }
+    if (social && social.semPush) return res.status(200).json({ enviados: 0, inbox: true });
 
     const tokens = [];
     // Aviso pessoal (ex.: "você ganhou folhas"): só os celulares dessa pessoa.

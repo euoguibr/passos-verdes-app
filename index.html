@@ -427,6 +427,40 @@ main.enter>*:nth-child(2){animation-delay:.04s}main.enter>*:nth-child(3){animati
 .tabs-in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;gap:4px}
 .tab{appearance:none;background:none;border:0;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em;min-height:52px}
 .tab svg{width:22px;height:22px}
+.nov{gap:14px}.novi{display:flex;gap:12px;align-items:flex-start}.novi>span{font-size:26px;line-height:1;flex:none}
+.nlist{padding:4px 0;gap:0}
+.nitem{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;display:flex;gap:12px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line);width:100%;cursor:pointer}
+.nitem:last-child{border-bottom:0}
+.nitem.nova{background:rgba(200,245,96,.07)}
+.nitem.nova b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8F560;margin-right:6px;vertical-align:middle}
+.nico{width:40px;height:40px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-size:20px;flex:none}
+.nitem>.avt,.nitem>:first-child{flex:none}
+.linkbtn.conn{color:var(--ink);font-weight:500}.linkbtn.conn b{font-weight:800}
+.mdlb{background:radial-gradient(120% 140% at 80% 40%,#1d3a12 0%,#0b1200 65%);aspect-ratio:640/220;display:block;overflow:hidden}
+.mdlb .mdl-mini{position:absolute;right:-10px;top:50%;width:52%;transform:translateY(-50%) rotate(-12deg);filter:drop-shadow(0 6px 18px rgba(0,0,0,.5))}
+.mdlb .gtitle{top:18px}
+.mdlstage .gover{z-index:5}
+.mdlstage{background:radial-gradient(120% 80% at 50% 40%,#16300f 0%,#060a05 70%);overflow:hidden}
+.mdl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;color:#fff;padding:14px 12px calc(16px + env(safe-area-inset-bottom,0px));box-sizing:border-box;gap:8px}
+.mdl-top{width:100%;display:flex;justify-content:space-between;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:800}
+.mdl-r{color:#C8F560}.mdl-rec{opacity:.7}
+.mdl-alvo{background:rgba(200,245,96,.14);border:1px solid rgba(200,245,96,.5);color:#C8F560;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700}
+.mdl-svg{width:min(94vw,420px,58vh);height:auto;flex:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent;margin-top:4px}
+.mdl-med{cursor:pointer}
+.mdl-med .mdl-ico{transition:transform .12s ease}
+.mdl-med .mdl-brilho{opacity:0;transition:opacity .12s ease}
+.mdl.mostrando .mdl-med:not(.on) .mdl-ico{opacity:.42}
+.mdl-med.on .mdl-brilho{opacity:1}
+.mdl-med.on .mdl-ico{transform:scale(1.18)}
+.mdl-med.on{filter:drop-shadow(0 0 18px var(--c)) drop-shadow(0 0 6px var(--c))}
+.mdl-n{font-family:var(--display);font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70;font-size:34px;fill:#C8F560}
+.mdl-st{text-align:center;margin-top:4px}
+.mdl-msg{display:block;font-family:var(--display);font-weight:900;font-stretch:72%;font-variation-settings:"wdth" 72;font-size:30px;text-transform:uppercase;line-height:1}
+.mdl-sub{display:block;font-size:13px;opacity:.72;margin-top:4px}
+.mdl-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;max-width:300px}
+.mdl-dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18)}.mdl-dots i.ok{background:#C8F560}.mdl-dots i.cur{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.mdl-go{margin-top:auto;min-width:180px}
+.mdl.erro .mdl-svg{animation:mdlerro .4s}@keyframes mdlerro{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 .provab{background:radial-gradient(120% 140% at 85% 30%,#2b5a10 0%,#0b1200 60%);aspect-ratio:640/220;display:block}
 .provab .gtitle{top:18px}
 .provakm{position:absolute;right:18px;bottom:6px;font-family:var(--display);font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70;font-size:96px;line-height:1;color:#C8F560;text-shadow:0 0 30px rgba(200,245,96,.35)}
@@ -723,7 +757,7 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 
 /* ---------- Navegação ---------- */
-const VIEWS=['inicio','agenda','desafios','loja','galera','mural','admin','perfil','config','clube','pessoa','privacidade','folhas'];
+const VIEWS=['inicio','agenda','desafios','loja','galera','mural','admin','notif','conexoes','perfil','config','clube','pessoa','privacidade','folhas'];
 const TABS=['inicio','agenda','desafios','mural','galera','loja'];
 const ICON={
  inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
@@ -734,15 +768,15 @@ const ICON={
  mural:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>',
  admin:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>'};
 const LABEL={inicio:'Início',agenda:'Agenda',desafios:'Desafios',loja:'Loja',galera:'Jogos',mural:'Mural',admin:'Organizar'};
-let view=(location.hash||'').slice(1);if(view==='jogos')view='galera';
+let view=(location.hash||'').slice(1);if(view==='jogos')view='galera';if(view.startsWith('p=')){S.verUid=view.slice(2);S.prevView='mural';view='pessoa'}
 if(!VIEWS.includes(view)){view='inicio';try{const v=localStorage.getItem('pv-tab');if(VIEWS.includes(v))view=v}catch(e){}}
-window.addEventListener('hashchange',()=>{const v=(location.hash||'').slice(1);if(VIEWS.includes(v)&&v!==view)go(v)});
-function go(v){if(v==='folhas'&&view!=='folhas')S.prevView=view;const mv=$('#view');if(mv){mv.classList.add('enter');clearTimeout(go.t);go.t=setTimeout(()=>mv.classList.remove('enter'),450)}view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
+window.addEventListener('hashchange',()=>{const v=(location.hash||'').slice(1);if(v.startsWith('p=')){S.verUid=v.slice(2);S.prevView='mural';go('pessoa');return}if(VIEWS.includes(v)&&v!==view)go(v)});
+function go(v){if(view==='notif'&&v!=='notif')S.nVistoAnt=null;if(v==='folhas'&&view!=='folhas')S.prevView=view;const mv=$('#view');if(mv){mv.classList.add('enter');clearTimeout(go.t);go.t=setTimeout(()=>mv.classList.remove('enter'),450)}view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
 
 function renderTabs(){
   const list=TABS;
   $('#tabs').innerHTML=list.map(v=>`<button class="tab" data-go="${v}" ${v===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[v]}</svg>${v==='admin'&&pendCount()?`<span class="badge num">${pendCount()}</span>`:''}${LABEL[v]}</button>`).join('');
-  $('#who').innerHTML=`${S.admin?`<button class="hbtn adm" data-go="admin" aria-label="Organizar" ${view==='admin'?'aria-current="page"':''}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON.admin}</svg>${pendCount()?`<span class="badge num">${pendCount()}</span>`:''}</button>`:''}<button class="hbtn" data-go="config" aria-label="Configurações" ${view==='config'?'aria-current="page"':''}>${GEAR}</button>${S.uid?`<button class="hbtn" data-go="perfil" aria-label="Meu perfil" ${view==='perfil'?'aria-current="page"':''}>${avatar(S.uid,34)}</button>`:(S.ready?`<button class="btn small primary" data-action="login">Entrar</button>`:'')}`;
+  $('#who').innerHTML=`${S.admin?`<button class="hbtn adm" data-go="admin" aria-label="Organizar" ${view==='admin'?'aria-current="page"':''}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON.admin}</svg>${pendCount()?`<span class="badge num">${pendCount()}</span>`:''}</button>`:''}${S.uid?`<button class="hbtn" data-go="notif" aria-label="Notificações${naoLidas()?' ('+naoLidas()+' novas)':''}" ${view==='notif'?'aria-current="page"':''}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>${naoLidas()?`<span class="badge num">${naoLidas()>9?'9+':naoLidas()}</span>`:''}</button>`:''}<button class="hbtn" data-go="config" aria-label="Configurações" ${view==='config'?'aria-current="page"':''}>${GEAR}</button>${S.uid?`<button class="hbtn" data-go="perfil" aria-label="Meu perfil" ${view==='perfil'?'aria-current="page"':''}>${avatar(S.uid,34)}</button>`:(S.ready?`<button class="btn small primary" data-action="login">Entrar</button>`:'')}`;
 }
 
 /* ---------- Render ---------- */
@@ -754,13 +788,13 @@ function render(){
   root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
-  if(view==='folhas')h=vFolhas();else if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='mural')h=vMural();else if(view==='admin')h=vAdmin();else h=vInicio();
+  if(view==='folhas')h=vFolhas();else if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='mural')h=vMural();else if(view==='notif')h=vNotif();else if(view==='conexoes')h=vConexoes();else if(view==='admin')h=vAdmin();else h=vInicio();
   root.innerHTML=h;
   const ob=onbHtml();const oe=$('#onb');if(ob){oe.innerHTML=ob;oe.hidden=false}else{oe.hidden=true;oe.innerHTML=''}
   renderCard();drawMini();
   for(const[id,v]of Object.entries(saved)){const el=document.getElementById(id);if(el)el.value=v}
   if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
-  renderTabs();refreshNames();bnSync(false);muralFotos();
+  renderTabs();refreshNames();bnSync(false);muralFotos();novidades();
 }
 function visitante(){
   if(!S.ready)return '';
@@ -864,7 +898,7 @@ function desafioCard(d,ativo){
   const rk=Object.values(by).sort((a,b)=>b.km-a.km);
   const pos=rk.findIndex(r=>r.uid===S.uid);
   const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeL(r.l))}${r.uid===S.uid?' (você)':''}</span><span class="num">${kmf(r.km)} km</span></li>`;
-  let rh=rk.slice(0,10).map(li).join('');if(pos>=10)rh+=li(rk[pos],pos);
+  const all=(S.rankKm||{})[d.id];let rh=rk.slice(0,all?999:10).map(li).join('');if(!all&&pos>=10)rh+=li(rk[pos],pos);
   const meus=S.lancamentos.filter(l=>l.desafio===d.id&&l.uid===S.uid).sort((a,b)=>(b.criado||0)-(a.criado||0));
   const meuOk=meus.filter(l=>l.status==='aprovado').reduce((t,l)=>t+(Number(l.km)||0),0);
   const fid='prova-'+d.id;
@@ -883,7 +917,7 @@ function desafioCard(d,ativo){
   ${S.uid?`<div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">${Math.round(pct)}% de ${kmf(meta)} km</span>`:''}</div>
   ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}`:(meta?`<p class="muted small" style="margin:0">Meta da galera: ${kmf(meta)} km</p>`:'')}
   ${form}${mine}
-  ${S.uid?`<div><p class="eyebrow" style="margin-bottom:4px">Ranking</p>${rk.length?`<ol class="rank">${rh}</ol>${pos>=0?`<button class="btn story" style="margin-top:10px" data-action="sh-rank" data-id="${esc(d.id)}">${STORYI}Postar minha posição no story</button>`:''}`:`<p class="muted small" style="margin:0">Nenhuma corrida aprovada ainda. Que tal ser o primeiro?</p>`}</div>`:''}</article>`;
+  ${S.uid?`<div><div class="sec-head"><p class="eyebrow" style="margin-bottom:4px">Ranking${rk.length?` · ${rk.length} ${rk.length===1?'pessoa':'pessoas'}`:''}</p>${rk.length>10?`<button class="linkbtn" data-action="rankkm" data-id="${esc(d.id)}">${all?'Ver menos':'Ver todos'}</button>`:''}</div>${rk.length?`<ol class="rank">${rh}</ol>${pos>=0?`<button class="btn story" style="margin-top:10px" data-action="sh-rank" data-id="${esc(d.id)}">${STORYI}Postar minha posição no story</button>`:''}`:`<p class="muted small" style="margin:0">Nenhuma corrida aprovada ainda. Que tal ser o primeiro?</p>`}</div>`:''}</article>`;
 }
 
 function pollCard(p){
@@ -1276,6 +1310,7 @@ function vPerfil(){
   const aniv=m.aniversario?m.aniversario:'';
   return `<section class="section"><div class="prof-head">${avatar(S.uid,88)}<div><p class="eyebrow">Nº ${bibNum()} · desde ${esc(desdeTxt(m))}</p><h1>${esc(nm)}</h1>
     <div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div></div></div>
+    ${conexoesResumo(S.uid)}
     <button class="btn primary" data-action="card">Mostrar cartão de membro</button></section>
   ${carteiraMini()}
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
@@ -1546,7 +1581,7 @@ setInterval(()=>{
 },5000);
 
 function vGalera(){
-  return `<section class="section"><p class="eyebrow">Jogos</p><h1 class="h-display">Bora jogar</h1><p class="lede">Dois jogos, ranking toda semana. Depois de abrir uma vez, dá pra jogar até sem internet.</p></section>`+visitante()+provaCard()+jogoCard();
+  return `<section class="section"><p class="eyebrow">Jogos</p><h1 class="h-display">Bora jogar</h1><p class="lede">Três jogos, ranking toda semana. Depois de abrir uma vez, dá pra jogar até sem internet.</p></section>`+visitante()+jogoCard()+provaCard()+mandalaCard();
 }
 
 function admList(col,items,title,sub,toggle,editable){
@@ -1795,16 +1830,18 @@ const G={on:false,state:'ready',raf:0,last:0,W:360,H:420,dpr:1,ctx:null,
   best:0,clouds:[],stars:[],dark:false,saved:false,score:0,newBest:false};
 const GR=2300,JUMP=-780,MAXSP=840;
 function gameScore(){return Math.min(100000,Math.floor(G.dist/20)+G.folhas*10)}
-function weekBest(){const r=(S.placar||[]).find(p=>p.uid===S.uid);return r?Number(r.pontos)||0:0}
+function placarAt(){return (G.percurso||S.percurso)==='rio'?(S.placarRio||[]):(S.placar||[])}
+function recJogo(){return Number(G.percurso==='rio'?me().recordeRio:me().recordeJogo)||0}
+function weekBest(){const r=placarAt().find(p=>p.uid===S.uid);return r?Number(r.pontos)||0:0}
 /* Jogo 3D (estilo corrida de frente). Se não carregar, abre a versão 2D. */
 const G3={mod:null,ctrl:null};
 async function openGame(){
-  const el=$('#game');G.modo='3d';G.on=false;
-  el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Corre, Verde!</p><b class="small muted">Deslize: ← → troca de pista · ↑ pula · ↓ rola</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
+  const el=$('#game');G.modo='3d';G.on=false;G.percurso=S.percurso;
+  el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Corre, Verde! · ${G.percurso==='rio'?'Rio':'Ruas'}</p><b class="small muted">Deslize: ← → troca de pista · ↑ pula · ↓ rola</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
   <div class="gstage" id="g3st"><div class="g3load">Carregando a pista…</div><div class="gover" id="gover" hidden></div></div></div>`;
   el.hidden=false;document.body.style.overflow='hidden';
   if(!S.uid)toast('Entre com sua conta para jogar e entrar no ranking.');
-  G.best=Math.max(Number(me().recordeJogo)||0,weekBest());
+  G.best=Math.max(recJogo(),weekBest());
   try{G3.mod=G3.mod||await import('/jogo3d.js');
     const t=document.createElement('canvas');if(!(t.getContext('webgl2')||t.getContext('webgl')))throw new Error('sem webgl');
   }catch(e){console.warn('jogo 3D indisponível',e);if(!$('#game').hidden)openGame2D();return}
@@ -1814,12 +1851,12 @@ async function openGame(){
 function g3Iniciar(){
   const st=document.getElementById('g3st');if(!st)return;st.querySelector('.g3load')?.remove();
   const noite=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
-  try{G3.ctrl=G3.mod.criar(st,{noite,recorde:G.best,onOver:r=>{G.dist=r.metros*20;G.folhas=r.folhas;G.tempo=r.tempo;G.pace=r.pace;gameOver()}})}
+  try{G3.ctrl=G3.mod.criar(st,{noite,percurso:G.percurso,recorde:G.best,onOver:r=>{G.dist=r.metros*20;G.folhas=r.folhas;G.tempo=r.tempo;G.pace=r.pace;gameOver()}})}
   catch(e){console.warn('jogo 3D',e);openGame2D()}
 }
 function g3Recomecar(){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}Object.assign(G,{saved:false,newBest:false,dist:0,folhas:0});if(G3.ctrl){G3.ctrl.reiniciar();G3.ctrl.recorde(G.best)}}
 function openGame2D(){
-  G.modo='2d';
+  G.modo='2d';G.percurso='ruas';
   if(!S.uid){toast('Entre com sua conta para jogar e entrar no ranking.')}
   const el=$('#game');
   el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Corre, Verde!</p><b class="small muted">Toque para pular. Segure para pular mais alto.</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
@@ -1836,7 +1873,7 @@ function openGame2D(){
   G.stars=Array.from({length:40},()=>({x:Math.random(),y:Math.random()*.5,r:Math.random()*1.4+.3}));
   gameReset();G.on=true;G.last=performance.now();cancelAnimationFrame(G.raf);G.raf=requestAnimationFrame(gameLoop);
 }
-function closeGame(){if(G3.ctrl){try{G3.ctrl.destruir()}catch(e){}G3.ctrl=null}G.on=false;cancelAnimationFrame(G.raf);window.removeEventListener('resize',G.fit||(()=>{}));const el=$('#game');el.hidden=true;el.innerHTML='';document.body.style.overflow='';render()}
+function closeGame(){if(G3.ctrl){try{G3.ctrl.destruir()}catch(e){}G3.ctrl=null}if(MD.ctrl){try{MD.ctrl.destruir()}catch(e){}MD.ctrl=null}G.on=false;cancelAnimationFrame(G.raf);window.removeEventListener('resize',G.fit||(()=>{}));const el=$('#game');el.hidden=true;el.innerHTML='';document.body.style.overflow='';render()}
 function gameReset(){if(G.modo==='3d'){g3Recomecar();return}Object.assign(G,{state:'ready',t:0,dist:0,speed:320,folhas:0,py:G.ground,vy:0,air:false,obs:[],leaves:[],dust:[],dustT:0,nextObs:1.4,nextLeaf:2.2,phase:0,shake:0,saved:false,newBest:false,hold:false});const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}}
 function gamePress(on){
   if(on){
@@ -1897,16 +1934,17 @@ function gameOver(){
   const o=document.getElementById('gover');if(!o)return;
   const wb=weekBest();
   o.innerHTML=`<div class="gcard"><p class="eyebrow" style="margin:0">${G.newBest?'Novo recorde!':'Fim de corrida'}</p><div class="gscore num">${sc.toLocaleString('pt-BR')}</div>
-  <p class="small muted" style="margin:0"><span class="num">${Math.floor(G.dist/20).toLocaleString('pt-BR')} m</span> corridos · <span class="num">${G.folhas}</span> ${G.folhas===1?'folha':'folhas'}</p>${G.modo==='3d'&&G.tempo?`<div class="g3res num"><span><b>${(Math.floor(G.dist/20)/1000).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</b>km</span><span><b>${Math.floor(G.tempo/60)}:${String(Math.round(G.tempo)%60).padStart(2,'0')}</b>tempo</span><span><b>${G.pace?Math.floor(G.pace/60)+':'+String(Math.round(G.pace)%60).padStart(2,'0'):'--'}</b>pace médio</span></div>`:''}
+  <p class="small muted" style="margin:0"><span class="num">${Math.floor(G.dist/20).toLocaleString('pt-BR')} m</span> corridos · <span class="num">${G.folhas}</span> ${G.percurso==='rio'&&G.modo==='3d'?(G.folhas===1?'lixo recolhido':'lixos recolhidos'):(G.folhas===1?'folha':'folhas')}</p>${G.modo==='3d'&&G.tempo?`<div class="g3res num"><span><b>${(Math.floor(G.dist/20)/1000).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</b>km</span><span><b>${Math.floor(G.tempo/60)}:${String(Math.round(G.tempo)%60).padStart(2,'0')}</b>tempo</span><span><b>${G.pace?Math.floor(G.pace/60)+':'+String(Math.round(G.pace)%60).padStart(2,'0'):'--'}</b>pace médio</span></div>`:''}
   ${S.uid?`<p class="small" style="margin:0">Seu melhor da semana: <b class="num">${Math.max(wb,sc).toLocaleString('pt-BR')}</b></p>`:`<p class="small" style="margin:0">Entre com sua conta para entrar no ranking.</p>`}
   <div class="row" style="justify-content:center"><button class="btn primary" data-action="game-again">Correr de novo</button><button class="btn" data-action="game-close">Ver ranking</button></div>${S.uid&&sc>0?`<button class="btn story" data-action="sh-jogo">${STORYI}Postar no story</button>`:''}</div>`;
   setTimeout(()=>{o.hidden=false},450);
 }
 async function saveScore(sc){
   if(!S.uid||G.saved)return;G.saved=true;
-  if(sc>(Number(me().recordeJogo)||0))saveMe(m=>{m.recordeJogo=sc});
+  const rio=G.percurso==='rio'&&G.modo==='3d';
+  if(sc>recJogo())saveMe(m=>{if(rio)m.recordeRio=sc;else m.recordeJogo=sc});
   if(sc>weekBest()){
-    try{await setDoc(doc(fs,'jogo',semanaKey(),'placar',S.uid),{uid:S.uid,nome:me().apelido||S.myName||'',pontos:sc,metros:Math.floor(G.dist/20),folhas:G.folhas,atualizado:Date.now()})}
+    try{await setDoc(doc(fs,rio?'jogorio':'jogo',semanaKey(),'placar',S.uid),{uid:S.uid,nome:me().apelido||S.myName||'',pontos:sc,metros:Math.floor(G.dist/20),folhas:G.folhas,atualizado:Date.now()})}
     catch(e){console.warn('placar',e)}
   }
 }
@@ -2045,16 +2083,18 @@ function runner(c,x,y,ph,air,down,t){
 }
 /* card e ranking na Galera */
 function jogoCard(){
-  const pl=(S.placar||[]).slice().sort((a,b)=>(b.pontos||0)-(a.pontos||0));const pos=pl.findIndex(p=>p.uid===S.uid);
+  G.percurso=S.percurso;const rio=S.percurso==='rio';
+  const pl=placarAt().slice().sort((a,b)=>(b.pontos||0)-(a.pontos||0));const pos=pl.findIndex(p=>p.uid===S.uid);
   const pr=S.info&&S.info.premioJogo;const camp=S.campeao;
   const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(r.uid===S.uid?(me().apelido||S.myName||r.nome):(nome(r.uid)!=='Corredor(a)'?nome(r.uid):(r.nome||'Corredor(a)')))}${r.uid===S.uid?' (você)':''}</span><span class="num">${(r.pontos||0).toLocaleString('pt-BR')}</span></li>`;
   let rows=pl.slice(0,S.rankAll?50:5).map(li).join('');if(!S.rankAll&&pos>=5)rows+=li(pl[pos],pos);
   return `<section class="section"><div class="card gamecard"><div class="gbanner"><canvas id="gmini" width="640" height="220" aria-hidden="true"></canvas><div class="gtitle"><span>Jogo da semana</span><b>Corre, Verde!</b></div></div><div class="gbody">
-  <p class="small" style="margin:0">Corra pelas ruas de Magé, passe pelas cachoeiras, desvie dos obstáculos e junte folhas. Ranking zera toda segunda.${pr?` <b>Prêmio da semana:</b> ${esc(pr)}`:''}</p>
-  <button class="btn primary" data-action="game">Jogar agora</button>
-  <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankall">${S.rankAll?'Ver menos':'Ver todos'}</button>`:''}</div>
+  <div class="seg" role="group" aria-label="Percurso">${[['ruas','🏙️ Ruas de Magé'],['rio','🌊 Rio Santo Aleixo']].map(([k,l])=>`<button data-action="percurso" data-v="${k}" aria-pressed="${S.percurso===k}">${l}</button>`).join('')}</div>
+  <p class="small" style="margin:0">${rio?'Ação ambiental no rio: pule de pedra em pedra, recolha o lixo, desvie das cobras, troncos e pedras grandes.':'Corra pelas ruas de Magé, passe pelas cachoeiras, desvie dos obstáculos e junte folhas.'} Cada percurso tem seu ranking, que zera toda segunda.${pr?` <b>Prêmio da semana:</b> ${esc(pr)}`:''}</p>
+  <button class="btn primary" data-action="game">${rio?'Correr no rio':'Correr nas ruas'}</button>
+  <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking ${rio?'do rio':'das ruas'} · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankall">${S.rankAll?'Ver menos':'Ver todos'}</button>`:''}</div>
   ${pl.length?`<ol class="rank">${rows}</ol>`:`<p class="muted small" style="margin:0">Ninguém jogou esta semana ainda. Seja o primeiro.</p>`}</div>
-  ${camp?`<p class="small muted" style="margin:0">🏆 Campeão da semana passada: <b>${esc(camp.uid===S.uid?'você':(nome(camp.uid)!=='Corredor(a)'?nome(camp.uid):(camp.nome||'Corredor(a)')))}</b> com <span class="num">${(camp.pontos||0).toLocaleString('pt-BR')}</span> pontos</p>`:''}</div></div></section>`;
+  ${camp&&!rio?`<p class="small muted" style="margin:0">🏆 Campeão da semana passada: <b>${esc(camp.uid===S.uid?'você':(nome(camp.uid)!=='Corredor(a)'?nome(camp.uid):(camp.nome||'Corredor(a)')))}</b> com <span class="num">${(camp.pontos||0).toLocaleString('pt-BR')}</span> pontos</p>`:''}</div></div></section>`;
 }
 function drawMini(){const c=document.getElementById('gmini');if(!c)return;const g=c.getContext('2d');const W=640,H=220,gy=170;
   const sky=g.createLinearGradient(0,0,0,gy);sky.addColorStop(0,'#1E6B3B');sky.addColorStop(1,'#5DBB7C');g.fillStyle=sky;g.fillRect(0,0,W,H);
@@ -2066,34 +2106,31 @@ function drawMini(){const c=document.getElementById('gmini');if(!c)return;const 
   [[500,128],[528,112]].forEach(([x,y])=>leaf(g,x,y,.3));
 }
 
-/* ---------- Prova PV (corrida de toque com distância e nível) ---------- */
-const DISTS=[5,10,15,21,42];
+/* ---------- Mandala PV (memória) + duelos ---------- */
 const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}};
 const lsSet=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(e){}};
-S.provaDist=Number(lsGet('pv-pdist',5))||5;S.provaNivel=lsGet('pv-pnivel','facil');S.placarP=[];S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLim=20;S.muralFiltro='todos';S.fotos={};S.segCont={};S.muralLoaded=false;
+S.placarM=[];S.placarRio=[];S.percurso=lsGet('pv-perc','ruas');S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLim=20;S.muralFiltro='todos';S.fotos={};S.segCont={};S.muralLoaded=false;
 const hms=sg=>{sg=Math.max(0,Math.round(Number(sg)||0));const h=Math.floor(sg/3600),m=Math.floor(sg%3600/60),x=sg%60;return (h?h+':'+String(m).padStart(2,'0'):String(m))+':'+String(x).padStart(2,'0')};
+function nomeU(uid,fb){return uid===S.uid?(me().apelido||S.myName||fb||'Você'):(nome(uid)!=='Corredor(a)'?nome(uid):(fb||'Corredor(a)'))}
+function mandalaBest(uid=S.uid){const r=(S.placarM||[]).find(p=>p.uid===uid);return r?Number(r.pontos)||0:0}
+function mandalaMini(){return `<svg viewBox="0 0 400 400" class="mdl-mini" aria-hidden="true">${[[200,118,'#7ED957'],[282,200,'#F5A524'],[200,282,'#3FA9F5'],[118,200,'#B07CF2']].map(([x,y,c])=>`<circle cx="${x}" cy="${y}" r="66" fill="#121513" stroke="#c9cec9" stroke-width="11"/><circle cx="${x}" cy="${y}" r="26" fill="${c}"/>`).join('')}<circle cx="200" cy="200" r="34" fill="#0b1200" stroke="#C8F560" stroke-width="3"/><clipPath id="hubm"><circle cx="200" cy="200" r="31"/></clipPath><image href="/icons/logo.png" x="169" y="169" width="62" height="62" clip-path="url(#hubm)"/></svg>`}
+const DISTS=[5,10,15,21,42];
+S.provaDist=Number(lsGet('pv-pdist',5))||5;S.provaNivel=lsGet('pv-pnivel','facil');S.placarP=[];
 const paceTxt=(t,d)=>t&&d?hms(t/d)+'/km':'';
 function provaBest(d,uid=S.uid){const r=(S.placarP||[]).find(p=>p.uid===uid);return r&&Number(r['t'+d])||0}
-function nomeU(uid,fb){return uid===S.uid?(me().apelido||S.myName||fb||'Você'):(nome(uid)!=='Corredor(a)'?nome(uid):(fb||'Corredor(a)'))}
 function provaCard(){
   const d=S.provaDist,f='t'+d;
   const pl=(S.placarP||[]).filter(p=>Number(p[f])>0).sort((a,b)=>a[f]-b[f]);const pos=pl.findIndex(p=>p.uid===S.uid);
   const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeU(r.uid,r.nome))}${r.uid===S.uid?' (você)':''}</span><span class="num">${hms(r[f])}</span></li>`;
   let rows=pl.slice(0,S.rankAllP?50:5).map(li).join('');if(!S.rankAllP&&pos>=5)rows+=li(pl[pos],pos);
   const rec=Number((me().recProva||{})[d])||0;
-  const abertos=(S.duelosR||[]).filter(x=>x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).sort((a,b)=>(b.criado||0)-(a.criado||0));
-  const feitos=[...(S.duelosR||[]),...(S.duelosE||[])].filter(x=>x.status==='feito').sort((a,b)=>(b.feitoEm||0)-(a.feitoEm||0)).slice(0,4);
-  const enviados=(S.duelosE||[]).filter(x=>x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).slice(0,3);
   return `<section class="section"><div class="card gamecard"><div class="gbanner provab"><div class="gtitle"><span>Novo · corrida de toque</span><b>Prova PV</b></div><div class="provakm num">${d}<small>km</small></div></div><div class="gbody">
   <p class="small" style="margin:0">Toque na tela pra correr: quanto mais rápido, mais rápido o boneco vai. Os adversários aceleram no fim e o fôlego acaba se você exagerar. Ranking por distância, zera toda segunda.</p>
   <div class="seg" role="group" aria-label="Distância">${DISTS.map(k=>`<button data-action="pdist" data-v="${k}" aria-pressed="${k===d}">${k===21?'21k':k===42?'42k':k+' km'}</button>`).join('')}</div>
   <div class="seg" role="group" aria-label="Nível">${[['facil','Fácil'],['dificil','Difícil']].map(([k,l])=>`<button data-action="pnivel" data-v="${k}" aria-pressed="${S.provaNivel===k}">${l}</button>`).join('')}</div>
   <button class="btn primary" data-action="prova">Correr ${d} km</button>
   ${rec?`<p class="small muted" style="margin:0;text-align:center">Seu recorde nos ${d} km: <b class="num">${hms(rec)}</b> · ${paceTxt(rec,d)}</p>`:''}
-  ${abertos.length?`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">⚡ Desafios pra você</p>${abertos.map(x=>`<div class="duelo">${avatar(x.de,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${esc(nomeU(x.de,x.deNome))} te desafiou</b><span class="small muted num">${x.dist} km · bater ${hms(x.tempoDe)}</span></span><button class="btn small primary" data-action="duelo-aceitar" data-id="${esc(x.id)}">Aceitar</button></div>`).join('')}</div>`:''}
-  ${enviados.length?`<p class="small muted" style="margin:0">Aguardando resposta: ${enviados.map(x=>esc(nomeU(x.para,x.paraNome))+' ('+x.dist+' km)').join(', ')}</p>`:''}
-  ${feitos.length?`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">Últimos duelos</p>${feitos.map(x=>{const eu=x.de===S.uid;const outro=eu?x.para:x.de;const meu=eu?x.tempoDe:x.tempoPara,dele=eu?x.tempoPara:x.tempoDe;const ganhei=x.vencedor===S.uid;
-    return `<div class="duelo">${avatar(outro,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${ganhei?'🏆 Você venceu':'Você perdeu'} de ${esc(nomeU(outro,eu?x.paraNome:x.deNome))}</b><span class="small muted num">${x.dist} km · você ${hms(meu)} × ${hms(dele)}</span></span>${!ganhei?`<button class="btn small" data-action="duelo-novo" data-uid="${esc(outro)}" data-d="${x.dist}">Revanche</button>`:''}</div>`}).join('')}</div>`:''}
+  ${duelosHtml('prova')}
   <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking ${d} km · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankallp">${S.rankAllP?'Ver menos':'Ver todos'}</button>`:''}</div>
   ${pl.length?`<ol class="rank">${rows}</ol>`:`<p class="muted small" style="margin:0">Ninguém correu os ${d} km esta semana. Seja o primeiro.</p>`}</div></div></div></section>`;
 }
@@ -2139,21 +2176,92 @@ function provaPicker(){
   const ids=[...S.seguindo];for(const p of S.placarP||[])if(!ids.includes(p.uid))ids.push(p.uid);
   const lista=ids.filter(u=>u&&u!==S.uid&&S.membros[u]).slice(0,16);
   o.innerHTML=`<div class="gcard" style="max-height:80vh;overflow:auto"><p class="eyebrow" style="margin:0">Desafiar nos ${d} km</p><p class="small muted" style="margin:0">A pessoa recebe um aviso e corre contra o seu tempo de <b class="num">${hms(Math.min(PV.res.tempo,provaBest(d)||Infinity))}</b>.</p>
-  ${lista.length?`<div class="stack" style="gap:6px;text-align:left">${lista.map(u=>`<button class="pickp" data-action="duelo-novo" data-uid="${esc(u)}" data-d="${d}">${avatar(u,32)}<span>${esc(nomeU(u))}</span>${S.seguindo.has(u)?'<small>seguindo</small>':''}</button>`).join('')}</div>`:`<p class="small" style="margin:0">Siga a galera no <b>Mural</b> ou no perfil de cada um pra poder desafiar.</p>`}
+  ${lista.length?`<div class="stack" style="gap:6px;text-align:left">${lista.map(u=>`<button class="pickp" data-action="duelo-novo" data-uid="${esc(u)}" data-jogo="prova" data-d="${d}">${avatar(u,32)}<span>${esc(nomeU(u))}</span>${S.seguindo.has(u)?'<small>seguindo</small>':''}</button>`).join('')}</div>`:`<p class="small" style="margin:0">Siga a galera no <b>Mural</b> ou no perfil de cada um pra poder desafiar.</p>`}
   <button class="btn" data-action="prova-voltar">Voltar</button></div>`;
 }
-async function criarDuelo(para,d){
+
+function duelosHtml(jogo){
+  const dj=x=>(x.jogo||'prova')===jogo,M=jogo==='mandala';
+  const abertos=(S.duelosR||[]).filter(x=>dj(x)&&x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  const feitos=[...(S.duelosR||[]),...(S.duelosE||[])].filter(x=>dj(x)&&x.status==='feito').sort((a,b)=>(b.feitoEm||0)-(a.feitoEm||0)).slice(0,4);
+  const enviados=(S.duelosE||[]).filter(x=>dj(x)&&x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).slice(0,3);
+  let h='';
+  if(abertos.length)h+=`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">⚡ Desafios pra você</p>${abertos.map(x=>`<div class="duelo">${avatar(x.de,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${esc(nomeU(x.de,x.deNome))} te desafiou</b><span class="small muted num">${M?`passe de ${x.alvo} medalhas`:`${x.dist} km · bater ${hms(x.tempoDe)}`}</span></span><button class="btn small primary" data-action="duelo-aceitar" data-id="${esc(x.id)}">Aceitar</button></div>`).join('')}</div>`;
+  if(enviados.length)h+=`<p class="small muted" style="margin:0">Aguardando resposta: ${enviados.map(x=>esc(nomeU(x.para,x.paraNome))+(M?'':` (${x.dist} km)`)).join(', ')}</p>`;
+  if(feitos.length)h+=`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">Últimos duelos</p>${feitos.map(x=>{const eu=x.de===S.uid;const outro=eu?x.para:x.de;const meu=M?(eu?x.alvo:x.resposta):hms(eu?x.tempoDe:x.tempoPara),dele=M?(eu?x.resposta:x.alvo):hms(eu?x.tempoPara:x.tempoDe);const ganhei=x.vencedor===S.uid;
+    return `<div class="duelo">${avatar(outro,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${ganhei?'🏆 Você venceu':'Você perdeu'} de ${esc(nomeU(outro,eu?x.paraNome:x.deNome))}</b><span class="small muted num">${M?`você ${meu} × ${dele} medalhas`:`${x.dist} km · você ${meu} × ${dele}`}</span></span>${!ganhei?`<button class="btn small" data-action="duelo-novo" data-uid="${esc(outro)}" data-jogo="${jogo}" data-d="${x.dist||''}">Revanche</button>`:''}</div>`}).join('')}</div>`;
+  return h;
+}
+function mandalaCard(){
+  const pl=(S.placarM||[]).filter(p=>Number(p.pontos)>0).sort((a,b)=>b.pontos-a.pontos);const pos=pl.findIndex(p=>p.uid===S.uid);
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeU(r.uid,r.nome))}${r.uid===S.uid?' (você)':''}</span><span class="num">${r.pontos}</span></li>`;
+  let rows=pl.slice(0,S.rankAllM?50:5).map(li).join('');if(!S.rankAllM&&pos>=5)rows+=li(pl[pos],pos);
+  const rec=Number(me().recordeMandala)||0;
+  return `<section class="section"><div class="card gamecard"><div class="gbanner mdlb">${mandalaMini()}<div class="gtitle"><span>Novo · memória</span><b>Mandala PV</b></div></div><div class="gbody">
+  <p class="small" style="margin:0">A mandala acende as medalhas numa sequência e você repete na mesma ordem. A cada rodada entra mais uma, fica mais rápido e, da rodada 11 em diante, a mandala gira.</p>
+  <button class="btn primary" data-action="mandala">Jogar Mandala</button>
+  ${rec?`<p class="small muted" style="margin:0;text-align:center">Seu recorde: <b class="num">${rec}</b> medalhas seguidas</p>`:''}
+  ${duelosHtml('mandala')}
+  <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankallm">${S.rankAllM?'Ver menos':'Ver todos'}</button>`:''}</div>
+  ${pl.length?`<ol class="rank">${rows}</ol>`:`<p class="muted small" style="margin:0">Ninguém jogou esta semana. Seja o primeiro.</p>`}</div></div></div></section>`;
+}
+const MD={mod:null,ctrl:null,duelo:null,res:null,card:''};
+async function openMandala(o={}){
+  const el=$('#game');G.modo='mandala';G.on=false;MD.duelo=o.duelo||null;MD.res=null;MD.card='';
+  el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Mandala PV</p><b class="small muted">${MD.duelo?'Duelo com '+esc(MD.duelo.deNome||'a galera'):'Grave e repita a sequência'}</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
+  <div class="gstage mdlstage" id="mdst"><div class="g3load">Carregando…</div><div class="gover" id="gover" hidden></div></div></div>`;
+  el.hidden=false;document.body.style.overflow='hidden';
+  if(!S.uid)toast('Entre com sua conta para entrar no ranking.');
+  try{MD.mod=MD.mod||await import('/mandala.js')}catch(e){const st=document.getElementById('mdst');if(st)st.querySelector('.g3load').textContent='Sem internet. Abra o jogo uma vez com internet pra ele funcionar offline.';return}
+  if($('#game').hidden)return;const st=document.getElementById('mdst');if(!st)return;st.querySelector('.g3load')?.remove();
+  const rec=Math.max(Number(me().recordeMandala)||0,mandalaBest());
+  MD.ctrl=MD.mod.criar(st,{recorde:rec,alvo:MD.duelo?MD.duelo.alvo:0,alvoNome:MD.duelo?MD.duelo.deNome:'',onFim:mandalaFim});
+}
+function mandalaFim(r){
+  MD.res=r;const o=document.getElementById('gover');if(!o)return;const p=r.pontos;
+  const wb=mandalaBest(),recAnt=Math.max(Number(me().recordeMandala)||0,wb),novo=p>recAnt&&p>0;
+  saveMandala(p);
+  let duelo='';
+  if(MD.duelo){const x=MD.duelo;const ganhei=p>x.alvo;resolverDuelo(x,p);duelo=`<p class="small" style="margin:0"><b>${ganhei?'🏆 Você venceu o duelo!':'😤 '+esc(x.deNome||'Seu adversário')+' venceu dessa vez'}</b><br><span class="num">você ${p} × ${x.alvo} medalhas</span></p>`;MD.duelo=null}
+  const pl=[...(S.placarM||[])].map(x=>x.uid===S.uid?{...x,pontos:Math.max(x.pontos||0,p)}:x);if(S.uid&&!pl.find(x=>x.uid===S.uid))pl.push({uid:S.uid,pontos:p});
+  const pos=pl.sort((a,b)=>(b.pontos||0)-(a.pontos||0)).findIndex(x=>x.uid===S.uid)+1;
+  MD.card=`<div class="gcard"><p class="eyebrow" style="margin:0;color:var(--danger)">${novo?'🎉 Novo recorde!':'Errou a sequência'}</p><div class="gscore num">${p}</div><p class="small muted" style="margin:0">${p===1?'medalha seguida':'medalhas seguidas'}</p>${duelo}
+  ${S.uid?`<p class="small" style="margin:0">${pos?`🏅 ${pos}º no ranking da semana · `:''}melhor: <b class="num">${Math.max(wb,p)}</b></p>`:`<p class="small" style="margin:0">Entre com sua conta para entrar no ranking.</p>`}
+  <div class="row" style="justify-content:center"><button class="btn primary" data-action="mandala-again">Jogar de novo</button>${S.uid&&Math.max(wb,p)>0?`<button class="btn" data-action="mandala-desafiar">⚡ Desafiar</button>`:''}</div><button class="linkbtn" data-action="game-close" style="align-self:center">Ver ranking</button></div>`;
+  o.innerHTML=MD.card;o.hidden=false;
+}
+async function saveMandala(p){
+  if(!S.uid||!(p>0))return;
+  if(p>(Number(me().recordeMandala)||0))saveMe(m=>{m.recordeMandala=p});
+  if(p>mandalaBest()){try{await setDoc(doc(fs,'mandala',semanaKey(),'placar',S.uid),{uid:S.uid,nome:me().apelido||S.myName||'',pontos:p,atualizado:Date.now()})}catch(e){console.warn('placar mandala',e)}}
+}
+function mandalaPicker(){
+  const o=document.getElementById('gover');if(!o)return;const alvo=Math.max(mandalaBest(),MD.res?MD.res.pontos:0);
+  const ids=[...S.seguindo];for(const p of S.placarM||[])if(!ids.includes(p.uid))ids.push(p.uid);
+  const lista=ids.filter(u=>u&&u!==S.uid&&S.membros[u]).slice(0,16);
+  o.innerHTML=`<div class="gcard" style="max-height:80vh;overflow:auto"><p class="eyebrow" style="margin:0">Desafiar na Mandala</p><p class="small muted" style="margin:0">A pessoa recebe um aviso e precisa passar das suas <b class="num">${alvo}</b> medalhas.</p>
+  ${lista.length?`<div class="stack" style="gap:6px;text-align:left">${lista.map(u=>`<button class="pickp" data-action="duelo-novo" data-uid="${esc(u)}" data-jogo="mandala">${avatar(u,32)}<span>${esc(nomeU(u))}</span>${S.seguindo.has(u)?'<small>seguindo</small>':''}</button>`).join('')}</div>`:`<p class="small" style="margin:0">Siga a galera no <b>Mural</b> ou no perfil de cada um pra poder desafiar.</p>`}
+  <button class="btn" data-action="mandala-voltar">Voltar</button></div>`;
+}
+async function criarDuelo(para,jogo='mandala',d=0){
   if(!S.uid||!para||para===S.uid)return;
-  const t=provaBest(d)||Number((me().recProva||{})[d])||0;
-  if(!t){toast(`Corra os ${d} km primeiro pra ter um tempo pra desafiar.`);S.provaDist=d;lsSet('pv-pdist',d);openProva({dist:d});return}
-  const ja=(S.duelosE||[]).find(x=>x.para===para&&x.status==='aberto'&&x.dist===d);if(ja){toast('Você já desafiou essa pessoa nessa distância.');return}
-  try{const ref=await addDoc(collection(fs,'duelos'),{de:S.uid,deNome:me().apelido||S.myName||'',para,paraNome:nome(para),dist:d,tempoDe:t,status:'aberto',criado:Date.now()});
+  let base;
+  if(jogo==='prova'){d=d||S.provaDist;const t=provaBest(d)||Number((me().recProva||{})[d])||0;
+    if(!t){toast(`Corra os ${d} km primeiro pra ter um tempo pra desafiar.`);S.provaDist=d;lsSet('pv-pdist',d);openProva({dist:d});return}
+    base={jogo:'prova',dist:d,tempoDe:t}}
+  else{const alvo=Math.max(mandalaBest(),Number(me().recordeMandala)||0);
+    if(!alvo){toast('Jogue a Mandala primeiro pra ter uma pontuação pra desafiar.');openMandala();return}
+    base={jogo:'mandala',alvo}}
+  const ja=(S.duelosE||[]).find(x=>x.para===para&&x.status==='aberto'&&(x.jogo||'prova')===jogo&&(jogo!=='prova'||x.dist===d));if(ja){toast('Você já desafiou essa pessoa. Espera ela responder!');return}
+  try{const ref=await addDoc(collection(fs,'duelos'),{de:S.uid,deNome:me().apelido||S.myName||'',para,paraNome:nome(para),...base,status:'aberto',criado:Date.now()});
     toast('Desafio enviado! ⚡');avisoSocial({acao:'duelo',id:ref.id});
-    const o=document.getElementById('gover');if(o&&PV.card)o.innerHTML=PV.card}
+    const o=document.getElementById('gover');const card=G.modo==='prova'?PV.card:MD.card;if(o&&card)o.innerHTML=card}
   catch(e){console.warn('duelo',e);toast('Não deu pra enviar o desafio.')}
 }
-async function resolverDuelo(x,t){
-  try{await updateDoc(doc(fs,'duelos',x.id),{tempoPara:t,status:'feito',vencedor:t<x.tempoDe?S.uid:x.de,feitoEm:Date.now()});avisoSocial({acao:'duelo-res',id:x.id})}
+async function resolverDuelo(x,v){
+  const m=(x.jogo||'prova')==='mandala';
+  const up=m?{resposta:v,vencedor:v>x.alvo?S.uid:x.de}:{tempoPara:v,vencedor:v<x.tempoDe?S.uid:x.de};
+  try{await updateDoc(doc(fs,'duelos',x.id),{...up,status:'feito',feitoEm:Date.now()});avisoSocial({acao:'duelo-res',id:x.id})}
   catch(e){console.warn('duelo resolver',e)}
 }
 async function avisoSocial(body){
@@ -2161,6 +2269,81 @@ async function avisoSocial(body){
     await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body)})}
   catch(e){console.warn('aviso social',e)}
 }
+
+/* ---------- Novidades da versão ---------- */
+const VERSAO='2026-11-jogos-mural';
+async function anunciarVersao(){ // a primeira pessoa da equipe que abrir a versão nova dispara o aviso pra galera, uma vez só
+  if(!S.admin||!auth.currentUser||anunciarVersao.feito)return;anunciarVersao.feito=true;
+  try{const r=await getDoc(doc(fs,'projeto','versao'));if(r.exists()&&r.data().avisada===VERSAO)return;
+    await setDoc(doc(fs,'projeto','versao'),{avisada:VERSAO,em:Date.now(),por:S.uid});
+    await notificar({tipo:'geral',titulo:'🎮 Tem novidade no app Passos Verdes!',texto:'Mural pra postar seu treino e seguir a galera, jogo novo Mandala PV, corrida no rio e duelos entre amigos. Vem ver!',url:'/#mural'});
+  }catch(e){console.warn('anúncio da versão',e)}
+}
+function novidades(){
+  let el=$('#novsheet');
+  const mostrar=S.uid&&S.ready&&!onbHtml()&&lsGet('pv-novid','')!==VERSAO&&$('#game').hidden;
+  if(!mostrar){if(el&&!el.hidden&&lsGet('pv-novid','')===VERSAO){el.hidden=true}return}
+  if(el&&!el.hidden)return;
+  if(!el){el=document.createElement('div');el.id='novsheet';el.className='overlay stsheet novsheet';el.setAttribute('role','dialog');el.setAttribute('aria-label','Novidades do app');document.body.appendChild(el)}
+  el.innerHTML=`<div class="in"><p class="eyebrow" style="margin:0">Atualização do app</p><h2 class="h-display" style="font-size:44px;margin:0">Tem novidade!</h2>
+  <div class="card nov">${[['📸','Mural','Poste foto, km e tempo do seu treino. Curta e siga a galera.'],['🌀','Mandala PV','Jogo de memória novo: grave a sequência das medalhas e repita.'],['🌊','Corrida no rio','No Corre, Verde! agora tem o percurso do rio: recolha o lixo e desvie das cobras.'],['⚡','Duelos','Desafie um amigo na Prova PV ou na Mandala e veja quem vence.'],['🔔','Avisos','Ative as notificações pra saber quando alguém te seguir ou te desafiar.']].map(([i,t,d])=>`<div class="novi"><span>${i}</span><div><b>${t}</b><p class="small muted" style="margin:0">${d}</p></div></div>`).join('')}</div>
+  <div class="row"><button class="btn primary" data-action="nov-ok" data-v="mural">Abrir o Mural</button><button class="btn" data-action="nov-ok" data-v="galera">Ver os jogos</button></div></div>`;
+  el.hidden=false;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="nov-ok"]');if(!b)return;e.stopImmediatePropagation();lsSet('pv-novid',VERSAO);const el=$('#novsheet');if(el){el.hidden=true}go(b.dataset.v)},true);
+
+/* ---------- Notificações (sininho) ---------- */
+const nVistoKey=()=>'pv-nvisto-'+S.uid;
+function nVisto(){const v=Number(lsGet(nVistoKey(),0));if(v)return v;const ini=Date.now()-2*864e5;lsSet(nVistoKey(),ini);return ini}
+function listaNotifs(){const lim=Date.now()-30*864e5;return [...(S.notifs||[]),...(S.avisosG||[])].filter(n=>(n.criado||0)>lim).sort((a,b)=>(b.criado||0)-(a.criado||0)).slice(0,60)}
+function naoLidas(){if(!S.uid)return 0;const v=view==='notif'?Infinity:nVisto();return listaNotifs().filter(n=>(n.criado||0)>v).length}
+let notifLimpo=false;
+function limparNotifs(){if(notifLimpo||!S.uid)return;notifLimpo=true;const lim=Date.now()-30*864e5;for(const n of S.notifs||[])if((n.criado||0)<lim)deleteDoc(doc(fs,'notificacoes',n.id)).catch(()=>{})}
+function iconeNotif(n){const t=String(n.titulo||'');const u=String(n.url||'');
+  if(u.startsWith('/#p='))return '👤';if(/curtiu/.test(t))return '💚';if(/desafiou|duelo/i.test(t))return '⚡';
+  return {folhas:'🍃',loja:'👕',eventos:'📅',noticias:'📰',desafios:'🏁',social:'💬'}[n.tipo]||'📣'}
+function vNotif(){
+  if(!S.uid)return `<section class="section"><p class="eyebrow">Notificações</p><h1 class="h-display">Avisos</h1></section>`+visitante();
+  if(S.nVistoAnt==null){S.nVistoAnt=nVisto();lsSet(nVistoKey(),Date.now())}
+  const ls=listaNotifs();const ant=S.nVistoAnt;
+  let h=`<section class="section"><p class="eyebrow">Notificações</p><h1 class="h-display">Avisos</h1>${S.push!=='granted'?`<p class="small muted" style="margin:0">Dica: ative os avisos no celular pra receber na hora. <button class="linkbtn" data-go="config">Ativar</button></p>`:''}</section>`;
+  if(!ls.length)return h+`<section class="section"><div class="empty">Nada por aqui ainda. Quando alguém te seguir, curtir seu treino, te desafiar ou a equipe mandar um aviso, aparece aqui.</div></section>`;
+  const novas=ls.filter(n=>(n.criado||0)>ant),antes=ls.filter(n=>(n.criado||0)<=ant);
+  const item=n=>`<button class="nitem ${(n.criado||0)>ant?'nova':''}" data-action="notif-abrir" data-url="${esc(n.url||'/#inicio')}">${n.de&&S.membros[n.de]?avatar(n.de,40):`<span class="nico">${iconeNotif(n)}</span>`}<span class="stack" style="gap:2px;flex:1;min-width:0"><b class="small">${esc(n.titulo||'')}</b>${n.texto?`<span class="small muted">${esc(n.texto)}</span>`:''}<span class="small muted" style="font-size:11px">${haTempo(n.criado||0)}${n.geral?' · Passos Verdes':''}</span></span></button>`;
+  if(novas.length)h+=`<section class="section"><h2 class="sec">Novas</h2><div class="card nlist">${novas.map(item).join('')}</div></section>`;
+  if(antes.length)h+=`<section class="section"><h2 class="sec">${novas.length?'Antes':'Recentes'}</h2><div class="card nlist">${antes.map(item).join('')}</div></section>`;
+  return h;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="notif-abrir"]');if(!b)return;e.stopImmediatePropagation();S.nVistoAnt=null;
+  const u=b.dataset.url||'/#inicio';const h=u.includes('#')?u.slice(u.indexOf('#')+1):'inicio';
+  if(h.startsWith('p=')){S.verUid=h.slice(2);S.prevView='notif';go('pessoa')}else go(VIEWS.includes(h)?h:'inicio')},true);
+/* ---------- Seguidores e seguindo ---------- */
+function conexoesResumo(uid){
+  const c=segContagem(uid);
+  return `<div class="row" style="gap:16px;margin:10px 0 12px"><button class="linkbtn conn" data-action="conexoes" data-uid="${esc(uid)}" data-t="seg"><b class="num">${c?c.seg:'–'}</b> seguidores</button><button class="linkbtn conn" data-action="conexoes" data-uid="${esc(uid)}" data-t="sigo"><b class="num">${c?c.sigo:'–'}</b> seguindo</button></div>`;
+}
+S.con={uid:null,t:'seg',lista:{},carregando:false};
+async function carregarConexoes(uid){
+  if(S.con.carregando)return;S.con.carregando=true;
+  try{const [a,b]=await Promise.all([getDocs(query(collection(fs,'seguidores'),where('para','==',uid))),getDocs(query(collection(fs,'seguidores'),where('de','==',uid)))]);
+    S.con.lista[uid]={seg:a.docs.map(d=>d.data().de),sigo:b.docs.map(d=>d.data().para)};
+    S.segCont[uid]={seg:a.docs.length,sigo:b.docs.length}}
+  catch(e){S.con.lista[uid]={seg:[],sigo:[]}}
+  S.con.carregando=false;schedule();
+}
+function vConexoes(){
+  const uid=S.con.uid||S.uid;const voltar=`<button class="linkbtn" data-go="${uid===S.uid?'perfil':'pessoa'}">‹ Voltar</button>`;
+  if(!S.uid)return `<section class="section">${voltar}</section>`+visitante();
+  const l=S.con.lista[uid];if(!l)carregarConexoes(uid);
+  const eu=uid===S.uid;const nm=eu?'Você':nomeU(uid);
+  let h=`<section class="section">${voltar}<p class="eyebrow">${esc(nm)}</p><div class="seg" role="group" aria-label="Lista">${[['seg','Seguidores'],['sigo','Seguindo']].map(([k,t])=>`<button data-action="conexoes" data-uid="${esc(uid)}" data-t="${k}" aria-pressed="${S.con.t===k}">${t}${l?' · '+l[k].length:''}</button>`).join('')}</div></section>`;
+  if(!l)return h+`<section class="section"><div class="empty">Carregando…</div></section>`;
+  const ids=l[S.con.t].filter(u=>S.membros[u]);
+  if(!ids.length)return h+`<section class="section"><div class="empty">${S.con.t==='seg'?(eu?'Ninguém te segue ainda. Poste seu treino no Mural pra galera te achar!':'Ninguém segue ainda.'):(eu?'Você ainda não segue ninguém. Dá uma olhada no Mural!':'Ainda não segue ninguém.')}</div></section>`;
+  return h+`<section class="section"><div class="card nlist">${ids.map(u=>`<div class="nitem">${avatar(u,40)}<button class="post-n" data-action="ver" data-uid="${esc(u)}"><b>${esc(nomeU(u))}</b>${S.con.t==='seg'&&eu&&!S.seguindo.has(u)?'<span class="small muted">te segue</span>':''}</button>${u!==S.uid?segueBtn(u):''}</div>`).join('')}</div></section>`;
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-action="conexoes"]');if(!b)return;e.stopImmediatePropagation();if(!S.uid){login();return}
+  const uid=b.dataset.uid;if(S.con.uid!==uid){S.con.lista[uid]=undefined}S.con.uid=uid;S.con.t=b.dataset.t||'seg';if(view!=='conexoes'){if(uid!==S.uid)S.verUid=uid;go('conexoes')}else render()},true);
 
 /* ---------- Seguir ---------- */
 function segueBtn(uid,small=true){
@@ -2185,7 +2368,7 @@ function segContagem(uid){
 }
 function segHtml(uid){
   const c=segContagem(uid);
-  return `<div class="row" style="align-items:center;gap:14px"><span class="small"><b class="num">${c?c.seg:'–'}</b> seguidores</span><span class="small"><b class="num">${c?c.sigo:'–'}</b> seguindo</span>${uid!==S.uid?segueBtn(uid)+`<button class="btn small" data-action="duelo-novo" data-uid="${esc(uid)}" data-d="${S.provaDist}">⚡ Desafiar</button>`:''}</div>`;
+  return `<div class="row" style="align-items:center;gap:14px"><button class="linkbtn conn" data-action="conexoes" data-uid="${esc(uid)}" data-t="seg"><b class="num">${c?c.seg:'–'}</b> seguidores</button><button class="linkbtn conn" data-action="conexoes" data-uid="${esc(uid)}" data-t="sigo"><b class="num">${c?c.sigo:'–'}</b> seguindo</button>${uid!==S.uid?segueBtn(uid)+`<button class="btn small" data-action="duelo-novo" data-uid="${esc(uid)}" data-jogo="prova" data-d="${S.provaDist}">⚡ Prova ${S.provaDist} km</button><button class="btn small" data-action="duelo-novo" data-uid="${esc(uid)}" data-jogo="mandala">⚡ Mandala</button>`:''}</div>`;
 }
 
 /* ---------- Mural ---------- */
@@ -2284,17 +2467,23 @@ async function muralLimpeza(){ // a equipe mantém o mural leve: posts com mais 
 }
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
-  const nossos=['pdist','pnivel','prova','prova-again','prova-desafiar','prova-voltar','duelo-novo','duelo-aceitar','rankallp','seguir','mural-novo','mural-x','mural-postar','mural-rmfoto','mural-filtro','mural-mais','mural-curtir','mural-apagar','mural-denunciar'];
+  const nossos=['mandala','mandala-again','mandala-desafiar','mandala-voltar','percurso','duelo-novo','duelo-aceitar','rankallm','pdist','pnivel','prova','prova-again','prova-desafiar','prova-voltar','rankallp','seguir','mural-novo','mural-x','mural-postar','mural-rmfoto','mural-filtro','mural-mais','mural-curtir','mural-apagar','mural-denunciar'];
   if(!nossos.includes(a))return;e.stopImmediatePropagation();
-  if(a==='pdist'){S.provaDist=Number(b.dataset.v);lsSet('pv-pdist',S.provaDist);render()}
+  if(a==='mandala')openMandala();
+  else if(a==='mandala-again'){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}MD.res=null;if(MD.ctrl){MD.ctrl.reiniciar();MD.ctrl.recorde(Math.max(Number(me().recordeMandala)||0,mandalaBest()))}}
+  else if(a==='mandala-desafiar')mandalaPicker();
+  else if(a==='mandala-voltar'){const o=document.getElementById('gover');if(o&&MD.card)o.innerHTML=MD.card}
+  else if(a==='percurso'){S.percurso=b.dataset.v;lsSet('pv-perc',S.percurso);render()}
+  else if(a==='duelo-novo'){if(!S.uid){login();return}criarDuelo(b.dataset.uid,b.dataset.jogo||'mandala',Number(b.dataset.d)||0)}
+  else if(a==='duelo-aceitar'){const x=(S.duelosR||[]).find(d=>d.id===b.dataset.id);if(!x)return;if((x.jogo||'prova')==='mandala')openMandala({duelo:x});else openProva({dist:x.dist,duelo:x})}
+  else if(a==='pdist'){S.provaDist=Number(b.dataset.v);lsSet('pv-pdist',S.provaDist);render()}
   else if(a==='pnivel'){S.provaNivel=b.dataset.v;lsSet('pv-pnivel',S.provaNivel);render()}
   else if(a==='prova')openProva();
   else if(a==='prova-again'){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}PV.res=null;if(G3.ctrl)G3.ctrl.reiniciar()}
   else if(a==='prova-desafiar')provaPicker();
   else if(a==='prova-voltar'){const o=document.getElementById('gover');if(o&&PV.card)o.innerHTML=PV.card}
-  else if(a==='duelo-novo'){if(!S.uid){login();return}criarDuelo(b.dataset.uid,Number(b.dataset.d)||S.provaDist)}
-  else if(a==='duelo-aceitar'){const x=(S.duelosR||[]).find(d=>d.id===b.dataset.id);if(x)openProva({dist:x.dist,duelo:x})}
   else if(a==='rankallp'){S.rankAllP=!S.rankAllP;render()}
+  else if(a==='rankallm'){S.rankAllM=!S.rankAllM;render()}
   else if(a==='seguir')seguir(b.dataset.uid);
   else if(a==='mural-novo'){if(!S.uid){login();return}muralSheet()}
   else if(a==='mural-x'){const el=$('#mursheet');if(el){el.hidden=true;el.innerHTML=''}}
@@ -2304,7 +2493,7 @@ document.addEventListener('click',async e=>{
   else if(a==='mural-mais'){S.muralLim+=20;muralOuvir()}
   else if(a==='mural-curtir'){const p=S.mural.find(x=>x.id===b.dataset.id);if(!p||!S.uid)return;const on=!!(p.curtidas||{})[S.uid];
     p.curtidas={...(p.curtidas||{})};if(on)delete p.curtidas[S.uid];else p.curtidas[S.uid]=true;render();
-    try{await updateDoc(doc(fs,'mural',p.id),{['curtidas.'+S.uid]:on?deleteField():true})}catch(err){console.warn('curtir',err)}}
+    try{await updateDoc(doc(fs,'mural',p.id),{['curtidas.'+S.uid]:on?deleteField():true});if(!on&&p.uid!==S.uid)avisoSocial({acao:'curtida',id:p.id})}catch(err){console.warn('curtir',err)}}
   else if(a==='mural-apagar'){const k='mural'+b.dataset.id;if(S.armed!==k){S.armed=k;render();return}S.armed=null;
     try{await deleteDoc(doc(fs,'mural',b.dataset.id));await deleteDoc(doc(fs,'muralfotos',b.dataset.id)).catch(()=>{});toast('Post apagado.')}catch(err){toast('Não deu pra apagar.')}}
   else if(a==='mural-denunciar'){const p=S.mural.find(x=>x.id===b.dataset.id);if(!p)return;
@@ -2499,6 +2688,7 @@ document.addEventListener('click',async e=>{
   else if(a==='login')login();
   else if(a==='logout'){await pushForget();try{await signOut(auth)}catch(err){}}
   else if(a==='push-on')pushOn();
+  else if(a==='rankkm'){S.rankKm=S.rankKm||{};S.rankKm[b.dataset.id]=!S.rankKm[b.dataset.id];render()}
   else if(a==='push-later'){try{localStorage.setItem('pv-push-hide',String(Date.now()+3*864e5))}catch(e){}render()}
   else if(a==='editnome'){S.editNome=true;render();document.getElementById('f-apelido')?.focus()}
   else if(a==='dellanc'){const k='rl'+id;if(S.armed!==k){arm(k);return}S.armed=null;try{await S.db.doc('lancamentos/'+id).delete();try{await S.db.doc('provas/'+id).delete()}catch(err){}toast('Lançamento cancelado.')}catch(err){toast('Não foi possível cancelar.')}}
@@ -3069,10 +3259,10 @@ async function login(){
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 onSnapshot(doc(fs,'projeto','folhas'),s=>{S.cfgFolhas=s.exists()?s.data():null;schedule()},()=>{});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubPV=null,unsubSG=null,unsubDR=null,unsubDE=null,unsubMU=null,unsubMP=null,unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
+let unsubNI=null,unsubAV=null,unsubPV=null,unsubJR=null,unsubPP=null,unsubSG=null,unsubDR=null,unsubDE=null,unsubMU=null,unsubMP=null,unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
 onAuthStateChanged(auth,async u=>{
   if(unsubMP){unsubMP();unsubMP=null}S.meusPedidos=[];
-  for(const u of [unsubPV,unsubSG,unsubDR,unsubDE,unsubMU])if(u)u();unsubPV=unsubSG=unsubDR=unsubDE=unsubMU=null;S.placarP=[];S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLoaded=false;S.segCont={};
+  for(const u of [unsubNI,unsubAV,unsubPV,unsubJR,unsubPP,unsubSG,unsubDR,unsubDE,unsubMU])if(u)u();unsubNI=unsubAV=unsubPV=unsubJR=unsubPP=unsubSG=unsubDR=unsubDE=unsubMU=null;S.placarM=[];S.placarRio=[];S.placarP=[];S.notifs=[];S.avisosG=[];S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLoaded=false;S.segCont={};
   for(const u of [unsubF,unsubRs,unsubTF,unsubTR,unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubF=unsubRs=unsubTF=unsubTR=unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];S.minhasFolhas=[];S.meusResgates=[];S.todasFolhas=[];S.resgates=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
@@ -3081,7 +3271,11 @@ onAuthStateChanged(auth,async u=>{
     pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
     unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
     unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule();setTimeout(checarGanhos,600)},()=>{});
-    unsubPV=onSnapshot(collection(fs,'prova',semanaKey(),'placar'),s=>{S.placarP=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubPV=onSnapshot(query(collection(fs,'mandala',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placarM=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubNI=onSnapshot(query(collection(fs,'notificacoes'),where('para','==',u.uid)),s=>{S.notifs=s.docs.map(d=>({id:d.id,...d.data()}));limparNotifs();schedule()},()=>{});
+    unsubAV=onSnapshot(query(collection(fs,'avisos'),orderBy('criado','desc'),limit(20)),s=>{S.avisosG=s.docs.map(d=>({id:d.id,...d.data(),geral:true}));schedule()},()=>{});
+    unsubPP=onSnapshot(collection(fs,'prova',semanaKey(),'placar'),s=>{S.placarP=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubJR=onSnapshot(query(collection(fs,'jogorio',semanaKey(),'placar'),orderBy('pontos','desc'),limit(50)),s=>{S.placarRio=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubSG=onSnapshot(query(collection(fs,'seguidores'),where('de','==',u.uid)),s=>{S.seguindo=new Set(s.docs.map(d=>d.data().para));schedule()},()=>{});
     unsubDR=onSnapshot(query(collection(fs,'duelos'),where('para','==',u.uid)),s=>{S.duelosR=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubDE=onSnapshot(query(collection(fs,'duelos'),where('de','==',u.uid)),s=>{S.duelosE=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
@@ -3103,6 +3297,7 @@ onAuthStateChanged(auth,async u=>{
 });
 function ligarAdmin(){
   if(unsubP)return;
+  setTimeout(anunciarVersao,6000);
   {
       unsubP=onSnapshot(collection(fs,'provas'),s=>{const p={};s.docs.forEach(d=>{p[d.id]=d.data()});
         for(const l of S.lancamentos)if(l.status==='pendente'&&!(l.id in p))p[l.id]=null;S.provas=p;schedule()},()=>{});
