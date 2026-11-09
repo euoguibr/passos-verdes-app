@@ -50,6 +50,43 @@ async function avisoSocial(db, eu, body) {
   return null;
 }
 
+// "Fulano passou você no ranking": o servidor confere as pontuações antes de avisar.
+const JOGOS = { corre: ['jogo', 'pontos', 1, 'Corre, Verde!'], mandala: ['mandala', 'pontos', 1, 'Mandala PV'] };
+async function ultrapassou(a, db, eu, isAdmin, body) {
+  const alvos = (Array.isArray(body.alvos) ? body.alvos : []).filter(u => typeof u === 'string' && ID.test(u)).slice(0, 10);
+  if (!alvos.length) return 0;
+  let quem = eu, mapa = {}, maior = true, nomeR = '', periodo = '', url = '/#galera', tipo = 'social', fmt = v => String(v);
+  if (body.jogo === 'km') {
+    if (!isAdmin) return 0;
+    quem = String(body.quem || ''); const des = String(body.desafio || '');
+    if (!ID.test(quem) || !ID.test(des)) return 0;
+    (await db.collection('lancamentos').where('desafio', '==', des).where('status', '==', 'aprovado').get()).forEach(d => { const v = d.data(); mapa[v.uid] = (mapa[v.uid] || 0) + (Number(v.km) || 0); });
+    nomeR = des.startsWith('semana-') ? 'desafio da semana' : corta(((await db.doc('desafios/' + des).get()).data() || {}).titulo || 'desafio', 40);
+    periodo = des; url = '/#desafios'; tipo = 'desafios'; fmt = v => (Math.round(v * 10) / 10).toLocaleString('pt-BR') + ' km';
+  } else {
+    const sem = String(body.sem || ''); if (!/^\d{4}-\d{2}-\d{2}$/.test(sem)) return 0;
+    let col, campo;
+    if (body.jogo === 'prova') { const d = Number(body.dist); if (![5, 10, 15, 21, 42].includes(d)) return 0; col = 'prova'; campo = 't' + d; maior = false; nomeR = 'Prova PV ' + d + ' km'; periodo = sem + d; fmt = v => fmtT(v); }
+    else if (JOGOS[body.jogo]) { [col, campo, , nomeR] = JOGOS[body.jogo]; periodo = sem; fmt = v => Number(v).toLocaleString('pt-BR'); }
+    else return 0;
+    (await db.collection(col).doc(sem).collection('placar').get()).forEach(d => { const v = Number(d.data()[campo]); if (v > 0) mapa[d.id] = v; });
+  }
+  const meu = mapa[quem]; if (!(meu > 0)) return 0;
+  const melhor = (x, y) => maior ? x > y : x < y;
+  const ordem = Object.entries(mapa).sort((x, y) => maior ? y[1] - x[1] : x[1] - y[1]).map(e => e[0]);
+  const nm = await nomeDe(db, quem); let n = 0;
+  for (const alvo of alvos) {
+    if (alvo === quem || !(alvo in mapa) || !melhor(meu, mapa[alvo])) continue;
+    const pos = ordem.indexOf(alvo) + 1;
+    const doc = { para: alvo, de: quem, tipo, titulo: '⚠️ ' + nm + ' passou você no ' + nomeR, texto: body.jogo === 'km' ? 'Agora você está em ' + pos + 'º com ' + fmt(mapa[alvo]) + '. Bora correr?' : 'Você caiu pro ' + pos + 'º lugar no ranking da semana. Bora recuperar?', url, criado: Date.now() };
+    try { await db.doc('notificacoes/ultra_' + String(body.jogo) + '_' + periodo + '_' + quem + '_' + alvo).create(doc); } catch (e) { continue; } // já avisou essa semana
+    const toks = []; (await db.collection('dispositivos').where('uid', '==', alvo).get()).forEach(d => toks.push(d.id));
+    if (toks.length) { try { await a.messaging().sendEachForMulticast({ tokens: toks, data: { title: corta(doc.titulo, 70), body: corta(doc.texto, 180), url, tag: 'ranking-' + Date.now() }, webpush: { headers: { Urgency: 'high', TTL: '86400' } } }); } catch (e) {} }
+    n++;
+  }
+  return n;
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Use POST.' });
@@ -65,6 +102,10 @@ module.exports = async (req, res) => {
 
     // Avisos sociais (qualquer pessoa logada): o servidor confere no banco e monta o texto.
     let social = null;
+    if (body.acao === 'ultrapassou') {
+      const adm = !!email && (await db.doc('admins/' + email).get()).exists;
+      return res.status(200).json({ avisados: await ultrapassou(a, db, user.uid, adm, body) });
+    }
     if (body.acao) {
       social = await avisoSocial(db, user.uid, body);
       if (!social) return res.status(200).json({ enviados: 0, ignorado: true });

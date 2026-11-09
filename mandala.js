@@ -64,6 +64,7 @@ export function criar(el, opt = {}) {
   // som
   let ac = null;
   const tom = (f, dur = 0.28, tipo = 'triangle', vol = 0.22) => {
+    if (opt.som === false) return;
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === 'suspended') ac.resume();
       const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = tipo; o.frequency.value = f;
