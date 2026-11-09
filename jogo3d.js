@@ -26,8 +26,15 @@ function texCostas() { // logo nas costas da camisa preta
   return t;
 }
 
-function boneco() {
-  const NEON = 0xc8f560, PRETO = 0x161816, PELE = 0xb57650, CABELO = 0x141010;
+function texPeito(num, cor) { // número de peito dos adversários
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128; const g = c.getContext('2d');
+  g.fillStyle = cor; g.fillRect(0, 0, 128, 128);
+  g.fillStyle = '#ffffff'; g.fillRect(14, 24, 100, 80); g.fillStyle = '#111'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.font = '900 46px Archivo, "Arial Narrow", Arial, sans-serif'; g.fillText(String(num), 64, 68);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+function boneco(o = {}) {
+  const NEON = o.det ?? 0xc8f560, PRETO = o.cam ?? 0x161816, PELE = o.pele ?? 0xb57650, CABELO = o.cab ?? 0x141010;
   const root = new THREE.Group(); const piv = new THREE.Group(); piv.position.y = 1; root.add(piv); const corpo = new THREE.Group(); corpo.position.y = -1; piv.add(corpo);
   const pele = toon(PELE), camisa = toon(PRETO), neon = toon(NEON), short = toon(PRETO), branco = toon(0xf4f4f0), cabelo = toon(CABELO);
   const cap = (r, l, m, seg = 10) => contorno(new THREE.Mesh(new THREE.CapsuleGeometry(r, l, 4, seg), m));
@@ -36,8 +43,8 @@ function boneco() {
   const tronco = cap(0.27, 0.38, camisa, 14); tronco.scale.set(1.15, 1, 0.8); tronco.position.y = 1.38; corpo.add(tronco);
   const gola = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.03, 6, 16), neon); gola.rotation.x = Math.PI / 2; gola.position.y = 1.73; corpo.add(gola);
   for (const sx of [-1, 1]) { const lt = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.5, 0.36), neon); lt.position.set(0.305 * sx, 1.38, 0); corpo.add(lt); }
-  const costas = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: texCostas() })); costas.position.set(0, 1.42, 0.222); corpo.add(costas);
-  const pv = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: NEON })); pv.position.set(-0.12, 1.55, -0.222); pv.rotation.y = Math.PI; corpo.add(pv);
+  const costas = new THREE.Mesh(new THREE.PlaneGeometry(0.42, 0.42), new THREE.MeshBasicMaterial({ map: o.num ? texPeito(o.num, '#' + PRETO.toString(16).padStart(6, '0')) : texCostas() })); costas.position.set(0, 1.42, 0.222); corpo.add(costas);
+  if (!o.num) { const pv = new THREE.Mesh(new THREE.CircleGeometry(0.06, 16), new THREE.MeshBasicMaterial({ color: NEON })); pv.position.set(-0.12, 1.55, -0.222); pv.rotation.y = Math.PI; corpo.add(pv); }
   const quadril = contorno(new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.25, 0.32, 14), short)); quadril.scale.z = 0.82; quadril.position.y = 0.98; corpo.add(quadril);
   const cint = new THREE.Mesh(new THREE.CylinderGeometry(0.285, 0.285, 0.05, 14), neon); cint.scale.z = 0.82; cint.position.y = 1.12; corpo.add(cint);
   // cabeça (um pouco maior, estilo desenho)
@@ -141,6 +148,7 @@ function serra(noite, camada) {
 /* ---------- jogo ---------- */
 export function criar(el, opt = {}) {
   const noite = !!opt.noite;
+  const PROVA = opt.modo === 'prova';
   const W = () => el.clientWidth || 360, H = () => el.clientHeight || 600;
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
@@ -413,11 +421,11 @@ export function criar(el, opt = {}) {
     else if (a === 'cima' || a === 'tap') { if (st.chao) { const kv = 1 + Math.max(0, st.vel - 16) / 30; st.vy = (st.tenis > 0 ? 15.5 : 11.2) * Math.sqrt(kv); st.chao = false; st.rolando = 0; } }
     else if (a === 'baixo') { if (!st.chao) st.vy = -28; st.rolando = Math.max(0.45, 0.7 - Math.max(0, st.vel - 16) * 0.007); }
   };
-  const pd = e => { e.preventDefault(); toque = { x: e.clientX, y: e.clientY, t: performance.now(), feito: false }; };
+  const pd = e => { e.preventDefault(); if (PROVA) { provaToque(); return; } toque = { x: e.clientX, y: e.clientY, t: performance.now(), feito: false }; };
   const pm = e => { if (!toque || toque.feito) return; const dx = e.clientX - toque.x, dy = e.clientY - toque.y; if (Math.hypot(dx, dy) > 28) { toque.feito = true; acao(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'dir' : 'esq') : (dy > 0 ? 'baixo' : 'cima')); } };
   const pu = e => { if (toque && !toque.feito && performance.now() - toque.t < 300) acao('tap'); toque = null; };
   cv.addEventListener('pointerdown', pd); cv.addEventListener('pointermove', pm); cv.addEventListener('pointerup', pu); cv.addEventListener('pointercancel', () => { toque = null; });
-  const kd = e => { const m = { ArrowLeft: 'esq', a: 'esq', ArrowRight: 'dir', d: 'dir', ArrowUp: 'cima', w: 'cima', ' ': 'cima', ArrowDown: 'baixo', s: 'baixo' }[e.key]; if (m) { e.preventDefault(); if (!e.repeat) acao(m); } };
+  const kd = e => { if (PROVA) { if (!e.repeat && (e.key === ' ' || e.key.startsWith('Arrow'))) { e.preventDefault(); provaToque(); } return; } const m = { ArrowLeft: 'esq', a: 'esq', ArrowRight: 'dir', d: 'dir', ArrowUp: 'cima', w: 'cima', ' ': 'cima', ArrowDown: 'baixo', s: 'baixo' }[e.key]; if (m) { e.preventDefault(); if (!e.repeat) acao(m); } };
   window.addEventListener('keydown', kd);
 
   /* placar na tela */
@@ -427,10 +435,112 @@ export function criar(el, opt = {}) {
   const dica = document.createElement('div'); dica.className = 'g3dica';
   dica.innerHTML = `<b>Deslize para correr</b><div class="g3setas"><span>← →<i>trocar de pista</i></span><span>↑<i>pular</i></span><span>↓<i>rolar</i></span></div><small>Pule cones, buracos e barreiras · role sob as placas de OBRAS · desvie das vans</small>`;
   el.appendChild(dica);
+  if (PROVA) {
+    dica.innerHTML = `<b>${opt.titulo || 'Prova'}</b><div class="g3setas"><span>👆<i>toque pra correr</i></span><span>⚡<i>mais toques, mais rápido</i></span><span>🫁<i>cuide do fôlego</i></span></div><small>Toque na tela pra ir pra largada. Os adversários aceleram no fim, guarde energia!</small>`;
+    hud.insertAdjacentHTML('beforeend', `<div class="g3fol"><span>fôlego</span><i><b></b></i></div><div class="g3go" hidden></div>`);
+  }
   const hm = hud.querySelector('.g3m'), hf = hud.querySelector('.g3f'), hr = hud.querySelector('.g3r'), hp = hud.querySelector('.g3pw'), htm = hud.querySelector('.g3tm'), hpc = hud.querySelector('.g3pc'), hkm = hud.querySelector('.g3km');
   const mmss = sg => { sg = Math.max(0, Math.round(sg)); return String(Math.floor(sg / 60)).padStart(2, '0') + ':' + String(sg % 60).padStart(2, '0'); };
+  const hms = sg => { sg = Math.max(0, Math.round(sg)); const h = Math.floor(sg / 3600), m = Math.floor(sg % 3600 / 60), x = sg % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(x).padStart(2, '0'); };
   const ritmo = v => 1000 / (2.56 + Math.max(0, v - 16) / 32 * 3.4); // segundos por km: 6:30 no início, perto de 2:50 no máximo
-  hr.textContent = opt.recorde ? 'Recorde ' + Number(opt.recorde).toLocaleString('pt-BR') : '';
+  hr.textContent = PROVA ? (opt.recorde ? 'Recorde ' + hms(opt.recorde) : '') : opt.recorde ? 'Recorde ' + Number(opt.recorde).toLocaleString('pt-BR') : '';
+  const hfol = hud.querySelector('.g3fol') || document.createElement('div'), hfb = hfol.querySelector('b') || document.createElement('b'), hgo = hud.querySelector('.g3go') || document.createElement('div');
+
+  /* ---------- modo prova (corrida de toque com adversários) ---------- */
+  const DIST = Number(opt.distancia) || 5;
+  const DUR = { 5: 55, 10: 80, 15: 100, 21: 125, 42: 180 }[DIST] || 60 + DIST * 3;
+  const RT = DIST * 300 / DUR; // segundos de prova por segundo real (no pace 5:00)
+  const SC = 450; // unidades do mundo por km de distância entre corredores
+  const P = { v: 0, f: 100, km: 0, T: 0, ult: -1, quebrou: false, t0: 0, fimT: 0 };
+  const paceDe = v => 300 * Math.pow(7.9 / Math.max(0.35, v), 1.6);
+  const NIVEIS = {
+    facil: [[400, 340], [385, 325], [370, 312], [355, 300], [340, 288]],
+    dificil: [[300, 252], [292, 245], [284, 238], [276, 232], [268, 226]]
+  };
+  const CORES = [[0x2f6fd6, 0xffffff], [0xe23b2e, 0xffffff], [0xf28c28, 0x111111], [0x7b4fd6, 0xffffff], [0xf2f2f2, 0x2f6fd6]];
+  const NOMES = ['Azul', 'Vermelho', 'Laranja', 'Roxo', 'Branco'];
+  const XS = [-2.7, 2.7, -1.35, 1.35, -3.6];
+  const npcs = [];
+  function etiqueta(txt, cor) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d');
+    g.font = '800 30px Figtree, Arial, sans-serif'; const w = Math.min(248, g.measureText(txt).width + 28);
+    g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.roundRect ? g.roundRect(128 - w / 2, 8, w, 46, 23) : g.rect(128 - w / 2, 8, w, 46); g.fill();
+    g.fillStyle = cor; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, 128, 32);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); sp.scale.set(2.4, 0.6, 1); sp.position.y = 2.75; sp.renderOrder = 5; return sp;
+  }
+  function montarNpcs() {
+    for (const n of npcs) scene.remove(n.b); npcs.length = 0;
+    const lista = (NIVEIS[opt.nivel] || NIVEIS.facil).map((p, i) => ({ p0: p[0], p1: p[1], nome: NOMES[i], cor: CORES[i], x: XS[i] }));
+    if (opt.fantasma && opt.fantasma.tempo > 0) { const pf = opt.fantasma.tempo / DIST; lista[0] = { p0: pf, p1: pf, nome: '⚡ ' + (opt.fantasma.nome || 'Desafiante'), cor: [0xc8f560, 0x111111], x: 1.35, fant: true }; lista[3].x = 2.7; lista[1].x = -1.35; }
+    lista.forEach((n, i) => {
+      const b = boneco({ cam: n.cor[0], det: n.cor[1], pele: [0x8d5a3b, 0xd9a07a, 0x6e4429, 0xc68b62, 0xa86d47][i], cab: [0x141010, 0x3a2414, 0x141010, 0x5a3a1a, 0x141010][i], num: n.fant ? 0 : 100 + ((i * 137 + DIST * 7) % 800) });
+      b.add(etiqueta(n.nome, n.fant ? '#c8f560' : '#ffffff'));
+      scene.add(b); npcs.push({ ...n, b, km: 0, ph: Math.random() * 6, fimT: 0, osc: Math.random() * 6 });
+    });
+  }
+  function provaToque() {
+    if (st.estado === 'pronto') { comecar(); return; }
+    if (st.estado !== 'jogo') return;
+    const agora = st.t; if (agora - P.ult < 0.07) return; P.ult = agora;
+    const imp = 1.25 * (P.quebrou ? 0.35 : 1);
+    P.v += imp * (1 - P.v / 12.5);
+    hfol.classList.remove('pulso'); void hfol.offsetWidth; hfol.classList.add('pulso');
+  }
+  function posicao() { return 1 + npcs.filter(n => n.fimT ? (!P.fimT || n.fimT < P.fimT) : n.km > P.km).length; }
+  function provaPasso(dt) {
+    st.t += dt;
+    if (st.estado === 'largada') {
+      const k = Math.floor(st.t); const txt = ['3', '2', '1'][k];
+      if (txt && hgo.textContent !== txt) { hgo.textContent = txt; hgo.hidden = false; hgo.style.animation = 'none'; void hgo.offsetWidth; hgo.style.animation = ''; try { navigator.vibrate && navigator.vibrate(30); } catch (e) {} }
+      if (st.t >= 3) { st.estado = 'jogo'; st.t = 0; hgo.textContent = 'VAI!'; hgo.style.animation = 'none'; void hgo.offsetWidth; hgo.style.animation = ''; setTimeout(() => { hgo.hidden = true; }, 700); try { navigator.vibrate && navigator.vibrate(80); } catch (e) {} }
+      return;
+    }
+    const corrida = st.estado === 'jogo';
+    // jogador
+    P.v = Math.max(0, P.v - 0.35 * P.v * dt) * (corrida ? 1 : Math.max(0, 1 - dt * 1.5));
+    const pc = paceDe(P.v);
+    if (corrida) {
+      P.T += dt * RT; P.km = Math.min(DIST, P.km + dt * RT / pc);
+      if (pc < 255) P.f -= (255 - pc) / 255 * 40 * dt; else if (pc > 300) P.f += 10 * dt; else P.f += 4 * dt;
+      P.f = Math.max(0, Math.min(100, P.f));
+      if (P.f <= 0 && !P.quebrou) { P.quebrou = true; st.tremor = 0.3; try { navigator.vibrate && navigator.vibrate([60, 40, 60]); } catch (e) {} }
+      if (P.quebrou && P.f > 30) P.quebrou = false;
+      if (P.km >= DIST) {
+        P.fimT = P.T; st.estado = 'chegou';
+        hgo.textContent = posicao() + 'º lugar!'; hgo.hidden = false; hgo.style.animation = 'none'; void hgo.offsetWidth; hgo.style.animation = '';
+        try { navigator.vibrate && navigator.vibrate([40, 40, 160]); } catch (e) {}
+        setTimeout(() => { if (!vivo) return; st.estado = 'fim'; opt.onOver && opt.onOver({ prova: true, distancia: DIST, tempo: P.fimT, posicao: posicao(), total: npcs.length + 1, pace: P.fimT / DIST }); }, 1600);
+      }
+      if (st.t > DUR * 4) { st.estado = 'fim'; opt.onOver && opt.onOver({ prova: true, desistiu: true, distancia: DIST, tempo: 0, posicao: npcs.length + 1, total: npcs.length + 1 }); }
+    } else if (st.estado === 'chegou' || st.estado === 'fim') { P.T += dt * RT; }
+    st.vel = 5 + P.v * 2.6; st.s += st.vel * dt;
+    // adversários: aceleram conforme a prova avança
+    for (const n of npcs) {
+      if (st.estado === 'jogo' || st.estado === 'chegou' || st.estado === 'fim') {
+        if (!n.fimT) {
+          const u = n.km / DIST; let p = n.p0 + (n.p1 - n.p0) * u; if (!n.fant && u > 0.9) p *= 0.95; if (!n.fant) p *= 1 + Math.sin(st.t * 0.5 + n.osc) * 0.025;
+          n.km += dt * RT / p; if (n.km >= DIST) { n.km = DIST; n.fimT = P.T; }
+          n.vis = Math.min(1.7, 300 / p);
+        } else n.vis = Math.max(0, (n.vis || 1) - dt);
+      }
+      n.ph += dt * (st.estado === 'pronto' || st.estado === 'largada' ? 0 : 7 + n.vis * 7);
+      const d = (n.km - P.km) * SC + (n.fimT ? 0 : 0);
+      n.b.visible = d > -14 && d < 165;
+      if (!n.b.visible) continue;
+      const dd = Math.max(0, d);
+      n.b.position.set(n.x + offX(dd), offY(dd), -d);
+      n.b.rotation.y = -Math.atan(2 * C() * dd);
+      pose(n.b, n.ph, 'corre', st.estado === 'pronto' || st.estado === 'largada' ? 0.15 : n.fimT ? 0.5 : 1);
+    }
+  }
+  function hudProva() {
+    hm.textContent = P.km.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' / ' + DIST + ' km';
+    htm.textContent = hms(P.T); hpc.textContent = st.estado === 'jogo' && P.v > 0.5 ? mmss(paceDe(P.v)).replace(/^0/, '') : '--:--';
+    hf.textContent = st.estado === 'pronto' || st.estado === 'largada' ? '🏁 largada' : '🏅 ' + posicao() + 'º de ' + (npcs.length + 1);
+    hfb.style.width = P.f + '%'; hfol.classList.toggle('baixo', P.f < 25); hfol.classList.toggle('quebrou', P.quebrou);
+    hp.textContent = P.quebrou ? '😮‍💨 Quebrou! Diminua um pouco' : '';
+  }
 
   function limparObjs() { for (const o of objs) scene.remove(o.m); objs.length = 0; }
   function reiniciar() {
@@ -438,10 +548,12 @@ export function criar(el, opt = {}) {
     proxPoste = 4; jog.userData.corpo.rotation.set(0, 0, 0); jog.userData.corpo.position.set(0, 1, 0);
     while (st.proxDeco[0] < 170) gerarDeco(0); while (st.proxDeco[1] < 170) gerarDeco(1);
     while (proxPoste < 170) { poste(proxPoste, (proxPoste / 32 | 0) % 2 ? 5.9 : -5.9); proxPoste += 32; }
-    dica.hidden = false; hp.textContent = ''; atualizarHud();
+    dica.hidden = false; hp.textContent = '';
+    if (PROVA) { Object.assign(P, { v: 0, f: 100, km: 0, T: 0, ult: -1, quebrou: false, fimT: 0 }); montarNpcs(); hgo.hidden = true; for (const n of npcs) { n.b.position.set(n.x, 0, 0); } }
+    atualizarHud();
   }
-  function comecar() { st.estado = 'jogo'; dica.hidden = true; }
-  function atualizarHud() { hm.textContent = (st.s / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km'; htm.textContent = mmss(st.tv); hpc.textContent = st.estado === 'jogo' ? mmss(ritmo(st.vel)).replace(/^0/, '') : '--:--'; hf.textContent = '🍃 ' + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
+  function comecar() { if (PROVA) { st.estado = 'largada'; st.t = 0; dica.hidden = true; return; } st.estado = 'jogo'; dica.hidden = true; }
+  function atualizarHud() { if (PROVA) { hudProva(); return; } hm.textContent = (st.s / 1000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km'; htm.textContent = mmss(st.tv); hpc.textContent = st.estado === 'jogo' ? mmss(ritmo(st.vel)).replace(/^0/, '') : '--:--'; hf.textContent = '🍃 ' + st.folhas; hp.textContent = st.ima > 0 ? `🧲 ${Math.ceil(st.ima)}s` : st.tenis > 0 ? `👟 ${Math.ceil(st.tenis)}s` : ''; }
   function bater() {
     st.estado = 'caiu'; st.tremor = 0.5; try { navigator.vibrate && navigator.vibrate(140); } catch (e) {}
     setTimeout(() => { if (st.estado === 'caiu') { st.estado = 'fim'; opt.onOver && opt.onOver({ metros: Math.floor(st.s), folhas: st.folhas, tempo: st.tv, pace: st.s > 1 ? st.tv / (st.s / 1000) : 0 }); } }, 900);
@@ -452,7 +564,8 @@ export function criar(el, opt = {}) {
   function quadro(agora) {
     if (!vivo) return; raf = requestAnimationFrame(quadro);
     const dt = Math.min(0.033, (agora - ult) / 1000); ult = agora;
-    const jogo = st.estado === 'jogo';
+    const jogo = st.estado === 'jogo' && !PROVA;
+    if (PROVA) { provaPasso(dt); if (st.estado === 'jogo' && Math.random() < dt * 0.1) st.curvaAlvo = (Math.random() - 0.5) * 0.0036; }
     if (jogo) {
       st.t += dt; st.vel = Math.min(50, 16 + 24 * (1 - Math.exp(-st.t / 50)) + st.t * 0.04); st.s += st.vel * dt; st.tv += st.vel * dt * ritmo(st.vel) / 1000; // relógio da corrida: tempo real que levaria nesse pace
       if (st.s >= st.proxKm) { const kmT = st.tv - st.tKm; st.tKm = st.tv; hkm.innerHTML = `<b>${Math.round(st.proxKm / 1000)} km</b><span>${mmss(kmT)} · pace ${mmss(ritmo(st.vel)).replace(/^0/, '')}/km</span>`; hkm.hidden = false; hkm.style.animation = 'none'; void hkm.offsetWidth; hkm.style.animation = ''; clearTimeout(st.kmTo); st.kmTo = setTimeout(() => { hkm.hidden = true; }, 2200); st.proxKm += 1000; try { navigator.vibrate && navigator.vibrate([40, 60, 40]); } catch (e) {} }
@@ -466,10 +579,12 @@ export function criar(el, opt = {}) {
     if (!st.chao) { st.vy -= (st.tenis > 0 ? 26 : 32) * kv * dt; st.py += st.vy * dt; if (st.py <= 0) { st.py = 0; st.vy = 0; st.chao = true; } }
     if (st.rolando > 0) st.rolando -= dt;
     const alvoX = LANES[st.faixa]; st.px += (alvoX - st.px) * Math.min(1, dt * (14 + Math.max(0, st.vel - 16) * 0.3));
-    if (jogo || st.estado === 'pronto') st.ph += dt * (st.estado === 'pronto' ? 7 : 7 + st.vel * 0.42);
+    if (PROVA) st.ph += dt * (st.estado === 'pronto' || st.estado === 'largada' ? 3 : 4 + st.vel * 0.42);
+    else if (jogo || st.estado === 'pronto') st.ph += dt * (st.estado === 'pronto' ? 7 : 7 + st.vel * 0.42);
     // gerar
-    if (jogo) {
-      while (st.proxLinha < st.s + 150) gerarLinha();
+    if (jogo || (PROVA && st.estado !== 'pronto')) {
+      if (!PROVA) 
+while (st.proxLinha < st.s + 150) gerarLinha();
       if (st.s + 160 > st.proxRio) { trechoRio(st.proxRio, 70); st.proxRio += 650 + Math.random() * 450; }
       if (st.s + 165 > st.proxSerra) { trechoSerra(st.proxSerra, 140); st.proxSerra += 700 + Math.random() * 400; if (Math.abs(st.proxSerra - st.proxRio) < 220) st.proxSerra += 260; }
     }
@@ -521,16 +636,17 @@ export function criar(el, opt = {}) {
     jog.position.set(st.px, st.py, 0);
     jog.rotation.y = (LANES[st.faixa] - st.px) * 0.12; // de costas para a câmera
     const um = jog.userData;
-    if (st.estado === 'caiu' || st.estado === 'fim') pose(jog, st.ph, 'caiu');
+    if (PROVA) pose(jog, st.ph, 'corre', st.estado === 'pronto' || st.estado === 'largada' ? 0.15 : Math.min(1, 0.35 + P.v / 10));
+    else if (st.estado === 'caiu' || st.estado === 'fim') pose(jog, st.ph, 'caiu');
     else if (!st.chao && !(st.rolando > 0)) pose(jog, st.ph, 'pulo');
     else pose(jog, st.ph, 'corre', st.estado === 'pronto' ? 0.5 : 1);
-    if (rolando && st.estado === 'jogo') { pose(jog, st.ph, 'pulo'); um.corpo.scale.setScalar(0.6); um.corpo.rotation.set(-(0.7 - st.rolando) * 13, 0, 0); um.corpo.position.y = 0.62; }
+    if (!PROVA && rolando && st.estado === 'jogo') { pose(jog, st.ph, 'pulo'); um.corpo.scale.setScalar(0.6); um.corpo.rotation.set(-(0.7 - st.rolando) * 13, 0, 0); um.corpo.position.y = 0.62; }
     sombra.position.set(st.px, 0.06, 0); sombra.scale.setScalar(Math.max(0.4, 1 - st.py * 0.15));
     luzP.position.set(st.px, 3.2, 1.5);
     // câmera
     const sh = st.tremor > 0 ? (Math.random() - .5) * st.tremor : 0; if (st.tremor > 0) st.tremor -= dt;
     const cy = 4.0 + st.py * 0.35, cz = 7.2;
-    const fovA = cam.userData.fov0 + Math.max(0, st.vel - 16) * 0.35; if (Math.abs(cam.fov - fovA) > 0.05) { cam.fov += (fovA - cam.fov) * Math.min(1, dt * 2); cam.updateProjectionMatrix(); }
+    const fovA = cam.userData.fov0 + (PROVA ? P.v * 0.8 : Math.max(0, st.vel - 16) * 0.35); if (Math.abs(cam.fov - fovA) > 0.05) { cam.fov += (fovA - cam.fov) * Math.min(1, dt * 2); cam.updateProjectionMatrix(); }
     cam.position.set(st.px * 0.65 + sh, cy + sh, cz); cam.lookAt(st.px * 0.65 + offX(18) * 0.5, 1.2 + st.py * 0.2 + offY(18), -18);
     renderer.render(scene, cam);
     hudT -= dt; if (hudT <= 0) { hudT = 0.1; atualizarHud(); }
@@ -539,14 +655,14 @@ export function criar(el, opt = {}) {
   window.addEventListener('resize', ajustar); ajustar();
   const vis = () => { ult = performance.now(); }; document.addEventListener('visibilitychange', vis);
   reiniciar(); raf = requestAnimationFrame(quadro);
-  if (opt.debug) window.__g3 = { st, objs, buraco, cachoeira };
+  if (opt.debug) window.__g3 = { st, objs, buraco, cachoeira, P, npcs, toque: () => provaToque() };
 
   return {
     reiniciar,
-    recorde(v) { hr.textContent = v ? 'Recorde ' + Number(v).toLocaleString('pt-BR') : ''; },
+    recorde(v) { hr.textContent = v ? 'Recorde ' + (PROVA ? hms(v) : Number(v).toLocaleString('pt-BR')) : ''; },
     destruir() {
       vivo = false; cancelAnimationFrame(raf); window.removeEventListener('keydown', kd); window.removeEventListener('resize', ajustar); document.removeEventListener('visibilitychange', vis);
-      limparObjs(); renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) {} cv.remove(); hud.remove(); dica.remove();
+      limparObjs(); for (const n of npcs) scene.remove(n.b); renderer.dispose(); try { renderer.forceContextLoss(); } catch (e) {} cv.remove(); hud.remove(); dica.remove();
     }
   };
 }

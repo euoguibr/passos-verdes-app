@@ -427,6 +427,35 @@ main.enter>*:nth-child(2){animation-delay:.04s}main.enter>*:nth-child(3){animati
 .tabs-in{max-width:560px;margin:0 auto;display:flex;justify-content:space-around;gap:4px}
 .tab{appearance:none;background:none;border:0;flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;border-radius:10px;cursor:pointer;color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em;min-height:52px}
 .tab svg{width:22px;height:22px}
+.provab{background:radial-gradient(120% 140% at 85% 30%,#2b5a10 0%,#0b1200 60%);aspect-ratio:640/220;display:block}
+.provab .gtitle{top:18px}
+.provakm{position:absolute;right:18px;bottom:6px;font-family:var(--display);font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70;font-size:96px;line-height:1;color:#C8F560;text-shadow:0 0 30px rgba(200,245,96,.35)}
+.provakm small{font-size:30px;margin-left:4px}
+.gbody .seg button{flex:1}
+.duelos{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:10px}
+.duelo{display:flex;align-items:center;gap:10px}
+.pickp{appearance:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:8px 10px;display:flex;align-items:center;gap:10px;cursor:pointer;font:inherit;text-align:left}
+.pickp>:first-child,.duelo>:first-child,.post-h>:first-child{flex:none}.pickp span{flex:1;font-weight:600}.pickp small{color:var(--muted)}
+.g3fol{position:absolute;left:12px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;text-shadow:0 1px 3px rgba(0,0,0,.6);pointer-events:none}
+.g3fol i{flex:1;height:10px;border-radius:99px;background:rgba(0,0,0,.45);overflow:hidden;border:1px solid rgba(255,255,255,.25)}
+.g3fol b{display:block;height:100%;width:100%;background:#C8F560;border-radius:99px;transition:width .1s linear}
+.g3fol.baixo b{background:#F2C14E}.g3fol.quebrou b{background:#FF6B5A}
+.g3fol.pulso i{animation:fpulse .18s ease-out}@keyframes fpulse{50%{transform:scaleY(1.35)}}
+.g3go{position:absolute;left:0;right:0;top:34%;text-align:center;font-family:var(--display);font-weight:900;font-stretch:70%;font-variation-settings:"wdth" 70;font-size:96px;line-height:1;color:#C8F560;text-shadow:0 4px 24px rgba(0,0,0,.55);animation:gopop .5s cubic-bezier(.2,1.6,.4,1);pointer-events:none;text-transform:uppercase}
+@keyframes gopop{from{transform:scale(2.2);opacity:0}to{transform:scale(1);opacity:1}}
+.mural{gap:16px}
+.post{gap:10px;padding:14px}
+.post-h{display:flex;align-items:center;gap:10px}
+.post-n{appearance:none;border:0;background:none;color:inherit;font:inherit;text-align:left;display:flex;flex-direction:column;flex:1;cursor:pointer;padding:0}
+.mfoto{margin:0 -14px;background:var(--line);display:grid;place-items:center;overflow:hidden;max-height:70vh}
+.mfoto img{width:100%;height:100%;object-fit:cover;display:block}
+.post-t{margin:0;white-space:pre-wrap;word-break:break-word}
+.post-f{display:flex;align-items:center;gap:8px}
+.likebtn{appearance:none;border:1px solid var(--line);background:none;color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-weight:700;font-size:13px;cursor:pointer}
+.likebtn.on{border-color:#C8F560;background:rgba(200,245,96,.15)}
+.linkbtn.danger{color:var(--danger)}
+.hbtn{position:relative}.pushrem{border-color:var(--neon,#C8F560)!important;gap:8px}.hbtn.adm[aria-current]{color:var(--neon,#C8F560)}.hbtn .badge{position:absolute;top:0;right:-2px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--danger);color:var(--surface);font-size:10px;font-weight:700;line-height:17px}
+@media (max-width:380px){.tab{font-size:10px;letter-spacing:0}.tab svg{width:20px;height:20px}}
 .tab{position:relative}
 .tab .badge{position:absolute;top:3px;right:calc(50% - 20px);min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:var(--danger);color:var(--surface);font-size:10px;font-weight:700;line-height:17px;letter-spacing:0}
 .seg{display:flex;background:var(--sunk);border-radius:999px;padding:4px;gap:4px}
@@ -640,7 +669,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--muted);font-size:14px
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, setDoc, updateDoc, deleteDoc, addDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField, getCountFromServer, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getMessaging, getToken, deleteToken, isSupported as msgSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged, reauthenticateWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
@@ -659,7 +688,7 @@ const $=s=>document.querySelector(s);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MES=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 const MESL=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-const COLS=['eventos','noticias','desafios','enquetes','quiz','produtos','banners','depoimentos','premios'];
+const COLS=['eventos','noticias','desafios','enquetes','produtos','banners','depoimentos','premios'];
 const S={db:null,user:null,uid:null,admin:false,myName:'',ready:false,offline:false,
   eventos:[],noticias:[],desafios:[],enquetes:[],quiz:[],membros:{},info:null,me:null,loaded:{},names:{},
   editNome:false,armed:null,showPast:false,readOnly:false,confirmed:null,pending:{},busyPic:null,
@@ -694,25 +723,26 @@ let toastT;
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 
 /* ---------- Navegação ---------- */
-const VIEWS=['inicio','agenda','desafios','loja','galera','admin','perfil','config','clube','pessoa','privacidade','folhas'];
-const TABS=['inicio','agenda','desafios','loja','galera','admin'];
+const VIEWS=['inicio','agenda','desafios','loja','galera','mural','admin','perfil','config','clube','pessoa','privacidade','folhas'];
+const TABS=['inicio','agenda','desafios','mural','galera','loja'];
 const ICON={
  inicio:'<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/>',
  agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
  desafios:'<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
  loja:'<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>',
- galera:'<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M15 14.5c3 0 6 1.8 6 5"/>',
+ galera:'<path d="M7.5 8h9a4.5 4.5 0 0 1 4.4 5.4l-.8 4a2.5 2.5 0 0 1-4.3 1.2L13.6 16h-3.2l-2.2 2.6a2.5 2.5 0 0 1-4.3-1.2l-.8-4A4.5 4.5 0 0 1 7.5 8z"/><path d="M8 11v3M6.5 12.5h3"/><circle cx="15.5" cy="11.5" r=".6" fill="currentColor"/><circle cx="17" cy="13.5" r=".6" fill="currentColor"/>',
+ mural:'<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 9"/>',
  admin:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13 7l4 4"/>'};
-const LABEL={inicio:'Início',agenda:'Agenda',desafios:'Desafios',loja:'Loja',galera:'Galera',admin:'Organizar'};
-let view=(location.hash||'').slice(1);
+const LABEL={inicio:'Início',agenda:'Agenda',desafios:'Desafios',loja:'Loja',galera:'Jogos',mural:'Mural',admin:'Organizar'};
+let view=(location.hash||'').slice(1);if(view==='jogos')view='galera';
 if(!VIEWS.includes(view)){view='inicio';try{const v=localStorage.getItem('pv-tab');if(VIEWS.includes(v))view=v}catch(e){}}
 window.addEventListener('hashchange',()=>{const v=(location.hash||'').slice(1);if(VIEWS.includes(v)&&v!==view)go(v)});
 function go(v){if(v==='folhas'&&view!=='folhas')S.prevView=view;const mv=$('#view');if(mv){mv.classList.add('enter');clearTimeout(go.t);go.t=setTimeout(()=>mv.classList.remove('enter'),450)}view=v;try{localStorage.setItem('pv-tab',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}render();window.scrollTo(0,0)}
 
 function renderTabs(){
-  const list=TABS.filter(v=>v!=='admin'||S.admin);
+  const list=TABS;
   $('#tabs').innerHTML=list.map(v=>`<button class="tab" data-go="${v}" ${v===view?'aria-current="page"':''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[v]}</svg>${v==='admin'&&pendCount()?`<span class="badge num">${pendCount()}</span>`:''}${LABEL[v]}</button>`).join('');
-  $('#who').innerHTML=`<button class="hbtn" data-go="config" aria-label="Configurações" ${view==='config'?'aria-current="page"':''}>${GEAR}</button>${S.uid?`<button class="hbtn" data-go="perfil" aria-label="Meu perfil" ${view==='perfil'?'aria-current="page"':''}>${avatar(S.uid,34)}</button>`:(S.ready?`<button class="btn small primary" data-action="login">Entrar</button>`:'')}`;
+  $('#who').innerHTML=`${S.admin?`<button class="hbtn adm" data-go="admin" aria-label="Organizar" ${view==='admin'?'aria-current="page"':''}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON.admin}</svg>${pendCount()?`<span class="badge num">${pendCount()}</span>`:''}</button>`:''}<button class="hbtn" data-go="config" aria-label="Configurações" ${view==='config'?'aria-current="page"':''}>${GEAR}</button>${S.uid?`<button class="hbtn" data-go="perfil" aria-label="Meu perfil" ${view==='perfil'?'aria-current="page"':''}>${avatar(S.uid,34)}</button>`:(S.ready?`<button class="btn small primary" data-action="login">Entrar</button>`:'')}`;
 }
 
 /* ---------- Render ---------- */
@@ -724,13 +754,13 @@ function render(){
   root.querySelectorAll('input[id]:not([type=file]),textarea[id],select[id]').forEach(el=>{if(el.value!=='')saved[el.id]=el.value});
   const fid=document.activeElement&&document.activeElement.id;
   let h='';
-  if(view==='folhas')h=vFolhas();else if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='admin')h=vAdmin();else h=vInicio();
+  if(view==='folhas')h=vFolhas();else if(view==='pessoa')h=vPessoa();else if(view==='privacidade')h=vPrivacidade();else if(view==='perfil')h=vPerfil();else if(view==='config')h=vConfig();else if(view==='clube')h=vClube();else if(view==='agenda')h=vAgenda();else if(view==='loja')h=vLoja();else if(view==='desafios')h=vDesafios();else if(view==='galera')h=vGalera();else if(view==='mural')h=vMural();else if(view==='admin')h=vAdmin();else h=vInicio();
   root.innerHTML=h;
   const ob=onbHtml();const oe=$('#onb');if(ob){oe.innerHTML=ob;oe.hidden=false}else{oe.hidden=true;oe.innerHTML=''}
   renderCard();drawMini();
   for(const[id,v]of Object.entries(saved)){const el=document.getElementById(id);if(el)el.value=v}
   if(fid){const el=document.getElementById(fid);if(el)el.focus({preventScroll:true})}
-  renderTabs();refreshNames();bnSync(false);
+  renderTabs();refreshNames();bnSync(false);muralFotos();
 }
 function visitante(){
   if(!S.ready)return '';
@@ -745,7 +775,7 @@ function loading(c,txt){return !S.loaded[c]&&!S.offline?`<div class="skel" role=
 
 function vInicio(){
   const m=me();const nm=m.apelido||S.myName||'';
-  let h=recadoHtml()+pedPendHtml()+statusHtml()+installHtml()+bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
+  let h=recadoHtml()+pedPendHtml()+pushRemHtml()+statusHtml()+installHtml()+bannersHtml()+`<section class="section"><p class="eyebrow">${saud()}${nm?', '+esc(nm.split(' ')[0]):''}</p>
    <h1 class="h-display">Bora correr junto?</h1>
    <p class="lede">Treino, corrida e resenha. A comunidade que corre em Magé.</p></section>`;
   h+=visitante();
@@ -770,8 +800,8 @@ function vInicio(){
     <div class="card"><h3>${esc(d.titulo)}</h3>${S.uid?`<div class="row" style="justify-content:space-between;align-items:baseline"><span class="bignum">${kmf(tot)} km</span>${meta?`<span class="muted small num">meta da galera: ${kmf(meta)} km</span>`:''}</div>
     ${meta?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}`:(meta?`<p class="muted small" style="margin:0">Meta da galera: <b class="num">${kmf(meta)} km</b>. Entre para ver o placar e somar os seus.</p>`:'')}<button class="btn" data-go="desafios">Lançar minha corrida</button></div></section>`}
   // Enquete ativa
-  const q=S.enquetes.filter(x=>x.ativa).sort((a,b)=>(b.criado||0)-(a.criado||0))[0];
-  if(q)h+=`<section class="section"><div class="sec-head"><h2 class="sec">A galera decide</h2><button class="linkbtn" data-go="galera">Mais</button></div>${pollCard(q)}</section>`;
+  const qs=S.enquetes.filter(x=>x.ativa).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  if(qs.length)h+=`<section class="section"><h2 class="sec">A galera decide</h2>${qs.map(pollCard).join('')}</section>`;
   h+=manifestoHtml()+depoHtml();
   // Notícias
   h+=`<section class="section"><h2 class="sec">Notícias</h2>`;
@@ -997,7 +1027,7 @@ async function pedidosAuto(){
   catch(e){console.warn('pedidos auto',e)}
   PAUTO.busy=false;
 }
-setInterval(pedidosAuto,10*60*1000);
+setInterval(()=>{pedidosAuto();muralLimpeza()},10*60*1000);
 function waNumber(){let d=String((S.info&&S.info.whatsapp)||'').replace(/\D/g,'');if(!d)return '';if(!d.startsWith('55'))d='55'+d;return d}
 function prodCard(p){
   const sel=S.sel[p.id]||{};const tam=tamanhosDe(p);const cor=Array.isArray(p.cores)?p.cores:[];
@@ -1115,6 +1145,7 @@ function vPessoa(){
   return `<section class="section">${voltar}<div class="prof-head">${avatar(uid,88).replace('data-action="ver"','')}<div><p class="eyebrow">Nº ${100+hash(uid)%900}${m.desde?' · desde '+esc(desdeTxt(m)):''}</p><h1>${esc(nm)}</h1>
     ${det?`<div class="chips">${m.objetivo?`<span class="chip treino">${esc(m.objetivo)}</span>`:''}${m.bairro?`<span class="chip">${esc(m.bairro)}</span>`:''}${m.pace?`<span class="chip num">${esc(m.pace)}/km</span>`:''}</div>`:''}</div></div>
     ${det&&(ig||m.strava)?`<div class="row small">${ig?`<a href="https://instagram.com/${esc(ig)}" target="_blank" rel="noopener">@${esc(ig)}</a>`:''}${/^https?:\/\//.test(m.strava||'')?`<a href="${esc(m.strava)}" target="_blank" rel="noopener">Perfil no Strava</a>`:''}</div>`:''}</section>
+  <section class="section">${segHtml(uid)}</section>
   <section class="section"><div class="stats"><div class="stat"><b>${kmf(n.km)}</b><span>km aprovados</span></div><div class="stat"><b>${n.pres}</b><span>treinos e eventos</span></div><div class="stat"><b>${n.des}</b><span>desafios</span></div></div></section>
   <section class="section"><h2 class="sec">Conquistas</h2>${medalhasHtml(uid,false)}</section>`;
 }
@@ -1262,6 +1293,17 @@ function vPerfil(){
     <div><button class="btn primary" type="submit" ${S.busyPic?'disabled':''}>Salvar perfil</button></div></form></section>
   <section class="section"><div class="card" style="padding-block:4px"><button class="linkrow" data-go="clube">Clube de vantagens${CHEV}</button><button class="linkrow" data-go="config">Configurações${CHEV}</button></div></section>`;
 }
+function pushRemHtml(){
+  if(!S.uid||!S.ready)return '';const st=S.push;
+  if(!['default','error','needs-install','denied'].includes(st))return '';
+  try{if(Number(localStorage.getItem('pv-push-hide')||0)>Date.now())return ''}catch(e){}
+  if(st==='needs-install'&&installHtml())return '';
+  const t={default:['🔔 Ativa os avisos?','Fica sabendo na hora quando sair treino, evento, ranking do jogo, folhas e o seu pedido da loja.'],
+    error:['🔔 Ativa os avisos?','Da última vez não deu certo. Tenta de novo, leva 2 segundos.'],
+    'needs-install':['🔔 Quer receber os avisos?','No iPhone, os avisos só chegam com o app instalado: no Safari, Compartilhar → Adicionar à Tela de Início. Depois abra pelo ícone e ative.'],
+    denied:['🔕 Seus avisos estão bloqueados','Pra liberar: Ajustes do celular → Notificações → Passos Verdes (no Android pode aparecer como Chrome) → Permitir.']}[st];
+  return `<section class="section"><div class="card pushrem"><b>${t[0]}</b><p class="small muted" style="margin:0">${t[1]}</p><div class="row">${st==='default'||st==='error'?`<button class="btn small primary" data-action="push-on" ${S.pushBusy?'disabled':''}>${S.pushBusy?'Ativando…':'Ativar avisos'}</button>`:''}<button class="btn small" data-action="push-later">Agora não</button></div></div></section>`;
+}
 function pushStatus(){
   const st={granted:['ok','Ativados','Você recebe um aviso quando sair treino, corrida, desafio, notícia ou novidade na loja.'],
     default:['wait','Desativados','Toque no botão para receber os avisos da Passos Verdes.'],
@@ -1297,7 +1339,8 @@ function vPrivacidade(){
   <h2>Quais dados guardamos</h2>
   <ul><li><b>Conta Google:</b> usamos o login do Google para te identificar. Guardamos seu nome de exibição e um código interno da conta. Sua senha nunca passa pelo app.</li>
   <li><b>Perfil:</b> o que você escolher preencher, como apelido, foto, bairro, objetivo, ritmo, aniversário (dia e mês), Instagram e Strava. Tudo é opcional, exceto o apelido.</li>
-  <li><b>Participação:</b> presenças confirmadas, votos em enquetes, respostas do quiz, curtidas, comentários, pontuação no jogo e km lançados nos desafios.</li>
+  <li><b>Participação:</b> presenças confirmadas, votos em enquetes, curtidas, comentários, pontuação nos jogos, km lançados nos desafios, quem você segue e o que você posta no Mural.</li>
+  <li><b>Mural:</b> as fotos e textos que você posta ficam visíveis para quem tem conta no app. As fotos são reduzidas antes de enviar. Você pode apagar seus posts quando quiser, e a equipe pode remover posts que fujam do tema.</li>
   <li><b>Prints de corrida:</b> usados só para a organização conferir os km. São apagados assim que a conferência é feita.</li>
   <li><b>Pedidos da loja:</b> produto, tamanho, quantidade e valor, para a entrega.</li>
   <li><b>Localização (opcional):</b> se você tocar em "Usar minha localização", ela é usada só no seu celular para buscar a previsão do tempo. Não é guardada nem enviada para a equipe.</li>
@@ -1503,13 +1546,7 @@ setInterval(()=>{
 },5000);
 
 function vGalera(){
-  let h=`<section class="section"><p class="eyebrow">Galera</p><h1 class="h-display">Joga, vota, participa</h1></section>`+visitante()+jogoCard();
-  const ps=[...S.enquetes].sort((a,b)=>(b.ativa?1:0)-(a.ativa?1:0)||(b.criado||0)-(a.criado||0));
-  if(ps.length||S.admin||!S.loaded.enquetes)h+=`<section class="section"><h2 class="sec">Enquetes</h2>${loading('enquetes','Carregando enquetes…')??(ps.length?ps.map(pollCard).join(''):`<div class="empty">Nenhuma enquete ainda. Só a equipe vê este aviso: crie uma em Organizar.</div>`)}</section>`;
-  const qs=[...S.quiz].sort((a,b)=>(a.criado||0)-(b.criado||0));
-  const m=me();const resp=qs.filter(q=>typeof m.quiz[q.id]==='number');const ac=resp.filter(q=>m.quiz[q.id]===Number(q.correta)).length;
-  if(qs.length||S.admin||!S.loaded.quiz)h+=`<section class="section"><div class="sec-head"><h2 class="sec">Quiz da corrida</h2>${S.uid&&qs.length?`<span class="muted small num">${ac}/${qs.length} acertos</span>`:''}</div>${loading('quiz','Carregando quiz…')??(qs.length?qs.map(quizCard).join(''):`<div class="empty">O quiz ainda não tem perguntas. Só a equipe vê este aviso: crie em Organizar.</div>`)}</section>`;
-  return h;
+  return `<section class="section"><p class="eyebrow">Jogos</p><h1 class="h-display">Bora jogar</h1><p class="lede">Dois jogos, ranking toda semana. Depois de abrir uma vez, dá pra jogar até sem internet.</p></section>`+visitante()+provaCard()+jogoCard();
 }
 
 function admList(col,items,title,sub,toggle,editable){
@@ -1562,7 +1599,7 @@ function vAdmin(){
   <section class="section"><h2 class="sec">Enviar aviso</h2><form class="card" data-form="aviso">
     <label for="aw-t">Título<input type="text" id="aw-t" maxlength="60" required placeholder="Ex.: Treino de amanhã mudou de lugar"></label>
     <label for="aw-x">Mensagem<textarea id="aw-x" maxlength="160" required placeholder="Ex.: Vamos nos encontrar na praça às 6h30."></textarea></label>
-    <label for="aw-u">Ao tocar, abrir<select id="aw-u"><option value="inicio">Início</option><option value="agenda">Agenda</option><option value="desafios">Desafios</option><option value="loja">Loja</option><option value="galera">Galera</option></select></label>
+    <label for="aw-u">Ao tocar, abrir<select id="aw-u"><option value="inicio">Início</option><option value="agenda">Agenda</option><option value="desafios">Desafios</option><option value="loja">Loja</option><option value="galera">Jogos</option><option value="mural">Mural</option></select></label>
     <div><button class="btn primary" type="submit">Enviar para todos</button></div>
     <p class="muted small" style="margin:0">Vai para todo mundo que ativou os avisos. Use para recados importantes. Ao publicar treino, notícia, desafio ou produto, o aviso já sai sozinho se a caixinha estiver marcada.</p></form></section>
 
@@ -1644,12 +1681,6 @@ function vAdmin(){
     <button class="btn primary" type="submit">Abrir enquete</button></form>
     <div class="card">${admList('enquetes',S.enquetes,x=>x.pergunta,x=>(x.opcoes||[]).length+' opções','ativa')}</div></section>
 
-<!--T:conteudo-->  <section class="section"><h2 class="sec">Nova pergunta do quiz</h2><form class="card" data-form="quiz">
-    <label for="qz-p">Pergunta<input type="text" id="qz-p" required></label>
-    <label for="qz-o">Opções (uma por linha)<textarea id="qz-o" required></textarea></label>
-    <div class="grid2"><label for="qz-c">Nº da opção certa<input type="number" id="qz-c" min="1" step="1" required></label><label for="qz-e">Explicação<input type="text" id="qz-e"></label></div>
-    <button class="btn primary" type="submit">Adicionar ao quiz</button></form>
-    <div class="card">${admList('quiz',S.quiz,x=>x.pergunta,x=>'Certa: '+((x.opcoes||[])[x.correta]||''))}</div></section>
 
 <!--T:config-->  <section class="section"><h2 class="sec">Sobre o projeto</h2><form class="card" data-form="info">
     <label for="in-s">Texto de apresentação<textarea id="in-s">${esc(i.sobre||'')}</textarea></label>
@@ -2035,6 +2066,251 @@ function drawMini(){const c=document.getElementById('gmini');if(!c)return;const 
   [[500,128],[528,112]].forEach(([x,y])=>leaf(g,x,y,.3));
 }
 
+/* ---------- Prova PV (corrida de toque com distância e nível) ---------- */
+const DISTS=[5,10,15,21,42];
+const lsGet=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:v}catch(e){return d}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(e){}};
+S.provaDist=Number(lsGet('pv-pdist',5))||5;S.provaNivel=lsGet('pv-pnivel','facil');S.placarP=[];S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLim=20;S.muralFiltro='todos';S.fotos={};S.segCont={};S.muralLoaded=false;
+const hms=sg=>{sg=Math.max(0,Math.round(Number(sg)||0));const h=Math.floor(sg/3600),m=Math.floor(sg%3600/60),x=sg%60;return (h?h+':'+String(m).padStart(2,'0'):String(m))+':'+String(x).padStart(2,'0')};
+const paceTxt=(t,d)=>t&&d?hms(t/d)+'/km':'';
+function provaBest(d,uid=S.uid){const r=(S.placarP||[]).find(p=>p.uid===uid);return r&&Number(r['t'+d])||0}
+function nomeU(uid,fb){return uid===S.uid?(me().apelido||S.myName||fb||'Você'):(nome(uid)!=='Corredor(a)'?nome(uid):(fb||'Corredor(a)'))}
+function provaCard(){
+  const d=S.provaDist,f='t'+d;
+  const pl=(S.placarP||[]).filter(p=>Number(p[f])>0).sort((a,b)=>a[f]-b[f]);const pos=pl.findIndex(p=>p.uid===S.uid);
+  const li=(r,i)=>`<li class="${i===0?'top1':''} ${r.uid===S.uid?'me':''}" data-action="ver" data-uid="${esc(r.uid)}"><span class="pos">${i+1}</span>${avatar(r.uid,30)}<span class="nm">${esc(nomeU(r.uid,r.nome))}${r.uid===S.uid?' (você)':''}</span><span class="num">${hms(r[f])}</span></li>`;
+  let rows=pl.slice(0,S.rankAllP?50:5).map(li).join('');if(!S.rankAllP&&pos>=5)rows+=li(pl[pos],pos);
+  const rec=Number((me().recProva||{})[d])||0;
+  const abertos=(S.duelosR||[]).filter(x=>x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).sort((a,b)=>(b.criado||0)-(a.criado||0));
+  const feitos=[...(S.duelosR||[]),...(S.duelosE||[])].filter(x=>x.status==='feito').sort((a,b)=>(b.feitoEm||0)-(a.feitoEm||0)).slice(0,4);
+  const enviados=(S.duelosE||[]).filter(x=>x.status==='aberto'&&(Date.now()-(x.criado||0))<7*864e5).slice(0,3);
+  return `<section class="section"><div class="card gamecard"><div class="gbanner provab"><div class="gtitle"><span>Novo · corrida de toque</span><b>Prova PV</b></div><div class="provakm num">${d}<small>km</small></div></div><div class="gbody">
+  <p class="small" style="margin:0">Toque na tela pra correr: quanto mais rápido, mais rápido o boneco vai. Os adversários aceleram no fim e o fôlego acaba se você exagerar. Ranking por distância, zera toda segunda.</p>
+  <div class="seg" role="group" aria-label="Distância">${DISTS.map(k=>`<button data-action="pdist" data-v="${k}" aria-pressed="${k===d}">${k===21?'21k':k===42?'42k':k+' km'}</button>`).join('')}</div>
+  <div class="seg" role="group" aria-label="Nível">${[['facil','Fácil'],['dificil','Difícil']].map(([k,l])=>`<button data-action="pnivel" data-v="${k}" aria-pressed="${S.provaNivel===k}">${l}</button>`).join('')}</div>
+  <button class="btn primary" data-action="prova">Correr ${d} km</button>
+  ${rec?`<p class="small muted" style="margin:0;text-align:center">Seu recorde nos ${d} km: <b class="num">${hms(rec)}</b> · ${paceTxt(rec,d)}</p>`:''}
+  ${abertos.length?`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">⚡ Desafios pra você</p>${abertos.map(x=>`<div class="duelo">${avatar(x.de,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${esc(nomeU(x.de,x.deNome))} te desafiou</b><span class="small muted num">${x.dist} km · bater ${hms(x.tempoDe)}</span></span><button class="btn small primary" data-action="duelo-aceitar" data-id="${esc(x.id)}">Aceitar</button></div>`).join('')}</div>`:''}
+  ${enviados.length?`<p class="small muted" style="margin:0">Aguardando resposta: ${enviados.map(x=>esc(nomeU(x.para,x.paraNome))+' ('+x.dist+' km)').join(', ')}</p>`:''}
+  ${feitos.length?`<div class="duelos"><p class="eyebrow" style="margin:0 0 6px">Últimos duelos</p>${feitos.map(x=>{const eu=x.de===S.uid;const outro=eu?x.para:x.de;const meu=eu?x.tempoDe:x.tempoPara,dele=eu?x.tempoPara:x.tempoDe;const ganhei=x.vencedor===S.uid;
+    return `<div class="duelo">${avatar(outro,32)}<span class="stack" style="gap:0;flex:1"><b class="small">${ganhei?'🏆 Você venceu':'Você perdeu'} de ${esc(nomeU(outro,eu?x.paraNome:x.deNome))}</b><span class="small muted num">${x.dist} km · você ${hms(meu)} × ${hms(dele)}</span></span>${!ganhei?`<button class="btn small" data-action="duelo-novo" data-uid="${esc(outro)}" data-d="${x.dist}">Revanche</button>`:''}</div>`}).join('')}</div>`:''}
+  <div><div class="sec-head"><p class="eyebrow" style="margin:0 0 4px">Ranking ${d} km · ${esc(semanaTxt())}</p>${pl.length>5?`<button class="linkbtn" data-action="rankallp">${S.rankAllP?'Ver menos':'Ver todos'}</button>`:''}</div>
+  ${pl.length?`<ol class="rank">${rows}</ol>`:`<p class="muted small" style="margin:0">Ninguém correu os ${d} km esta semana. Seja o primeiro.</p>`}</div></div></div></section>`;
+}
+const PV={duelo:null,res:null,pick:false,card:''};
+async function openProva(o={}){
+  const d=o.dist||S.provaDist,nivel=o.nivel||S.provaNivel;
+  const el=$('#game');G.modo='prova';G.on=false;PV.duelo=o.duelo||null;PV.res=null;PV.pick=false;PV.dist=d;PV.nivel=nivel;
+  el.innerHTML=`<div class="gwrap"><div class="ghead"><div><p class="eyebrow" style="margin:0">Prova PV · ${d} km · ${nivel==='dificil'?'Difícil':'Fácil'}</p><b class="small muted">${PV.duelo?'Duelo: bata o tempo de '+esc(PV.duelo.deNome||'quem te desafiou'):'Toque na tela pra correr'}</b></div><button class="btn small" data-action="game-close">Fechar</button></div>
+  <div class="gstage" id="g3st"><div class="g3load">Montando a largada…</div><div class="gover" id="gover" hidden></div></div></div>`;
+  el.hidden=false;document.body.style.overflow='hidden';
+  if(!S.uid)toast('Entre com sua conta para entrar no ranking.');
+  try{G3.mod=G3.mod||await import('/jogo3d.js');const t=document.createElement('canvas');if(!(t.getContext('webgl2')||t.getContext('webgl')))throw new Error('sem webgl')}
+  catch(e){console.warn('prova indisponível',e);const st=document.getElementById('g3st');if(st)st.querySelector('.g3load').textContent=navigator.onLine?'Seu celular não conseguiu abrir o jogo 3D.':'Sem internet. Abra o jogo uma vez com internet pra ele funcionar offline.';return}
+  if($('#game').hidden)return;
+  const st=document.getElementById('g3st');if(!st)return;st.querySelector('.g3load')?.remove();
+  const noite=document.documentElement.getAttribute('data-theme')==='dark'||(!document.documentElement.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+  const rec=Math.min(...[provaBest(d),Number((me().recProva||{})[d])||0].filter(x=>x>0),Infinity);
+  try{G3.ctrl=G3.mod.criar(st,{modo:'prova',distancia:d,nivel,noite,titulo:`Prova ${d} km`,recorde:isFinite(rec)?rec:0,fantasma:PV.duelo?{nome:PV.duelo.deNome,tempo:PV.duelo.tempoDe}:null,onOver:provaFim})}
+  catch(e){console.warn('prova',e);toast('Não deu pra abrir a prova.')}
+}
+function provaFim(r){
+  PV.res=r;const o=document.getElementById('gover');if(!o)return;
+  if(r.desistiu){o.innerHTML=`<div class="gcard"><p class="eyebrow" style="margin:0">Prova encerrada</p><p class="small">Parou de correr? Bora tentar de novo.</p><div class="row" style="justify-content:center"><button class="btn primary" data-action="prova-again">Correr de novo</button><button class="btn" data-action="game-close">Fechar</button></div></div>`;o.hidden=false;return}
+  const d=r.distancia,t=Math.round(r.tempo);const antes=provaBest(d),recAnt=Number((me().recProva||{})[d])||0;const novo=!recAnt||t<recAnt;
+  saveProva(d,t);
+  let duelo='';
+  if(PV.duelo){const x=PV.duelo;const ganhei=t<x.tempoDe;resolverDuelo(x,t);
+    duelo=`<p class="small" style="margin:0"><b>${ganhei?'🏆 Você venceu o duelo!':'😤 '+esc(x.deNome||'Seu adversário')+' venceu dessa vez'}</b><br><span class="num">você ${hms(t)} × ${hms(x.tempoDe)}</span></p>`;PV.duelo=null}
+  PV.card=`<div class="gcard"><p class="eyebrow" style="margin:0">${r.posicao===1?'🥇 Campeão da prova':r.posicao+'º lugar de '+r.total}${novo?' · novo recorde!':''}</p><div class="gscore num">${hms(t)}</div>
+  <div class="g3res num"><span><b>${d}</b>km</span><span><b>${hms(t/d)}</b>pace médio</span><span><b>${r.posicao}º</b>posição</span></div>${duelo}
+  ${S.uid?`<p class="small muted" style="margin:0">Melhor da semana nos ${d} km: <b class="num">${hms(antes&&antes<t?antes:t)}</b></p>`:`<p class="small" style="margin:0">Entre com sua conta para entrar no ranking.</p>`}
+  <div class="row" style="justify-content:center"><button class="btn primary" data-action="prova-again">Correr de novo</button>${S.uid?`<button class="btn" data-action="prova-desafiar">⚡ Desafiar</button>`:''}</div><button class="linkbtn" data-action="game-close" style="align-self:center">Ver ranking</button></div>`;
+  o.innerHTML=PV.card;setTimeout(()=>{o.hidden=false},300);
+}
+async function saveProva(d,t){
+  if(!S.uid||!(t>0))return;
+  const rec=me().recProva||{};if(!rec[d]||t<rec[d])saveMe(m=>{m.recProva={...(m.recProva||{}),[d]:t}});
+  const wb=provaBest(d);
+  if(!wb||t<wb){try{await setDoc(doc(fs,'prova',semanaKey(),'placar',S.uid),{uid:S.uid,nome:me().apelido||S.myName||'',['t'+d]:t,atualizado:Date.now()},{merge:true})}catch(e){console.warn('placar prova',e)}}
+}
+function provaPicker(){
+  const o=document.getElementById('gover');if(!o||!PV.res)return;const d=PV.res.distancia;
+  const ids=[...S.seguindo];for(const p of S.placarP||[])if(!ids.includes(p.uid))ids.push(p.uid);
+  const lista=ids.filter(u=>u&&u!==S.uid&&S.membros[u]).slice(0,16);
+  o.innerHTML=`<div class="gcard" style="max-height:80vh;overflow:auto"><p class="eyebrow" style="margin:0">Desafiar nos ${d} km</p><p class="small muted" style="margin:0">A pessoa recebe um aviso e corre contra o seu tempo de <b class="num">${hms(Math.min(PV.res.tempo,provaBest(d)||Infinity))}</b>.</p>
+  ${lista.length?`<div class="stack" style="gap:6px;text-align:left">${lista.map(u=>`<button class="pickp" data-action="duelo-novo" data-uid="${esc(u)}" data-d="${d}">${avatar(u,32)}<span>${esc(nomeU(u))}</span>${S.seguindo.has(u)?'<small>seguindo</small>':''}</button>`).join('')}</div>`:`<p class="small" style="margin:0">Siga a galera no <b>Mural</b> ou no perfil de cada um pra poder desafiar.</p>`}
+  <button class="btn" data-action="prova-voltar">Voltar</button></div>`;
+}
+async function criarDuelo(para,d){
+  if(!S.uid||!para||para===S.uid)return;
+  const t=provaBest(d)||Number((me().recProva||{})[d])||0;
+  if(!t){toast(`Corra os ${d} km primeiro pra ter um tempo pra desafiar.`);S.provaDist=d;lsSet('pv-pdist',d);openProva({dist:d});return}
+  const ja=(S.duelosE||[]).find(x=>x.para===para&&x.status==='aberto'&&x.dist===d);if(ja){toast('Você já desafiou essa pessoa nessa distância.');return}
+  try{const ref=await addDoc(collection(fs,'duelos'),{de:S.uid,deNome:me().apelido||S.myName||'',para,paraNome:nome(para),dist:d,tempoDe:t,status:'aberto',criado:Date.now()});
+    toast('Desafio enviado! ⚡');avisoSocial({acao:'duelo',id:ref.id});
+    const o=document.getElementById('gover');if(o&&PV.card)o.innerHTML=PV.card}
+  catch(e){console.warn('duelo',e);toast('Não deu pra enviar o desafio.')}
+}
+async function resolverDuelo(x,t){
+  try{await updateDoc(doc(fs,'duelos',x.id),{tempoPara:t,status:'feito',vencedor:t<x.tempoDe?S.uid:x.de,feitoEm:Date.now()});avisoSocial({acao:'duelo-res',id:x.id})}
+  catch(e){console.warn('duelo resolver',e)}
+}
+async function avisoSocial(body){
+  try{if(!auth.currentUser)return;const tok=await auth.currentUser.getIdToken();
+    await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body)})}
+  catch(e){console.warn('aviso social',e)}
+}
+
+/* ---------- Seguir ---------- */
+function segueBtn(uid,small=true){
+  if(!S.uid||uid===S.uid)return '';const on=S.seguindo.has(uid);
+  return `<button class="btn ${small?'small':''} ${on?'':'primary'}" data-action="seguir" data-uid="${esc(uid)}">${on?'Seguindo':'Seguir'}</button>`;
+}
+async function seguir(uid){
+  if(!S.uid){login();return}if(uid===S.uid)return;
+  const id=S.uid+'_'+uid;const on=S.seguindo.has(uid);
+  if(on){S.seguindo.delete(uid)}else S.seguindo.add(uid);
+  if(S.segCont[uid]&&typeof S.segCont[uid]==='object')S.segCont[uid].seg+=on?-1:1;
+  render();
+  try{if(on)await deleteDoc(doc(fs,'seguidores',id));else{await setDoc(doc(fs,'seguidores',id),{de:S.uid,para:uid,criado:Date.now()});avisoSocial({acao:'seguir',uid})}}
+  catch(e){console.warn('seguir',e);toast('Não deu certo. Tente de novo.')}
+}
+function segContagem(uid){
+  const c=S.segCont[uid];if(c==='...')return null;if(c)return c;
+  S.segCont[uid]='...';
+  Promise.all([getCountFromServer(query(collection(fs,'seguidores'),where('para','==',uid))),getCountFromServer(query(collection(fs,'seguidores'),where('de','==',uid)))])
+    .then(([a,b])=>{S.segCont[uid]={seg:a.data().count,sigo:b.data().count};schedule()}).catch(()=>{S.segCont[uid]={seg:0,sigo:0}});
+  return null;
+}
+function segHtml(uid){
+  const c=segContagem(uid);
+  return `<div class="row" style="align-items:center;gap:14px"><span class="small"><b class="num">${c?c.seg:'–'}</b> seguidores</span><span class="small"><b class="num">${c?c.sigo:'–'}</b> seguindo</span>${uid!==S.uid?segueBtn(uid)+`<button class="btn small" data-action="duelo-novo" data-uid="${esc(uid)}" data-d="${S.provaDist}">⚡ Desafiar</button>`:''}</div>`;
+}
+
+/* ---------- Mural ---------- */
+const haTempo=ms=>{const s=Math.max(0,(Date.now()-ms)/1000);if(s<60)return 'agora';if(s<3600)return Math.floor(s/60)+' min';if(s<86400)return Math.floor(s/3600)+' h';if(s<7*86400)return Math.floor(s/86400)+' d';return new Date(ms).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})};
+function parseTempo(v){v=String(v||'').trim();if(!v)return 0;const p=v.split(/[:h]/).map(x=>parseInt(x,10));if(p.some(isNaN))return 0;if(p.length===1)return p[0]*60;if(p.length===2)return p[0]*60+p[1];return p[0]*3600+p[1]*60+p[2]}
+function vMural(){
+  let h=`<section class="section"><p class="eyebrow">Mural</p><h1 class="h-display">Mostra teu treino</h1><p class="lede">Foto, km e aquela resenha do treino. Siga a galera e acompanhe quem corre com você.</p></section>`;
+  if(!S.uid)return h+visitante();
+  h+=`<section class="section"><button class="btn primary" data-action="mural-novo">+ Postar treino</button><div class="seg" role="group" aria-label="Filtro">${[['todos','Todos'],['seguindo','Seguindo']].map(([k,l])=>`<button data-action="mural-filtro" data-v="${k}" aria-pressed="${S.muralFiltro===k}">${l}</button>`).join('')}</div></section>`;
+  if(!S.muralLoaded)return h+`<section class="section"><div class="empty">Carregando o mural…</div></section>`;
+  let ps=S.mural;if(S.muralFiltro==='seguindo')ps=ps.filter(p=>S.seguindo.has(p.uid)||p.uid===S.uid);
+  if(!ps.length)return h+`<section class="section"><div class="empty">${S.muralFiltro==='seguindo'?'Quem você segue ainda não postou. Toque em "Todos" e siga a galera.':'Ninguém postou ainda. Seja o primeiro a mostrar o treino!'}</div></section>`;
+  h+=`<section class="section mural">${ps.map(postHtml).join('')}</section>`;
+  if(S.mural.length>=S.muralLim)h+=`<section class="section"><button class="btn" data-action="mural-mais">Ver mais posts</button></section>`;
+  return h;
+}
+function postHtml(p){
+  const meu=p.uid===S.uid;const n=Object.keys(p.curtidas||{}).length;const curti=!!(p.curtidas||{})[S.uid];
+  const k='mural'+p.id;const pace=p.km>0&&p.tempo>0?hms(p.tempo/p.km)+'/km':'';
+  const foto=S.fotos[p.id];
+  return `<article class="card post">
+  <div class="post-h">${avatar(p.uid,40)}<button class="post-n" data-action="ver" data-uid="${esc(p.uid)}"><b>${esc(nomeU(p.uid,p.nome))}</b><span class="small muted">${haTempo(p.criado||0)}</span></button>${!meu&&!S.seguindo.has(p.uid)?segueBtn(p.uid):''}</div>
+  ${p.foto?`<div class="mfoto" data-id="${esc(p.id)}" style="aspect-ratio:${Number(p.w)||4}/${Number(p.h)||5}">${foto?`<img src="${foto}" alt="Foto do treino de ${esc(nomeU(p.uid,p.nome))}" loading="lazy">`:foto===''?'<span class="small muted">Foto indisponível</span>':''}</div>`:''}
+  ${p.km||p.tempo?`<div class="chips num">${p.km?`<span class="chip treino">${kmf(p.km)} km</span>`:''}${p.tempo?`<span class="chip">${hms(p.tempo)}</span>`:''}${pace?`<span class="chip">${pace}</span>`:''}</div>`:''}
+  ${p.texto?`<p class="post-t">${esc(p.texto)}</p>`:''}
+  <div class="post-f"><button class="likebtn ${curti?'on':''}" data-action="mural-curtir" data-id="${esc(p.id)}" aria-pressed="${curti}">💚 <span class="num">${n||''}</span>${n?'':'Curtir'}</button>
+  <span style="flex:1"></span>${meu||S.admin?`<button class="linkbtn ${S.armed===k?'danger':''}" data-action="mural-apagar" data-id="${esc(p.id)}">${S.armed===k?'Confirmar':'Apagar'}</button>`:`<button class="linkbtn" data-action="mural-denunciar" data-id="${esc(p.id)}">Denunciar</button>`}</div></article>`;
+}
+let muralIO=null;
+function muralFotos(){
+  if(view!=='mural')return;
+  if(!muralIO&&'IntersectionObserver' in window)muralIO=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){muralIO.unobserve(e.target);carregarFoto(e.target.dataset.id)}},{rootMargin:'400px'});
+  document.querySelectorAll('.mfoto[data-id]').forEach(el=>{const id=el.dataset.id;if(S.fotos[id]!==undefined)return;if(muralIO)muralIO.observe(el);else carregarFoto(id)});
+}
+const fotoBusca={};
+async function carregarFoto(id){
+  if(S.fotos[id]!==undefined||fotoBusca[id])return;fotoBusca[id]=1;
+  try{const d=await getDoc(doc(fs,'muralfotos',id));S.fotos[id]=d.exists()&&okPic(d.data().foto)?d.data().foto:''}catch(e){S.fotos[id]='';delete fotoBusca[id]}
+  const el=document.querySelector(`.mfoto[data-id="${id}"]`);if(el)el.innerHTML=S.fotos[id]?`<img src="${S.fotos[id]}" alt="Foto do treino">`:'<span class="small muted">Foto indisponível</span>';
+}
+const MP={foto:'',w:0,h:0,busy:false};
+function muralSheet(){
+  let el=$('#mursheet');
+  if(!el){el=document.createElement('div');el.id='mursheet';el.className='overlay stsheet';el.setAttribute('role','dialog');el.setAttribute('aria-label','Postar treino');el.hidden=true;document.body.appendChild(el)}
+  const km=($('#mp-k')||{}).value||'',tp=($('#mp-t')||{}).value||'',tx=($('#mp-x')||{}).value||'';
+  el.innerHTML=`<div class="in"><div class="row" style="justify-content:space-between;flex-wrap:nowrap;align-items:flex-start"><div><p class="eyebrow" style="margin:0">Mural</p><h2 class="sec">Postar treino</h2></div><button class="hbtn" style="font-size:30px;line-height:1" data-action="mural-x" aria-label="Fechar">×</button></div>
+  <div class="card" style="gap:12px">
+   <div class="photo-in">${MP.foto?`<img class="prev" src="${MP.foto}" alt="Prévia da foto">`:''}<div class="row"><span class="btn small filebtn">${MP.busy?'Preparando…':MP.foto?'Trocar foto':'📷 Escolher foto'}<input type="file" id="mp-f" accept="image/*" aria-label="Foto do treino"></span>${MP.foto?`<button type="button" class="btn small danger" data-action="mural-rmfoto">Remover</button>`:''}</div></div>
+   <div class="grid2"><label for="mp-k">Distância (km)<input type="text" id="mp-k" inputmode="decimal" maxlength="6" placeholder="Ex.: 8,5" value="${esc(km)}"></label><label for="mp-t">Tempo<input type="text" id="mp-t" inputmode="numeric" placeholder="Ex.: 45:30" value="${esc(tp)}"></label></div>
+   <label for="mp-x">Como foi?<textarea id="mp-x" maxlength="280" placeholder="Ex.: Longão de domingo com a galera, subida da serra tava pesada 😅">${esc(tx)}</textarea></label>
+   <p class="small muted" style="margin:0">A foto é reduzida antes de enviar. Poste só coisa de treino: a equipe pode remover o que fugir do tema.</p>
+   <button class="btn primary" data-action="mural-postar" ${MP.busy?'disabled':''}>${MP.busy?'Postando…':'Publicar'}</button></div></div>`;
+  el.hidden=false;
+}
+async function fotoMural(file){
+  const img=await loadImg(file);let max=900,q=0.7,out='',w=0,h=0;
+  const webp=document.createElement('canvas').toDataURL('image/webp').startsWith('data:image/webp');
+  for(let t=0;t<6;t++){
+    const sc=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));w=Math.round(img.naturalWidth*sc);h=Math.round(img.naturalHeight*sc);
+    const c=document.createElement('canvas');c.width=w;c.height=h;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,w,h);g.drawImage(img,0,0,w,h);
+    out=c.toDataURL(webp?'image/webp':'image/jpeg',q);if(out.length<150000)break;q-=0.08;max=Math.round(max*0.88);
+  }
+  if(out.length>190000)throw new Error('grande');
+  return {foto:out,w,h};
+}
+document.addEventListener('change',async e=>{
+  if(e.target.id!=='mp-f'||!e.target.files||!e.target.files[0])return;
+  MP.busy=true;muralSheet();
+  try{Object.assign(MP,await fotoMural(e.target.files[0]))}catch(err){toast('Não deu pra usar essa foto. Tente outra.')}
+  MP.busy=false;muralSheet();
+});
+async function muralPostar(){
+  if(MP.busy)return;const km=parseFloat(String(($('#mp-k')||{}).value||'').replace(',','.'))||0,tempo=parseTempo(($('#mp-t')||{}).value),texto=String(($('#mp-x')||{}).value||'').trim().slice(0,280);
+  if(!MP.foto&&!texto&&!km){toast('Coloque uma foto, os km ou um texto.');return}
+  const hoje=S.mural.filter(p=>p.uid===S.uid&&Date.now()-(p.criado||0)<864e5).length;if(hoje>=3){toast('Limite de 3 posts por dia. Volta amanhã! 💚');return}
+  if(km>300||(tempo&&tempo>86400)){toast('Confere a distância e o tempo.');return}
+  MP.busy=true;muralSheet();
+  const id=newId('mural');
+  try{
+    if(MP.foto){await setDoc(doc(fs,'muralfotos',id),{uid:S.uid,foto:MP.foto,criado:Date.now()});S.fotos[id]=MP.foto}
+    await setDoc(doc(fs,'mural',id),{uid:S.uid,nome:me().apelido||S.myName||'',texto,km:Math.round(km*100)/100,tempo,foto:!!MP.foto,w:MP.w||0,h:MP.h||0,curtidas:{},criado:Date.now()});
+    Object.assign(MP,{foto:'',w:0,h:0,busy:false});const el=$('#mursheet');if(el){el.hidden=true;el.innerHTML=''}
+    toast('Postado! 💚');S.muralFiltro='todos';if(view!=='mural')go('mural');else render();
+  }catch(err){console.warn('mural',err);MP.busy=false;muralSheet();toast('Não deu pra postar. Tente de novo.')}
+}
+function muralOuvir(){
+  if(unsubMU){unsubMU();unsubMU=null}if(!S.uid)return;
+  unsubMU=onSnapshot(query(collection(fs,'mural'),orderBy('criado','desc'),limit(S.muralLim)),s=>{S.mural=s.docs.map(d=>({id:d.id,...d.data()}));S.muralLoaded=true;schedule()},()=>{S.muralLoaded=true;schedule()});
+}
+let muralLimpo=0;
+async function muralLimpeza(){ // a equipe mantém o mural leve: posts com mais de 90 dias saem
+  if(!S.admin||Date.now()-muralLimpo<6*36e5)return;muralLimpo=Date.now();
+  try{const q=await getDocs(query(collection(fs,'mural'),where('criado','<',Date.now()-90*864e5),limit(25)));
+    for(const d of q.docs){await deleteDoc(doc(fs,'muralfotos',d.id)).catch(()=>{});await deleteDoc(doc(fs,'mural',d.id)).catch(()=>{})}}
+  catch(e){console.warn('limpeza mural',e)}
+}
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
+  const nossos=['pdist','pnivel','prova','prova-again','prova-desafiar','prova-voltar','duelo-novo','duelo-aceitar','rankallp','seguir','mural-novo','mural-x','mural-postar','mural-rmfoto','mural-filtro','mural-mais','mural-curtir','mural-apagar','mural-denunciar'];
+  if(!nossos.includes(a))return;e.stopImmediatePropagation();
+  if(a==='pdist'){S.provaDist=Number(b.dataset.v);lsSet('pv-pdist',S.provaDist);render()}
+  else if(a==='pnivel'){S.provaNivel=b.dataset.v;lsSet('pv-pnivel',S.provaNivel);render()}
+  else if(a==='prova')openProva();
+  else if(a==='prova-again'){const o=document.getElementById('gover');if(o){o.hidden=true;o.innerHTML=''}PV.res=null;if(G3.ctrl)G3.ctrl.reiniciar()}
+  else if(a==='prova-desafiar')provaPicker();
+  else if(a==='prova-voltar'){const o=document.getElementById('gover');if(o&&PV.card)o.innerHTML=PV.card}
+  else if(a==='duelo-novo'){if(!S.uid){login();return}criarDuelo(b.dataset.uid,Number(b.dataset.d)||S.provaDist)}
+  else if(a==='duelo-aceitar'){const x=(S.duelosR||[]).find(d=>d.id===b.dataset.id);if(x)openProva({dist:x.dist,duelo:x})}
+  else if(a==='rankallp'){S.rankAllP=!S.rankAllP;render()}
+  else if(a==='seguir')seguir(b.dataset.uid);
+  else if(a==='mural-novo'){if(!S.uid){login();return}muralSheet()}
+  else if(a==='mural-x'){const el=$('#mursheet');if(el){el.hidden=true;el.innerHTML=''}}
+  else if(a==='mural-rmfoto'){Object.assign(MP,{foto:'',w:0,h:0});muralSheet()}
+  else if(a==='mural-postar')muralPostar();
+  else if(a==='mural-filtro'){S.muralFiltro=b.dataset.v;render()}
+  else if(a==='mural-mais'){S.muralLim+=20;muralOuvir()}
+  else if(a==='mural-curtir'){const p=S.mural.find(x=>x.id===b.dataset.id);if(!p||!S.uid)return;const on=!!(p.curtidas||{})[S.uid];
+    p.curtidas={...(p.curtidas||{})};if(on)delete p.curtidas[S.uid];else p.curtidas[S.uid]=true;render();
+    try{await updateDoc(doc(fs,'mural',p.id),{['curtidas.'+S.uid]:on?deleteField():true})}catch(err){console.warn('curtir',err)}}
+  else if(a==='mural-apagar'){const k='mural'+b.dataset.id;if(S.armed!==k){S.armed=k;render();return}S.armed=null;
+    try{await deleteDoc(doc(fs,'mural',b.dataset.id));await deleteDoc(doc(fs,'muralfotos',b.dataset.id)).catch(()=>{});toast('Post apagado.')}catch(err){toast('Não deu pra apagar.')}}
+  else if(a==='mural-denunciar'){const p=S.mural.find(x=>x.id===b.dataset.id);if(!p)return;
+    try{await addDoc(collection(fs,'reportes'),{uid:S.uid,nome:me().apelido||S.myName||'',texto:`Post do Mural denunciado (id ${p.id}) de ${p.nome||p.uid}: "${String(p.texto||'').slice(0,200)}"`,status:'aberto',app:'mural',criado:Date.now()});toast('Obrigado! A equipe vai olhar.')}catch(err){toast('Não deu pra enviar.')}}
+},true);
+
 /* ---------- Nomes ---------- */
 function refreshNames(){}
 
@@ -2223,6 +2499,7 @@ document.addEventListener('click',async e=>{
   else if(a==='login')login();
   else if(a==='logout'){await pushForget();try{await signOut(auth)}catch(err){}}
   else if(a==='push-on')pushOn();
+  else if(a==='push-later'){try{localStorage.setItem('pv-push-hide',String(Date.now()+3*864e5))}catch(e){}render()}
   else if(a==='editnome'){S.editNome=true;render();document.getElementById('f-apelido')?.focus()}
   else if(a==='dellanc'){const k='rl'+id;if(S.armed!==k){arm(k);return}S.armed=null;try{await S.db.doc('lancamentos/'+id).delete();try{await S.db.doc('provas/'+id).delete()}catch(err){}toast('Lançamento cancelado.')}catch(err){toast('Não foi possível cancelar.')}}
   else if(a==='aprovar')conferir(id,true);
@@ -2792,9 +3069,10 @@ async function login(){
 for(const c of COLS)DB.collection(c).onSnapshot(s=>{S[c]=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded[c]=true;schedule()},()=>{S.loaded[c]=true;schedule()});
 onSnapshot(doc(fs,'projeto','folhas'),s=>{S.cfgFolhas=s.exists()?s.data():null;schedule()},()=>{});
 DB.doc('projeto/info').onSnapshot(s=>{S.info=s.exists?s.data():null;schedule()},()=>{});
-let unsubMP=null,unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
+let unsubPV=null,unsubSG=null,unsubDR=null,unsubDE=null,unsubMU=null,unsubMP=null,unsubF=null,unsubRs=null,unsubTF=null,unsubTR=null,unsubM=null,unsubL=null,unsubP=null,unsubO=null,unsubC=null,unsubJ=null,unsubJ2=null,unsubK=null,unsubR=null,unsubA=null,unsubX=null;
 onAuthStateChanged(auth,async u=>{
   if(unsubMP){unsubMP();unsubMP=null}S.meusPedidos=[];
+  for(const u of [unsubPV,unsubSG,unsubDR,unsubDE,unsubMU])if(u)u();unsubPV=unsubSG=unsubDR=unsubDE=unsubMU=null;S.placarP=[];S.seguindo=new Set();S.duelosR=[];S.duelosE=[];S.mural=[];S.muralLoaded=false;S.segCont={};
   for(const u of [unsubF,unsubRs,unsubTF,unsubTR,unsubM,unsubL,unsubP,unsubO,unsubC,unsubJ,unsubJ2,unsubK,unsubR,unsubA,unsubX])if(u)u();unsubF=unsubRs=unsubTF=unsubTR=unsubM=unsubL=unsubP=unsubO=unsubC=unsubJ=unsubJ2=unsubK=unsubR=unsubA=unsubX=null;S.avatares={};S.provas={};S.pedidos=[];S.campeoes=[];S.reportes=[];S.edit=null;S.placar=[];S.campeao=null;S.parceiros=[];S.onbDone=false;S.cardOpen=false;S.lancamentos=[];S.provas={};S.pedidos=[];S.minhasFolhas=[];S.meusResgates=[];S.todasFolhas=[];S.resgates=[];
   S.uid=u?u.uid:null;S.myName=u?(u.displayName||''):'';S.admin=false;S.readOnly=false;S.confirmed=null;
   S.me=u?BLANK():null;S.membros={};
@@ -2803,6 +3081,11 @@ onAuthStateChanged(auth,async u=>{
     pushCheck().then(()=>{if(S.uid!==u.uid)return;render();if(S.push==='granted')pushSave().catch(e=>console.warn('push',e))});
     unsubA=onSnapshot(collection(fs,'avatares'),s=>{const a={};s.docs.forEach(d=>{a[d.id]=d.data().foto||''});S.avatares=a;schedule()},()=>{});
     unsubF=onSnapshot(query(collection(fs,'folhas'),where('uid','==',u.uid)),s=>{S.minhasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule();setTimeout(checarGanhos,600)},()=>{});
+    unsubPV=onSnapshot(collection(fs,'prova',semanaKey(),'placar'),s=>{S.placarP=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubSG=onSnapshot(query(collection(fs,'seguidores'),where('de','==',u.uid)),s=>{S.seguindo=new Set(s.docs.map(d=>d.data().para));schedule()},()=>{});
+    unsubDR=onSnapshot(query(collection(fs,'duelos'),where('para','==',u.uid)),s=>{S.duelosR=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    unsubDE=onSnapshot(query(collection(fs,'duelos'),where('de','==',u.uid)),s=>{S.duelosE=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+    muralOuvir();
     unsubMP=onSnapshot(query(collection(fs,'pedidos'),where('uid','==',u.uid)),s=>{S.meusPedidos=s.docs.map(d=>({id:d.id,...d.data()}));if(PIX.ped&&PIX.etapa==='pagar'){const n=S.meusPedidos.find(x=>x.id===PIX.ped.id);if(n&&n.status!==PIX.ped.status){PIX.ped=null;PIX.etapa=null;pixRender();toast(n.status==='pago'?'Pagamento confirmado! Retire no treino 💚':'Pedido atualizado.')}}schedule()},()=>{});
     unsubRs=onSnapshot(query(collection(fs,'resgates'),where('uid','==',u.uid)),s=>{S.meusResgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
     unsubX=onSnapshot(collection(fs,'reacoes'),s=>{const r={};s.docs.forEach(d=>{r[d.id]=d.data()});S.reacoes=r;schedule()},()=>{});
@@ -2827,7 +3110,7 @@ function ligarAdmin(){
       unsubTF=onSnapshot(collection(fs,'folhas'),s=>{S.todasFolhas=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
       if(!window.__unsubAl)window.__unsubAl=onSnapshot(doc(fs,'projeto','alunos'),s=>{const d=s.exists&&(typeof s.exists==='function'?s.exists():s.exists)?s.data():null;S.alunosApp=(d&&d.lista)||{};schedule()},()=>{});
       unsubTR=onSnapshot(collection(fs,'resgates'),s=>{S.resgates=s.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
-      unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule();clearTimeout(PAUTO.t);PAUTO.t=setTimeout(pedidosAuto,4000)},()=>{});
+      unsubO=DB.collection('pedidos').onSnapshot(s=>{S.pedidos=s.docs.map(d=>({id:d.id,...d.data()}));schedule();clearTimeout(PAUTO.t);PAUTO.t=setTimeout(()=>{pedidosAuto();muralLimpeza()},4000)},()=>{});
   }
 }
 render();
