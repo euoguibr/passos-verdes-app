@@ -78,6 +78,7 @@ async function ultrapassou(a, db, eu, isAdmin, body) {
   for (const alvo of alvos) {
     if (alvo === quem || !(alvo in mapa) || !melhor(meu, mapa[alvo])) continue;
     const pos = ordem.indexOf(alvo) + 1;
+    if (pos > 4) continue; // só avisa quem estava no pódio (top 3) e acabou de cair
     const doc = { para: alvo, de: quem, tipo, titulo: '⚠️ ' + nm + ' passou você no ' + nomeR, texto: body.jogo === 'km' ? 'Agora você está em ' + pos + 'º com ' + fmt(mapa[alvo]) + '. Bora correr?' : 'Você caiu pro ' + pos + 'º lugar no ranking da semana. Bora recuperar?', url, criado: Date.now() };
     try { await db.doc('notificacoes/ultra_' + String(body.jogo) + '_' + periodo + '_' + quem + '_' + alvo).create(doc); } catch (e) { continue; } // já avisou essa semana
     const toks = []; (await db.collection('dispositivos').where('uid', '==', alvo).get()).forEach(d => toks.push(d.id));

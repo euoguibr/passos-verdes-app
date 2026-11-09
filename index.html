@@ -2316,7 +2316,7 @@ async function resolverDuelo(x,v){
 function ultrapassados(lista,eu,antes,depois,maior){
   const mel=(x,y)=>maior?x>y:x<y;const outros=lista.filter(r=>r.uid&&r.uid!==eu&&r.v>0);
   const velha=[...outros,...(antes>0?[{uid:eu,v:antes}]:[])].sort((a,b)=>maior?b.v-a.v:a.v-b.v);
-  return outros.filter(r=>mel(depois,r.v)&&!(antes>0&&mel(antes,r.v))&&velha.findIndex(x=>x.uid===r.uid)<10).map(r=>r.uid).slice(0,10);
+  return outros.filter(r=>mel(depois,r.v)&&!(antes>0&&mel(antes,r.v))&&velha.findIndex(x=>x.uid===r.uid)<3).map(r=>r.uid).slice(0,3);
 }
 function avisarRanking(jogo,lista,antes,depois,maior,extra={}){
   const al=ultrapassados(lista,extra.quem||S.uid,antes,depois,maior);
