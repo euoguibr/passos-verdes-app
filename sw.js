@@ -1,5 +1,5 @@
 // Service worker: deixa o app instalável, abre com internet ruim e mostra os avisos.
-const CACHE = 'pv-v42';
+const CACHE = 'pv-v43';
 const CDN = 'pv-cdn-1'; // bibliotecas de fora (Firebase, three.js, fontes): guardadas para abrir e jogar sem internet
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/logo.png', '/icons/icon-192.png', '/jogo3d.js', '/mandala.js'];
 const DE_FORA = [/^https:\/\/www\.gstatic\.com\/firebasejs\//, /^https:\/\/cdn\.jsdelivr\.net\/npm\/three@/, /^https:\/\/fonts\.(googleapis|gstatic)\.com\//];
