@@ -312,6 +312,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
         <div class="line total"><span>Resultado do fechamento</span><b class="num" id="fRes">—</b></div>
         <div class="line"><span>Para cada sócio (÷ 4)</span><span class="socio num" id="fSocio">—</span></div>
         <div class="note" id="fRep"></div>
+        <div class="rbox" id="fReserva"></div>
         <div class="eyebrow" style="margin-top:6px">Fora do fechamento</div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-ev)"></i>Eventos do mês</span><span class="num note" id="fEv">—</span></div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-prod)"></i>Venda de produtos</span><span class="num note" id="fProd">—</span></div>
@@ -552,6 +553,17 @@ function renderPainel(){
     nota+=falta>0.01?` Empréstimo do ${e.emprestimo.socio}: ${Math.round(pago/parc)} de ${e.emprestimo.parcelas} parcelas pagas, faltam ${brl(falta)} (a parcela entra em gastos gerais).`:` Empréstimo do ${e.emprestimo.socio}: quitado.`;
   });
   $("fRep").textContent=nota;
+  { /* reserva: só visualização de quanto ficaria na conta */
+    const pr=+((S.fiscal&&S.fiscal.reserva)??20),rec=RM.r.assessoria+RM.r.eventos+RM.r.produtos,rv=Math.round(rec*pr)/100,sob=res-rv;
+    const ae=document.activeElement;if(!(ae&&ae.id==="fResPct"))$("fReserva").innerHTML=`<div class="line"><b>Reserva da empresa</b><label class="note" style="display:flex;align-items:center;gap:6px">guardar <input id="fResPct" type="number" min="0" max="100" step="5" value="${pr}" style="width:64px;padding:4px 6px"> %</label></div>
+      <div class="line"><span>Recebido no mês</span><b class="num" id="fResRec"></b></div>
+      <div class="line"><span>Ficaria na conta</span><b class="num" id="fResV"></b></div>
+      <div class="line"><span>Para cada sócio, guardando a reserva</span><b class="num" id="fResS"></b></div>
+      <div class="note" id="fResN"></div>`;
+    $("fResRec").textContent=brl(rec);$("fResV").textContent=brl(rv);$("fResS").textContent=brl(Math.max(0,sob)/4);
+    $("fResN").textContent=`Recebido = mensalidades ${brl(RM.r.assessoria)} + eventos ${brl(RM.r.eventos)} + produtos ${brl(RM.r.produtos)}. É só para visualizar: nada é descontado do fechamento.`+(sob<0?" Neste mês a reserva passa do resultado do fechamento; o resto teria que sair do lucro dos eventos.":"");
+    $("fResPct").onchange=e=>{const x=Math.min(100,Math.max(0,parseFloat(e.target.value)||0));if(!needDb())return;guard(()=>S.db.doc("config/fiscal").set({...(S.fiscal||{}),reserva:x}),"Reserva salva")};
+  }
   $("fEv").textContent=m.eventos.net||retEv?`lucro ${brl(m.eventos.net-RM.imp.eventos)} após imposto ${brl(RM.imp.eventos)} · repassado no evento ${brl(retEv)}`:"sem movimento";
   $("fProd").textContent=m.produtos.in||m.produtos.out?`vendido ${brl(m.produtos.in)} · pago ao fornecedor ${brl(m.produtos.out)}`:"sem movimento";
 
@@ -991,7 +1003,7 @@ $("btnFiscal").onclick=()=>{const F=fisc();const v=x=>String(x).replace(".",",")
     <div class="grid3" style="grid-template-columns:1fr 1fr 1fr"><label class="field">Assessoria<input id="fqA" inputmode="decimal" value="${v(F.aliq.assessoria)}"></label><label class="field">Eventos<input id="fqE" inputmode="decimal" value="${v(F.aliq.eventos)}"></label><label class="field">Produtos<input id="fqP" inputmode="decimal" value="${v(F.aliq.produtos)}"></label></div>
     <div class="acts"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="fqOk">Salvar</button></div>`,
   ov=>ov.querySelector("#fqOk").onclick=()=>{if(!needDb())return;const n=id=>parseFloat(String($(id).value).replace(",","."));
-    const d={aliq:{assessoria:n("fqA"),eventos:n("fqE"),produtos:n("fqP")},contador:{comEvento:0,semEvento:0,inicio:""}};
+    const d={...(S.fiscal||{}),aliq:{assessoria:n("fqA"),eventos:n("fqE"),produtos:n("fqP")},contador:{comEvento:0,semEvento:0,inicio:""}};
     if(Object.values(d.aliq).some(x=>isNaN(x)||x<0)){toast("Confira os números.");return}
     guard(()=>S.db.doc("config/fiscal").set(d),"Alíquotas salvas")})};
 $("mPrev").onclick=()=>{S.ym=ymShift(S.ym,-1);render()};
