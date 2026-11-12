@@ -1146,9 +1146,9 @@ function vLoja(){
   return h;
 }
 function prodBadges(p,onde){const de=Number(p.precoDe)||0;const off=de>Number(p.preco)?Math.round((1-Number(p.preco)/de)*100):0;const sec=(p.secao||'').trim();
-  // na foto: só "Esgotado" e "Última peça"; o resto vai embaixo, junto do preço
-  if(onde==='foto')return [p.esgotado?`<span class="bdg out">Esgotado</span>`:'',p.selo==='Última peça'&&!p.esgotado?`<span class="bdg last">Última peça</span>`:''].join('');
-  return [p.selo&&p.selo!=='Última peça'?`<span class="bdg">${esc(p.selo)}</span>`:'',sec&&!/^produtos?$/i.test(sec)&&!(p.selo&&slug(p.selo).slice(0,6)===slug(sec).slice(0,6))?`<span class="bdg sec">${esc(sec)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('')}
+  // na foto: só "Esgotado"; todas as outras etiquetas vão embaixo, junto do preço
+  if(onde==='foto')return p.esgotado?`<span class="bdg out">Esgotado</span>`:'';
+  return [p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',sec&&!/^produtos?$/i.test(sec)&&!(p.selo&&slug(p.selo).slice(0,6)===slug(sec).slice(0,6))?`<span class="bdg sec">${esc(sec)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('')}
 function prodCard(p){
   const de=Number(p.precoDe)||0;const cor=Array.isArray(p.cores)?p.cores:[];const sw=cor.map(c=>corHex(c)).filter(Boolean);const ms=modelosDe(p);const tb=tamBase(p);
   const b=prodBadges(p,'foto'),bb=prodBadges(p);
