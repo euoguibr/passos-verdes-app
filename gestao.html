@@ -405,7 +405,7 @@ const FR={
   assessoria:{t:"Assessoria",c:"var(--f-ass)",in:["Outros"],out:["Treinus","Outros"]},
   eventos:{t:"Eventos",c:"var(--f-ev)",in:["Inscrições","Patrocínio","Venda no evento","Outros"],out:["Medalhas e troféus","Camisas","Número de peito","Cronometragem","Locutor e atrações","Água e frutas","Estrutura","Kits e sacolas","Divulgação","Outros"]},
   produtos:{t:"Produtos",c:"var(--f-prod)",in:["Venda de camisas","Outros"],out:["Compra de estoque","Outros"]},
-  geral:{t:"Geral",c:"var(--f-ger)",in:["Aporte de sócio","Empréstimo de sócio","Outros"],out:["Treinus","Impostos (DAS)","Empréstimo de sócio","Reembolso a sócio","Advogado e taxas","Taxas bancárias","Marketing","Materiais","Outros"]},
+  geral:{t:"Geral",c:"var(--f-ger)",in:["Aporte de sócio","Empréstimo de sócio","Outros"],out:["Treinus","Impostos (DAS)","Taxa da maquininha","Empréstimo de sócio","Reembolso a sócio","Advogado e taxas","Taxas bancárias","Marketing","Materiais","Outros"]},
   retirada:{t:"Repasse sócios",c:"var(--f-ret)",in:[],out:["Repasse sócios"]}
 };
 const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -719,6 +719,15 @@ function modal(html,onMount,wide){
 }
 function close(){$("modalRoot").innerHTML=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+/* maquininha Inter: taxas vêm do Planejamento (campos Débito / Crédito), com os valores do Inter como padrão */
+const FORMAS=["Pix","Dinheiro","Débito","Crédito à vista","Crédito 2x","Transferência"];
+const TX_KEY={"Débito":"t_deb","Crédito à vista":"t_c1","Crédito 2x":"t_c2"},TX_DEF={t_deb:1.40,t_c1:3.45,t_c2:6.07};
+function taxaCartao(forma,valor){const k=TX_KEY[forma];if(!k)return 0;const o=S.cen&&S.cen.v;const p=o&&o[k]!=null&&o[k]!==""?+o[k]:TX_DEF[k];return Math.round(valor*p)/100}
+function taxaLanc(forma,valor,data,desc,ref){const t=taxaCartao(forma,valor);if(!(t>0))return null;
+  return{tipo:"saida",frente:"geral",eventoId:null,desc:`Taxa da maquininha · ${forma} · ${desc}`,cat:"Taxa da maquininha",qtd:1,unit:t,valor:t,data,previsto:false,registradoEm:nowISO(),...ref}}
+function taxaInfo(sel,val,out){const up=()=>{const f=$(sel).value,v=parseFloat($(val).value)||0,t=taxaCartao(f,v);$(out).hidden=!TX_KEY[f];
+  if(TX_KEY[f])$(out).innerHTML=`<span>Taxa da maquininha (${f}): <b>${brl(t)}</b> · cai na conta <b>${brl(v-t)}</b></span><span>Lance o valor cheio: a venda entra inteira e a taxa vira um gasto em Geral sozinha.</span>`};
+  $(sel).addEventListener("change",up);$(val).addEventListener("input",up);up()}
 const opts=(arr,sel)=>arr.map(v=>`<option ${v===sel?"selected":""}>${esc(v)}</option>`).join("");
 function needDb(){if(!S.db){toast("Sem conexão com o banco de dados desta página.");return false}if(!S.canWrite){toast("Você só tem acesso de leitura.");return false}return true}
 async function guard(fn,ok,keep){try{await fn();if(!keep)close();toast(ok)}catch(e){toast(e&&e.code==="quota_exceeded"?"Limite de registros atingido.":"Não deu para salvar. Tente de novo.");console.error(e)}}
@@ -729,18 +738,19 @@ function payModal(id){
   modal(`<h3>Registrar pagamento</h3><div class="note">${esc(a.nome)} · vencimento ${fmtDY(a.proxVenc)}</div>
     <div class="grid2"><label class="field">Valor (R$)<input id="pV" type="number" step="0.01" inputmode="decimal" value="${a.valor}"></label>
     <label class="field">Data do pagamento<input id="pD" type="date" value="${todayISO()}"></label></div>
-    <label class="field">Forma<select id="pF">${opts(["Pix","Dinheiro","Cartão","Transferência"],a.forma||"Pix")}</select></label>
+    <label class="field">Forma<select id="pF">${opts(FORMAS,a.forma||"Pix")}</select></label><div class="rbox note" id="pTx" hidden></div>
     <div class="note">O próximo vencimento passa para ${fmtDY(addMonth(a.proxVenc||todayISO(),a.dia))}.</div>
     <div class="acts"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="pOk">Confirmar pagamento</button></div>`,
-  ov=>ov.querySelector("#pOk").onclick=()=>{
+  ov=>{taxaInfo("pF","pV","pTx");ov.querySelector("#pOk").onclick=()=>{
     if(!needDb())return;const v=parseFloat($("pV").value),d=$("pD").value;
     if(!(v>0)||!d){toast("Preencha valor e data.");return}
     const novo=addMonth(a.proxVenc||d,a.dia);
     guard(async()=>{
       await S.db.collection("pagamentos").add({alunoId:a.id,nome:a.nome,valor:v,data:d,forma:$("pF").value,registradoEm:nowISO(),vencAnterior:a.proxVenc||null,ultimoAnterior:a.ultimoPgto||null});
       await S.db.doc("alunos/"+a.id).update({ultimoPgto:d,proxVenc:novo});
+      const tl=taxaLanc($("pF").value,v,d,"Mensalidade · "+a.nome,{alunoId:a.id});if(tl)await S.db.collection("lancamentos").add(tl);
     },"Pagamento registrado");
-  });
+  }});
 }
 
 function alunoModal(id){
@@ -1132,7 +1142,8 @@ async function confirmarPagamento(id,{valor,data,forma}){
     }
     const lr=doc(collection(fs,"caixa_lancamentos"));
     tx.set(lr,{tipo:"entrada",frente:"produtos",eventoId:null,desc:`Venda · ${pedDesc(p)}${p.nome?" · "+p.nome:""}`,cat:"Venda de camisas",qtd:q,unit:Math.round(valor/q*100)/100,valor,data,previsto:false,registradoEm:nowISO(),pedidoId:id});
-    tx.update(pe,{status:"pago",pagoEm:data,forma,valorPago:valor,caixaId:lr.id,baixouEstoque:baixou,encomenda});
+    const tl=taxaLanc(forma,valor,data,pedDesc(p),{pedidoId:id});let txId=null;if(tl){const tr=doc(collection(fs,"caixa_lancamentos"));tx.set(tr,tl);txId=tr.id}
+    tx.update(pe,{status:"pago",pagoEm:data,forma,valorPago:valor,caixaId:lr.id,baixouEstoque:baixou,encomenda,...(txId?{taxaId:txId}:{})});
     if(upd)tx.update(pr,upd);
   });
 }
@@ -1148,7 +1159,8 @@ async function cancelarPedido(id){
     let pr=null,prod=null;if(p.baixouEstoque&&p.produtoId){pr=doc(fs,"produtos",p.produtoId);const s=await tx.get(pr);prod=s.exists()?s.data():null}
     if(prod&&controla(prod)){const k=vkey(p.tamanho,p.cor),est={...prod.estoque,[k]:(+prod.estoque[k]||0)+(+p.qtd||1)};tx.update(pr,{estoque:est,esgotado:esgot({...prod,estoque:est})})}
     if(p.caixaId)tx.delete(doc(fs,"caixa_lancamentos",p.caixaId));
-    tx.update(pe,{status:"cancelado",canceladoEm:nowISO(),caixaId:null,baixouEstoque:false});
+    if(p.taxaId)tx.delete(doc(fs,"caixa_lancamentos",p.taxaId));
+    tx.update(pe,{status:"cancelado",canceladoEm:nowISO(),caixaId:null,taxaId:null,baixouEstoque:false});
   });
 }
 
@@ -1162,11 +1174,11 @@ function confirmModal(id){
   modal(`<h3>Confirmar pagamento</h3><div class="note">${esc(pedDesc(p))} · ${esc(p.nome||"Sem nome")}</div>
     <div class="grid2"><label class="field">Valor recebido (R$)<input id="cV" type="number" step="0.01" inputmode="decimal" value="${+p.total||0}"></label>
     <label class="field">Data<input id="cD" type="date" value="${todayISO()}"></label></div>
-    <label class="field">Forma<select id="cF">${opts(["Pix","Dinheiro","Cartão","Transferência"],"Pix")}</select></label>
+    <label class="field">Forma<select id="cF">${opts(FORMAS,"Pix")}</select></label><div class="rbox note" id="cTx" hidden></div>
     <div class="rbox note">${note}<br>Entra no caixa como <b>Produtos · Venda de camisas</b> e soma no saldo.</div>
     <div class="acts"><button class="btn" data-close>Voltar</button><button class="btn primary" id="cOk">Confirmar</button></div>`,
-  ov=>ov.querySelector("#cOk").onclick=()=>{if(!needDb())return;const v=parseFloat($("cV").value),d=$("cD").value;if(!(v>0)||!d){toast("Preencha valor e data.");return}
-    guard(async()=>{await confirmarPagamento(id,{valor:Math.round(v*100)/100,data:d,forma:$("cF").value});avisoPago(p)},"Pagamento confirmado")});
+  ov=>{taxaInfo("cF","cV","cTx");ov.querySelector("#cOk").onclick=()=>{if(!needDb())return;const v=parseFloat($("cV").value),d=$("cD").value;if(!(v>0)||!d){toast("Preencha valor e data.");return}
+    guard(async()=>{await confirmarPagamento(id,{valor:Math.round(v*100)/100,data:d,forma:$("cF").value});avisoPago(p)},"Pagamento confirmado")}});
 }
 function cancelModal(id){
   const p=S.pedidos.find(x=>x.id===id);if(!p)return;const st=stPed(p);
@@ -1185,7 +1197,7 @@ function vendaWaModal(){
     <div class="grid2"><label class="field">Total (R$)<input id="wV" type="number" step="0.01" inputmode="decimal"></label><label class="field">Data<input id="wD" type="date" value="${todayISO()}"></label></div>
     <div class="note" id="wE"></div>
     <label class="field check"><input id="wPg" type="checkbox" checked> Já pagou (lança no caixa e dá baixa no estoque)</label>
-    <label class="field" id="wFw">Forma<select id="wF">${opts(["Pix","Dinheiro","Cartão","Transferência"],"Pix")}</select></label>
+    <label class="field" id="wFw">Forma<select id="wF">${opts(FORMAS,"Pix")}</select></label><div class="rbox note" id="wTx" hidden></div>
     <div class="acts"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="wOk">Registrar venda</button></div>`,
   ov=>{
     let auto=true;
@@ -1196,7 +1208,7 @@ function vendaWaModal(){
       const e=estOf(p,$("wT").value,$("wC").value);
       $("wE").textContent=p.encomenda?"Produto sob encomenda.":e===null?"Estoque não controlado para este produto.":`Em estoque nessa variação: ${e}${e<q?" (vai entrar como encomenda)":""}.`};
     $("wP").onchange=()=>sync(false);$("wT").onchange=$("wC").onchange=$("wQ").oninput=()=>sync(true);$("wV").oninput=()=>{auto=false};
-    $("wPg").onchange=()=>{$("wFw").hidden=!$("wPg").checked};sync(false);
+    $("wPg").onchange=()=>{$("wFw").hidden=!$("wPg").checked;if(!$("wPg").checked)$("wTx").hidden=true};sync(false);taxaInfo("wF","wV","wTx");
     ov.querySelector("#wOk").onclick=()=>{if(!needDb())return;const p=prodById($("wP").value),{T,C}=dims(p);
       const q=Math.max(1,parseInt($("wQ").value)||1),v=parseFloat($("wV").value),d=$("wD").value,nome=$("wN").value.trim();
       if(!nome||!(v>0)||!d){toast("Preencha cliente, total e data.");return}
