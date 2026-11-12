@@ -478,6 +478,11 @@ main.enter>*:nth-child(2){animation-delay:.04s}main.enter>*:nth-child(3){animati
 .vb{display:flex;flex-direction:column;gap:4px;padding:10px 10px 12px}
 .vn{font-size:14px;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .vp{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}.vp .price{font-size:20px}.vp s{font-size:12px;color:var(--muted)}
+.ps-gal{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.ps-gal::-webkit-scrollbar{display:none}
+.ps-gal img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;scroll-snap-align:center}
+.ps-dots{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:6px;pointer-events:none}.ps-dots i{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,.25);transition:.2s}.ps-dots i.on{background:var(--green);width:18px;border-radius:9px}
+.vmais{position:absolute;right:6px;bottom:6px;font-size:10px;font-weight:800;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:3px 7px}
+.vtags{display:flex;flex-wrap:wrap;gap:4px}.vtags .bdg{font-size:9px;padding:3px 6px}.bdg.sec{background:var(--sunk,#eee);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .vmeta{display:flex;align-items:center;gap:8px;min-height:16px}.vmeta .swatches i{width:12px;height:12px;border:0;box-shadow:0 0 0 1.5px var(--muted)}
 .vcard.soldout{opacity:.55}
 .ps-in{padding-top:6px;max-height:92vh;overflow-y:auto}
@@ -1140,15 +1145,18 @@ function vLoja(){
   h+=`<section class="section"><div class="vitrine">${ps.map(prodCard).join('')}</div></section>`;
   return h;
 }
-function prodBadges(p){const de=Number(p.precoDe)||0;const off=de>Number(p.preco)?Math.round((1-Number(p.preco)/de)*100):0;const sec=(p.secao||'').trim();
-  return [p.esgotado?`<span class="bdg out">Esgotado</span>`:'',p.selo?`<span class="bdg ${p.selo==='Última peça'?'last':''}">${esc(p.selo)}</span>`:'',sec&&!/^produtos?$/i.test(sec)&&!(p.selo&&slug(p.selo).slice(0,6)===slug(sec).slice(0,6))?`<span class="bdg sec">${esc(sec)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('')}
+function prodBadges(p,onde){const de=Number(p.precoDe)||0;const off=de>Number(p.preco)?Math.round((1-Number(p.preco)/de)*100):0;const sec=(p.secao||'').trim();
+  // na foto: só "Esgotado" e "Última peça"; o resto vai embaixo, junto do preço
+  if(onde==='foto')return [p.esgotado?`<span class="bdg out">Esgotado</span>`:'',p.selo==='Última peça'&&!p.esgotado?`<span class="bdg last">Última peça</span>`:''].join('');
+  return [p.selo&&p.selo!=='Última peça'?`<span class="bdg">${esc(p.selo)}</span>`:'',sec&&!/^produtos?$/i.test(sec)&&!(p.selo&&slug(p.selo).slice(0,6)===slug(sec).slice(0,6))?`<span class="bdg sec">${esc(sec)}</span>`:'',off?`<span class="bdg off">${off}% OFF</span>`:'',p.encomenda?`<span class="bdg enc">Sob encomenda</span>`:''].join('')}
 function prodCard(p){
   const de=Number(p.precoDe)||0;const cor=Array.isArray(p.cores)?p.cores:[];const sw=cor.map(c=>corHex(c)).filter(Boolean);const ms=modelosDe(p);const tb=tamBase(p);
-  const b=prodBadges(p);
+  const b=prodBadges(p,'foto'),bb=prodBadges(p);
   return `<button class="vcard ${p.esgotado?'soldout':''}" data-action="prod-abrir" data-id="${esc(p.id)}" aria-label="${esc(p.nome)}, ${brl(p.preco)}">
-  <span class="vimg">${okPic(p.foto)?`<img src="${p.foto}" alt="" loading="lazy">`:`<span class="noimg small">Sem foto</span>`}${b?`<span class="vbdg">${b}</span>`:''}</span>
+  <span class="vimg">${okPic(p.foto)?`<img src="${p.foto}" alt="" loading="lazy">`:`<span class="noimg small">Sem foto</span>`}${b?`<span class="vbdg">${b}</span>`:''}${(p.fotosExtra||[]).filter(okPic).length?`<span class="vmais">+${(p.fotosExtra||[]).filter(okPic).length} fotos</span>`:''}</span>
   <span class="vb"><b class="vn">${esc(p.nome)}</b>
   <span class="vp"><span class="price">${brl(p.preco)}</span>${de>Number(p.preco)?`<s>${brl(de)}</s>`:''}</span>
+  ${bb?`<span class="vtags">${bb}</span>`:''}
   <span class="vmeta">${sw.length?`<span class="swatches">${sw.slice(0,5).map(h=>`<i style="background:${h}"></i>`).join('')}</span>`:''}${ms.length?`<span class="small muted">${ms.map(m=>m.slice(0,4)+'.').join(' / ')}</span>`:tb.length?`<span class="small muted">${esc(tb[0])}${tb.length>1?'–'+esc(tb[tb.length-1]):''}</span>`:''}</span></span></button>`;
 }
 /* janela do produto: modelo, cor (troca a foto), tamanho e quantidade */
@@ -1168,9 +1176,11 @@ function prodSheet(){
   const novo=el.hidden||!el.innerHTML;const rol=el.querySelector('.ps-in');const sc=rol?rol.scrollTop:0;
   el.innerHTML=`<div class="rk-dim" data-action="prod-fechar"></div><div class="rk-in ps-in ${novo?'':'sem-anim'}"><div class="rk-grab"></div>
   <button class="hbtn ps-x" data-action="prod-fechar" aria-label="Fechar">×</button>
-  <div class="ps-foto">${okPic(foto)?`<img src="${foto}" alt="${esc(p.nome)}${sel.c?' na cor '+esc(sel.c):''}" data-action="zoom" data-src="${foto}">`:`<div class="noimg">Sem foto</div>`}<span class="vbdg">${prodBadges(p)}</span></div>
+  ${(()=>{const fs=[foto,...(Array.isArray(p.fotosExtra)?p.fotosExtra:[])].filter(okPic);
+    return `<div class="ps-foto">${fs.length?`<div class="ps-gal" id="ps-gal">${fs.map((f,i)=>`<img src="${f}" alt="${esc(p.nome)} · foto ${i+1} de ${fs.length}" ${i?'loading="lazy"':''} data-action="zoom" data-src="${f}">`).join('')}</div>${fs.length>1?`<div class="ps-dots">${fs.map((f,i)=>`<i class="${i?'':'on'}"></i>`).join('')}</div>`:''}`:`<div class="noimg">Sem foto</div>`}<span class="vbdg">${prodBadges(p,'foto')}</span></div>`})()}
   <div class="ps-body"><h2 class="sec" style="margin:0">${esc(p.nome)}</h2>
   <div class="vp"><span class="price" style="font-size:30px">${brl(p.preco)}</span>${de>Number(p.preco)?`<s>${brl(de)}</s>`:''}</div>
+  ${prodBadges(p)?`<span class="vtags">${prodBadges(p)}</span>`:''}
   ${p.descricao?`<p class="small muted" style="margin:0">${esc(p.descricao)}</p>`:''}
   ${p.esgotado?`<span class="st no" style="align-self:flex-start">Esgotado</span>`:`
   ${ms.length>1?`<div class="ps-opt"><span class="ps-l">Modelo</span><div class="chips2">${ms.map(m=>`<button class="ch2" data-action="prod-sel" data-k="m" data-v="${esc(m)}" aria-pressed="${sel.m===m}">${esc(m)}</button>`).join('')}</div></div>`:''}
@@ -1183,10 +1193,12 @@ function prodSheet(){
   ${/^https?:\/\//.test(p.linkPagamento||'')?`<a class="btn" href="${esc(p.linkPagamento)}" target="_blank" rel="noopener">Pagar agora</a>`:''}`}
   </div></div>`;
   el.hidden=false;if(!novo)el.querySelector('.ps-in').scrollTop=sc;
+  const gal=el.querySelector('#ps-gal');if(gal){if(S.galCor===sel.c&&S.galPos)gal.scrollLeft=S.galPos;S.galCor=sel.c;
+    gal.addEventListener('scroll',()=>{S.galPos=gal.scrollLeft;const i=Math.round(gal.scrollLeft/gal.clientWidth);el.querySelectorAll('.ps-dots i').forEach((d,k)=>d.classList.toggle('on',k===i))},{passive:true})}
 }
 document.addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;
   if(!['prod-abrir','prod-fechar','prod-sel','prod-q'].includes(a))return;e.stopImmediatePropagation();
-  if(a==='prod-abrir'){S.prodAberto=b.dataset.id}
+  if(a==='prod-abrir'){S.prodAberto=b.dataset.id;S.galPos=0;S.galCor=null}
   else if(a==='prod-fechar'){S.prodAberto=null}
   else if(a==='prod-sel'){const p=S.produtos.find(x=>x.id===S.prodAberto);if(!p)return;const sel=S.sel[p.id]=S.sel[p.id]||{};const k=b.dataset.k;sel[k]=b.dataset.v;
     if(ctrlEst(p)&&k!=='c'){sel.t=tamBase(p).length?(sel.tb?tamComb(sel.tb,sel.m||''):''):(sel.m||'');if(sel.c&&sel.t&&qtdVar(p,sel.t,sel.c)<=0)sel.c=''}}
@@ -1766,6 +1778,7 @@ function vAdmin(){
     <label for="pr-d">Descrição<textarea id="pr-d" placeholder="Tecido, caimento, detalhes">${ep?esc(ep.descricao||''):''}</textarea></label>
     <div class="grid2"><label for="pr-t">Tamanhos (separe por vírgula)<input type="text" id="pr-t" placeholder="P, M, G, GG" value="${ep?esc((ep.tamanhos||[]).join(', ')):''}"></label><label for="pr-c">Cores (separe por vírgula)<input type="text" id="pr-c" placeholder="Preta, Verde" value="${ep?esc((ep.cores||[]).join(', ')):''}"></label></div>
     <fieldset class="chkset"><legend class="small"><b>Modelos</b> (deixe sem marcar se for unissex)</legend>${['Masculino','Feminino'].map(m=>`<label class="chk"><input type="checkbox" id="pr-m-${m}" ${ep&&(ep.modelos||[]).includes(m)?'checked':''}> ${m}</label>`).join('')}</fieldset>
+    <div class="stack" style="gap:8px"><p class="small" style="margin:0"><b>Mais fotos</b> (até 3) · a pessoa passa pro lado pra ver: costas, detalhe, alguém vestindo…</p>${[0,1,2].map(i=>photoField('pr-fx-'+i,'Foto extra '+(i+1),ep&&ep.fotosExtra?ep.fotosExtra[i]||'':'')).join('')}</div>
     ${fotosCorCampos(ep)}
     <label for="pr-l">Link de pagamento (opcional)<input type="url" id="pr-l" placeholder="Link do Mercado Pago, InfinitePay…" value="${ep?esc(ep.linkPagamento||''):''}"></label>
     ${photoField('pr-f','Foto do produto (quadrada fica melhor)',ep?ep.foto:'')}
@@ -2762,9 +2775,10 @@ document.addEventListener('submit',e=>{
     const ord=val('pr-o')===''?null:Number(val('pr-o'));
     const modelos=['Masculino','Feminino'].filter(m=>checked('pr-m-'+m));
     const fotosCor={};for(const c of splitList(val('pr-c')).slice(0,5)){const k='pr-fc-'+slug(c);const v=S.pending[k]!==undefined?S.pending[k]:(ep&&ep.fotosCor?ep.fotosCor[c]||'':'');if(v)fotosCor[c]=v}
-    if(JSON.stringify({foto,fotosCor}).length>900000){toast('Fotos pesadas demais pra um produto só. Use menos fotos de cor.');return}
-    const pd2=parseFloat(String(val('pr-pd')).replace(',','.'));const data={modelos,fotosCor,nome:val('pr-n'),preco,precoDe:pd2>0?pd2:0,selo:val('pr-sl'),secao:val('pr-sc'),descricao:val('pr-d'),tamanhos:splitList(val('pr-t')).flatMap(t=>t.split(/[\s\/|]+/)).filter(Boolean),cores:splitList(val('pr-c')),linkPagamento:/^https?:\/\//.test(val('pr-l'))?val('pr-l'):'',foto,ordem:ord};
-    if(ep){S.db.doc('produtos/'+ep.id).update(data).then(()=>{S.editProd=null;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-'))delete S.pending[k];f.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');render();toast('Produto atualizado.')}).catch(()=>toast('Não foi possível salvar.'))}
+    const fotosExtra=[0,1,2].map(i=>{const k='pr-fx-'+i;return S.pending[k]!==undefined?S.pending[k]:(ep&&ep.fotosExtra?ep.fotosExtra[i]||'':'')}).filter(Boolean);
+    if(JSON.stringify({foto,fotosCor,fotosExtra}).length>900000){toast('Fotos pesadas demais pra um produto só. Use menos fotos de cor.');return}
+    const pd2=parseFloat(String(val('pr-pd')).replace(',','.'));const data={modelos,fotosCor,fotosExtra,nome:val('pr-n'),preco,precoDe:pd2>0?pd2:0,selo:val('pr-sl'),secao:val('pr-sc'),descricao:val('pr-d'),tamanhos:splitList(val('pr-t')).flatMap(t=>t.split(/[\s\/|]+/)).filter(Boolean),cores:splitList(val('pr-c')),linkPagamento:/^https?:\/\//.test(val('pr-l'))?val('pr-l'):'',foto,ordem:ord};
+    if(ep){S.db.doc('produtos/'+ep.id).update(data).then(()=>{S.editProd=null;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-')||k.startsWith('pr-fx-'))delete S.pending[k];f.querySelectorAll('input:not([type=file]),textarea').forEach(el=>el.value='');render();toast('Produto atualizado.')}).catch(()=>toast('Não foi possível salvar.'))}
     else{const av=checked('pr-av');addTo('produtos',{...data,esgotado:false},f).then(ok=>{if(ok&&av)notificar({tipo:'loja',titulo:'Novidade na loja: '+data.nome,texto:brl(data.preco)+(data.descricao?' · '+resumo(data.descricao,100):'')+'. Toque para ver.',url:'/#loja'})})}
   }
   else if(k==='desafio'){const av=checked('ds-av');const d={titulo:val('ds-t'),descricao:val('ds-x'),meta:Number(val('ds-m'))||0,inicio:val('ds-i'),fim:val('ds-f'),ativo:true};
@@ -2829,8 +2843,8 @@ document.addEventListener('click',async e=>{
   else if(a==='dellanc'){const k='rl'+id;if(S.armed!==k){arm(k);return}S.armed=null;try{await S.db.doc('lancamentos/'+id).delete();try{await S.db.doc('provas/'+id).delete()}catch(err){}toast('Lançamento cancelado.')}catch(err){toast('Não foi possível cancelar.')}}
   else if(a==='aprovar')conferir(id,true);
   else if(a==='pedok'){try{await S.db.doc('pedidos/'+id).update({status:'concluido'})}catch(err){toast('Não foi possível alterar.')}}
-  else if(a==='editprod'){S.editProd=id;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-'))delete S.pending[k];document.querySelectorAll('#pr-n,#pr-p,#pr-o,#pr-d,#pr-t,#pr-c,#pr-l,#pr-pd,#pr-sc').forEach(el=>el.value='');render();const p=S.produtos.find(x=>x.id===id);if(p){const set=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v??''};set('pr-n',p.nome);set('pr-p',p.preco);set('pr-o',p.ordem);set('pr-d',p.descricao);set('pr-t',(p.tamanhos||[]).join(', '));set('pr-c',(p.cores||[]).join(', '));set('pr-l',p.linkPagamento)}document.getElementById('pr-n')?.scrollIntoView({block:'center'})}
-  else if(a==='cancelprod'){S.editProd=null;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-'))delete S.pending[k];document.querySelectorAll('#pr-n,#pr-p,#pr-o,#pr-d,#pr-t,#pr-c,#pr-l').forEach(el=>el.value='');render()}
+  else if(a==='editprod'){S.editProd=id;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-')||k.startsWith('pr-fx-'))delete S.pending[k];document.querySelectorAll('#pr-n,#pr-p,#pr-o,#pr-d,#pr-t,#pr-c,#pr-l,#pr-pd,#pr-sc').forEach(el=>el.value='');render();const p=S.produtos.find(x=>x.id===id);if(p){const set=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v??''};set('pr-n',p.nome);set('pr-p',p.preco);set('pr-o',p.ordem);set('pr-d',p.descricao);set('pr-t',(p.tamanhos||[]).join(', '));set('pr-c',(p.cores||[]).join(', '));set('pr-l',p.linkPagamento)}document.getElementById('pr-n')?.scrollIntoView({block:'center'})}
+  else if(a==='cancelprod'){S.editProd=null;delete S.pending['pr-f'];for(const k in S.pending)if(k.startsWith('pr-fc-')||k.startsWith('pr-fx-'))delete S.pending[k];document.querySelectorAll('#pr-n,#pr-p,#pr-o,#pr-d,#pr-t,#pr-c,#pr-l').forEach(el=>el.value='');render()}
   else if(a==='recusar'){const k='rc'+id;if(S.armed!==k){arm(k);return}S.armed=null;conferir(id,false)}
   else if(a==='zoom'){S.zoom=b.dataset.src||null;renderZoom()}
   else if(a==='closezoom'){S.zoom=null;renderZoom()}
