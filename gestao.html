@@ -308,15 +308,13 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-ass)"></i>Assessoria (mensalidades − custos)</span><b class="num" id="fAss">—</b></div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-ger)"></i>Gastos gerais</span><b class="num" id="fGer">—</b></div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-imp)"></i><span id="fImpL">Imposto da assessoria</span></span><b class="num" id="fImp">—</b></div>
-        <div class="line"><span class="k"><i class="dot" style="background:var(--f-imp)"></i><span id="fCtbL">Contador</span></span><b class="num" id="fCtb">—</b></div>
         <div class="line total"><span>Resultado do fechamento</span><b class="num" id="fRes">—</b></div>
         <div class="line"><span>Para cada sócio (÷ 4)</span><span class="socio num" id="fSocio">—</span></div>
         <div class="note" id="fRep"></div>
         <div class="eyebrow" style="margin-top:6px">Fora do fechamento</div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-ev)"></i>Eventos do mês</span><span class="num note" id="fEv">—</span></div>
         <div class="line"><span class="k"><i class="dot" style="background:var(--f-prod)"></i>Camisas (repasse ao fornecedor)</span><span class="num note" id="fProd">—</span></div>
-        <div class="rbox" id="fReserva"></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" id="btnResumo">Gerar resumo pro contador</button><button class="btn sm" id="btnFiscal">Impostos e contador</button></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm primary" id="btnResumo">Gerar resumo do faturamento</button><button class="btn sm" id="btnFiscal">Alíquotas de imposto</button></div>
       </div>
     </div>
 
@@ -440,7 +438,7 @@ function frenteOf(l){
 const real=l=>!l.previsto;
 /* impostos e contador: alíquotas e honorários ficam em config/fiscal (editáveis no Painel) */
 const FISC_DEF={aliq:{assessoria:6,eventos:6,produtos:4},contador:{comEvento:480,semEvento:280,inicio:"2026-10"}};
-const fisc=()=>{const f=S.fiscal||{};return{aliq:{...FISC_DEF.aliq,...(f.aliq||{})},contador:{...FISC_DEF.contador,...(f.contador||{})}}};
+const fisc=()=>{const f=S.fiscal||{};return{aliq:{...FISC_DEF.aliq,...(f.aliq||{})},contador:{comEvento:0,semEvento:0,inicio:""}}}; /* sem contador desde nov/2026 */
 const PROV_CATS=["Impostos (DAS)","Contador (mensalidade)"];
 const isProv=l=>PROV_CATS.includes(l.cat);
 const temEvento=ym=>S.eventos.some(e=>ymOf(e.data)===ym);
@@ -537,12 +535,9 @@ function renderPainel(){
   const res=m.assessoria.net+m.geral.net-RM.imp.assessoria-ctb;
   $("splitTitle").textContent="Fechamento de "+ymLabel(S.ym);
   const put=(id,v)=>{$(id).textContent=brl(v);$(id).className="num "+(v<0?"neg":"")};
-  put("fAss",m.assessoria.net);put("fGer",m.geral.net);put("fImp",-RM.imp.assessoria);put("fCtb",-ctb);put("fRes",res);
+  put("fAss",m.assessoria.net);put("fGer",m.geral.net);put("fImp",-RM.imp.assessoria);put("fRes",res);
   $("fImpL").textContent=`Imposto da assessoria (${String(F.aliq.assessoria).replace(".",",")}%)`;
-  $("fCtbL").textContent=ctb?`Contador (${temEvento(S.ym)?"mês com evento":"mês sem evento"})`:"Contador";
   const venc=ymShift(S.ym,1);
-  $("fReserva").innerHTML=`<div class="line"><b>Separar para impostos e contador</b><b class="num">${brl(RM.imp.total+ctb)}</b></div>
-    <div class="note num">DAS de ${MESES[+S.ym.slice(5)-1]} (vence 20/${venc.slice(5)}): ${brl(RM.imp.total)} = assessoria ${brl(RM.imp.assessoria)} + eventos ${brl(RM.imp.eventos)} + produtos ${brl(RM.imp.produtos)}${ctb?` · contador ${brl(ctb)}`:""}. É estimativa pela 1ª faixa do Simples. Quando pagar, lance em Geral como “Impostos (DAS)” ou “Contador (mensalidade)”: esses pagamentos não descontam de novo no fechamento.</div>`;
   $("fSocio").textContent=brl(res/4);
   const inM=l=>real(l)&&ymOf(l.data)===S.ym&&frenteOf(l)==="retirada";
   const retFech=S.lancs.filter(l=>inM(l)&&!l.eventoId).reduce((s,l)=>s+(+l.valor||0),0);
@@ -935,11 +930,11 @@ function resumoModal(){
       ${R.rec.length+R.desp.length+R.ret.length+R.outras.length+R.emp.length?`<div class="rscroll"><table class="rtable"><thead><tr><th>Data</th><th>Lançamento</th><th>Frente</th><th style="text-align:right">Valor</th></tr></thead><tbody>
         ${lineRows(R.rec,"+ ")}${lineRows(R.outras,"+ ")}${lineRows(R.desp,"− ")}${lineRows(R.ret,"− ")}${R.emp.map(r=>`<tr><td class="num">${fmtD(r.data)}</td><td>${esc(r.desc)}</td><td>Empréstimo</td><td class="v">${r.valor<0?"− ":"+ "}${brl(Math.abs(r.valor))}</td></tr>`).join("")}</tbody></table></div>`
       :`<div class="empty"><b>Nada lançado em ${ymLabel(ym)}</b>Registre mensalidades e lançamentos do mês antes de gerar o resumo.</div>`}
-      <div class="note">DAS estimado na 1ª faixa do Simples (6% serviços, 4% produtos). O valor oficial sai do PGDAS-D feito pelo contador. A receita conta pela data em que entrou na conta; itens de evento ainda marcados como previstos ficam de fora.</div>`;
+      <div class="note">DAS estimado na 1ª faixa do Simples (6% serviços, 4% produtos). O valor oficial sai do PGDAS-D, no Portal do Simples Nacional. A receita conta pela data em que entrou na conta; itens de evento ainda marcados como previstos ficam de fora.</div>`;
     ov.querySelector("#rMes").textContent=ymLabel(ym);
     ov._R=R;
   };
-  modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Resumo pro contador</h3>
+  modal(`<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h3>Resumo do faturamento</h3>
       <div class="month"><button id="rPrev" aria-label="Mês anterior">‹</button><b id="rMes" class="num"></b><button id="rNext" aria-label="Próximo mês">›</button></div></div>
     <div id="rBody" style="display:flex;flex-direction:column;gap:14px"></div>
     <div class="acts"><button class="btn left" data-close>Fechar</button><button class="btn" id="rCopy">Copiar texto pro WhatsApp</button><button class="btn primary" id="rCsv">Baixar planilha (CSV)</button></div>`,
@@ -989,17 +984,14 @@ $("btnEntrada").onclick=()=>itemModal({tipo:"entrada",frente:S.lf!=="todos"&&S.l
 $("btnSaldo").onclick=saldoModal;
 $("btnResumo").onclick=resumoModal;
 $("btnFiscal").onclick=()=>{const F=fisc();const v=x=>String(x).replace(".",",");
-  modal(`<h3>Impostos e contador</h3><div class="note">Valores usados para calcular a reserva do mês, o fechamento e o lucro dos eventos.</div>
+  modal(`<h3>Alíquotas de imposto</h3><div class="note">Valores usados no fechamento, no resumo do faturamento e no lucro dos eventos.</div>
     <div class="eyebrow">Alíquota do Simples (%)</div>
     <div class="grid3" style="grid-template-columns:1fr 1fr 1fr"><label class="field">Assessoria<input id="fqA" inputmode="decimal" value="${v(F.aliq.assessoria)}"></label><label class="field">Eventos<input id="fqE" inputmode="decimal" value="${v(F.aliq.eventos)}"></label><label class="field">Produtos<input id="fqP" inputmode="decimal" value="${v(F.aliq.produtos)}"></label></div>
-    <div class="eyebrow">Mensalidade do contador (R$)</div>
-    <div class="grid3" style="grid-template-columns:1fr 1fr 1fr"><label class="field">Mês com evento<input id="fcE" inputmode="decimal" value="${v(F.contador.comEvento)}"></label><label class="field">Mês sem evento<input id="fcS" inputmode="decimal" value="${v(F.contador.semEvento)}"></label><label class="field">A partir de<input id="fcI" type="month" value="${F.contador.inicio||""}"></label></div>
-    <div class="note">Mês com evento = tem algum evento cadastrado com data naquele mês.</div>
     <div class="acts"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="fqOk">Salvar</button></div>`,
   ov=>ov.querySelector("#fqOk").onclick=()=>{if(!needDb())return;const n=id=>parseFloat(String($(id).value).replace(",","."));
-    const d={aliq:{assessoria:n("fqA"),eventos:n("fqE"),produtos:n("fqP")},contador:{comEvento:n("fcE"),semEvento:n("fcS"),inicio:$("fcI").value||""}};
-    if([...Object.values(d.aliq),d.contador.comEvento,d.contador.semEvento].some(x=>isNaN(x)||x<0)){toast("Confira os números.");return}
-    guard(()=>S.db.doc("config/fiscal").set(d),"Impostos e contador salvos")})};
+    const d={aliq:{assessoria:n("fqA"),eventos:n("fqE"),produtos:n("fqP")},contador:{comEvento:0,semEvento:0,inicio:""}};
+    if(Object.values(d.aliq).some(x=>isNaN(x)||x<0)){toast("Confira os números.");return}
+    guard(()=>S.db.doc("config/fiscal").set(d),"Alíquotas salvas")})};
 $("mPrev").onclick=()=>{S.ym=ymShift(S.ym,-1);render()};
 $("mNext").onclick=()=>{S.ym=ymShift(S.ym,1);render()};
 $("q").oninput=e=>{S.q=e.target.value;renderAlunos()};
@@ -1262,7 +1254,7 @@ S.cen=S.cen||null;S.orcs=S.orcs||{};S.plan=S.plan||"cenario";S.orc=null;
 const up5=x=>Math.ceil(x/5)*5;
 const pct=x=>String(Math.round(x*100)/100).replace(".",",")+"%";
 const PL_LABEL={a_alunos:"Alunos pagando no mês",a_mens:"Mensalidade",a_treinus:"Treinus por mês",a_contador:"Contador num mês sem evento",a_gastos:"Outros gastos fixos por mês",a_parcela:"Parcela de empréstimo",a_aliq:"Imposto da assessoria (%)",a_res:"Guardar no caixa (% do lucro)",a_meta:"Meta por sócio (R$)",
-  c_saldo:"Saldo hoje no Inter",c_das:"DAS atrasado",c_mes:"DAS e contador do mês",c_meses:"Meses de custo fixo guardados",c_giro:"Dinheiro para adiantar evento",c_ev:"Eventos por ano",p_margem:"Margem nos produtos (%)",t_pix:"Pix (%)",t_deb:"Débito (%)",t_c1:"Crédito à vista (%)",t_c2:"Crédito 2x (%)",t_lim:"2x só a partir de (R$)"};
+  c_saldo:"Saldo hoje no Inter",c_das:"DAS atrasado",c_mes:"DAS do mês",c_meses:"Meses de custo fixo guardados",c_giro:"Dinheiro para adiantar evento",c_ev:"Eventos por ano",p_margem:"Margem nos produtos (%)",t_pix:"Pix (%)",t_deb:"Débito (%)",t_c1:"Crédito à vista (%)",t_c2:"Crédito 2x (%)",t_lim:"2x só a partir de (R$)"};
 
 /* números ao vivo do caixa — viram o padrão de cada campo */
 function planLive(){
@@ -1303,12 +1295,12 @@ function renderPlan(force){
   const fld=(k,step,hint)=>{const ov=S.cen&&S.cen.v&&S.cen.v[k]!==undefined&&S.cen.v[k]!==null&&S.cen.v[k]!=="";return `<label class="field">${PL_LABEL[k]}<input type="number" step="${step||1}" data-pl="${k}" value="${v(k)}">${hint||ov?`<small class="${ov?"plov":""}">${ov?`Editado · real: ${String(L[k]).replace(".",",")}`:hint}</small>`:""}</label>`};
   const prods=[...S.produtos].sort((a,b)=>(a.ordem??0)-(b.ordem??0));
   body.innerHTML=chips+`
-  <div class="note" style="margin-bottom:14px">Os números já vêm do caixa: alunos ativos, Treinus, saldo, imposto e contador. Mude qualquer um para testar um cenário; o campo editado fica marcado. <button class="btn sm ghost" data-planreset="1">Voltar aos números reais</button></div>
+  <div class="note" style="margin-bottom:14px">Os números já vêm do caixa: alunos ativos, Treinus, saldo e imposto. Mude qualquer um para testar um cenário; o campo editado fica marcado. <button class="btn sm ghost" data-planreset="1">Voltar aos números reais</button></div>
   <div class="kpis4" id="plKpis"></div>
   <section class="plsec"><h2>Assessoria</h2><div class="cols2">
     <div class="panel"><div class="grid2">
       ${fld("a_alunos",1,`${I.ativos} ativos; em média ${Math.round(I.pagMed)} pagam por mês`)}${fld("a_mens",5,`Média dos ativos: ${brl(I.mensMed)}`)}
-      ${fld("a_treinus",1,"Média dos últimos meses")}${fld("a_contador",10,"Configurado em Impostos e contador")}
+      ${fld("a_treinus",1,"Média dos últimos meses")}
       ${fld("a_gastos",10,"Taxas, marketing, materiais")}${fld("a_parcela",0.01,I.parcInfo||"Nenhum empréstimo em aberto")}
       ${fld("a_aliq",0.5)}${fld("a_res",5)}</div>
       <div class="note num">Recebido de mensalidades, média dos últimos 6 meses: <b>${brl(I.recMed)}</b></div></div>
@@ -1319,7 +1311,7 @@ function renderPlan(force){
   </tbody></table></div><div class="note">Para planejar o próximo, use <b>Orçamentos de eventos</b>.</div></div></section>
   <section class="plsec"><h2>Produtos: quanto cobrar</h2><div class="panel">
     <div class="note" style="margin-bottom:10px">Preencha o <b>custo de cada peça</b> (o que pagamos ao fornecedor). A conta tira o imposto de ${pct(+fisc().aliq.produtos||0)} e a taxa da maquininha do Inter de cada venda, e mostra quanto sobra em cada forma de pagamento. <b>Mínimo</b> = preço que só paga peça, imposto e taxa, sem lucro. <b>Sugerido</b> = preço com a margem abaixo, arredondado para cima de 5 em 5. Os dois já contam com o pior caso: crédito à vista, ou 2x quando o preço passa do limite do parcelamento.</div>
-    <div class="grid2" style="max-width:460px"><label class="field">Imposto sobre venda (%)<input type="number" value="${+fisc().aliq.produtos||0}" disabled><small>Muda em Impostos e contador</small></label>${fld("p_margem",5,"Quanto do preço vira lucro")}</div>
+    <div class="grid2" style="max-width:460px"><label class="field">Imposto sobre venda (%)<input type="number" value="${+fisc().aliq.produtos||0}" disabled><small>Muda em Alíquotas de imposto</small></label>${fld("p_margem",5,"Quanto do preço vira lucro")}</div>
     <div class="note" style="margin:12px 0 4px"><b>Taxas da maquininha Inter</b> (recebendo no dia útil seguinte). Pix pelo app direto na conta não tem taxa; na maquininha são 200 grátis por mês e depois 0,49%.</div>
     <div class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))">${fld("t_pix",0.01)}${fld("t_deb",0.01)}${fld("t_c1",0.01)}${fld("t_c2",0.01)}${fld("t_lim",10)}</div>
     <div class="tblw"><table class="pltbl"><thead><tr><th>Produto</th><th>Custo da peça</th><th>Preço cobrado</th><th>Imposto</th><th>Lucro no Pix</th><th>Lucro no débito</th><th>Lucro no crédito</th><th>Lucro em 2x</th><th>Mínimo</th><th>Sugerido</th><th></th></tr></thead><tbody id="plProd">
@@ -1329,19 +1321,19 @@ function renderPlan(force){
     <div class="toolbar" style="margin:10px 0 0"><button class="btn" data-xadd="1">+ Produto que não está no app</button></div>
     <div class="note">Use as linhas "fora do app" para regata, boné, camisa de evento ou qualquer peça que ainda vai vender: coloque o custo e o preço que pensa em cobrar. Os custos ficam só aqui na Gestão; a galera do app não vê. "Usar na loja" troca o preço do produto no app.</div></div></section>
   <section class="plsec"><h2>Caixa da empresa</h2><div class="cols2">
-    <div class="panel"><div class="grid2">${fld("c_saldo",0.01,"Saldo estimado agora")}${fld("c_das",1,"Estimativa: imposto de todos os meses anteriores menos o DAS já lançado")}${fld("c_mes",0.01,"Imposto e contador deste mês")}${fld("c_meses",1)}${fld("c_giro",500,"Medalhas e camisas antes das inscrições")}${fld("c_ev",1)}</div></div>
+    <div class="panel"><div class="grid2">${fld("c_saldo",0.01,"Saldo estimado agora")}${fld("c_das",1,"Estimativa: imposto de todos os meses anteriores menos o DAS já lançado")}${fld("c_mes",0.01,"Imposto deste mês")}${fld("c_meses",1)}${fld("c_giro",500,"Medalhas e camisas antes das inscrições")}${fld("c_ev",1)}</div></div>
     <div class="panel"><div id="plC"></div><div id="plCMsg"></div></div></div></section>`;
   planCalc();
 }
 function planCalc(){
   if(S.plan!=="cenario"||!$("plA"))return;
   const L=planLive(),v=k=>{const el=document.querySelector(`[data-pl="${k}"]`);return el&&el.value!==""?+el.value:planV(L,k)};
-  const rec=v("a_alunos")*v("a_mens"),imp=rec*v("a_aliq")/100,cus=v("a_treinus")+v("a_contador")+v("a_gastos")+v("a_parcela");
+  const rec=v("a_alunos")*v("a_mens"),imp=rec*v("a_aliq")/100,cus=v("a_treinus")+v("a_gastos")+v("a_parcela");
   const luc=rec-imp-cus,res=Math.max(0,luc)*v("a_res")/100,soc=luc-res,por=soc/4;
   const ln=(k,x,c,cls)=>`<div class="line ${cls||""}"><span class="k">${c?`<i class="dot" style="background:${c}"></i>`:""}${k}</span><b class="num ${x<0?"neg":""}">${brl(x)}</b></div>`;
   const bar=ps=>{const t=ps.reduce((s,p)=>s+Math.max(0,p[0]),0)||1;return ps.map(([x,c])=>`<i style="width:${Math.max(0,x)/t*100}%;background:${c}"></i>`).join("")};
   $("plABar").innerHTML=bar([[imp,"var(--f-imp)"],[cus,"var(--f-ger)"],[res,"var(--f-ev)"],[soc,"var(--f-ass)"]]);
-  $("plA").innerHTML=ln("Mensalidades",rec)+ln(`Imposto (${pct(v("a_aliq"))})`,-imp,"var(--f-imp)")+ln("Treinus, contador, gastos e parcela",-cus,"var(--f-ger)")+ln("Lucro da assessoria",luc,null,"total")+ln(`Guardar no caixa (${pct(v("a_res"))})`,-res,"var(--f-ev)")+ln("Para dividir entre 4",soc,"var(--f-ass)");
+  $("plA").innerHTML=ln("Mensalidades",rec)+ln(`Imposto (${pct(v("a_aliq"))})`,-imp,"var(--f-imp)")+ln("Treinus, gastos e parcela",-cus,"var(--f-ger)")+ln("Lucro da assessoria",luc,null,"total")+ln(`Guardar no caixa (${pct(v("a_res"))})`,-res,"var(--f-ev)")+ln("Para dividir entre 4",soc,"var(--f-ass)");
   $("plASoc").textContent=brl(por);$("plASoc").className="num "+(por<0?"neg":"");
   const M=v("a_meta"),need=(M*4/(1-v("a_res")/100)+cus)/(1-v("a_aliq")/100),mensN=v("a_alunos")?need/v("a_alunos"):0,aluN=v("a_mens")?Math.ceil(need/v("a_mens")):0;
   $("plAMeta").innerHTML=`Para cada sócio tirar <b>${brl0(M)}</b>, a assessoria precisa faturar <b>${brl0(need)}</b>: mensalidade de <b>${brl(mensN)}</b> com ${v("a_alunos")} alunos, ou <b>${aluN} alunos</b> pagando ${brl0(v("a_mens"))}.`;
@@ -1362,10 +1354,10 @@ function planCalc(){
   document.querySelectorAll("[data-prow]").forEach(tr=>{const p=prodById(tr.dataset.prow);if(!p)return;prodRow(tr,+(tr.querySelector("[data-pcusto]").value)||0,+p.preco||0,p.id)});
   document.querySelectorAll("[data-xrow]").forEach(tr=>{const g=f=>+(tr.querySelector(`[data-xf="${f}"]`).value)||0;prodRow(tr,g("custo"),g("preco"),null)});
   // caixa
-  const fixo=v("a_treinus")+v("a_contador")+v("a_gastos"),livre=v("c_saldo")-v("c_das")-v("c_mes"),meta=fixo*v("c_meses")+v("c_giro");
+  const fixo=v("a_treinus")+v("a_gastos"),livre=v("c_saldo")-v("c_das")-v("c_mes"),meta=fixo*v("c_meses")+v("c_giro");
   const evRes=(()=>{const ps=Object.values(S.orcs||{});if(!ps.length)return 0;return ps.reduce((s,o)=>s+orcCalcData(o).res,0)/ps.length})();
   const porMes=res+evRes*v("c_ev")/12,falta=meta-livre;
-  $("plC").innerHTML=ln("Saldo no Inter",v("c_saldo"))+ln("DAS atrasado",-v("c_das"),"var(--f-imp)")+ln("Imposto e contador deste mês",-v("c_mes"),"var(--f-imp)")+ln("Dinheiro livre de verdade",livre,null,"total")+ln(`Meta de reserva (${v("c_meses")} meses de custo fixo + adiantamento)`,meta,"var(--f-ev)")+ln(`Guardando por mês${evRes?" (assessoria + média dos orçamentos)":" (assessoria)"}`,porMes,"var(--f-ev)");
+  $("plC").innerHTML=ln("Saldo no Inter",v("c_saldo"))+ln("DAS atrasado",-v("c_das"),"var(--f-imp)")+ln("Imposto deste mês",-v("c_mes"),"var(--f-imp)")+ln("Dinheiro livre de verdade",livre,null,"total")+ln(`Meta de reserva (${v("c_meses")} meses de custo fixo + adiantamento)`,meta,"var(--f-ev)")+ln(`Guardando por mês${evRes?" (assessoria + média dos orçamentos)":" (assessoria)"}`,porMes,"var(--f-ev)");
   $("plCMsg").innerHTML=livre<0?`<div class="callout bad"><b>O caixa livre está negativo em ${brl(-livre)}.</b> O imposto que falta pagar é maior que o saldo. Guardando ${brl0(porMes)} por mês, leva ${porMes>0?Math.ceil(-livre/porMes)+" meses":"tempo indefinido"} só para zerar.</div>`
     :`<div class="callout ${falta>0?"warn":"ok"}">${falta>0?`Faltam <b>${brl(falta)}</b> para a meta, uns <b>${porMes>0?Math.ceil(falta/porMes):"∞"} meses</b> no ritmo atual.`:"<b>Meta de reserva atingida.</b>"}</div>`;
   $("plKpis").innerHTML=[["Assessoria por sócio",brl(por),por<M],["Mensalidade para a meta",brl(mensN),false],["Caixa livre de verdade",brl(livre),livre<0],["Meta de reserva",brl0(meta),false]].map(([l,x,a])=>`<div class="stat ${a?"alert":""}"><div class="eyebrow">${l}</div><div class="v num">${x}</div></div>`).join("");
@@ -1391,7 +1383,7 @@ function orcListHtml(){
   const all=Object.entries(S.orcs||{}).map(([id,o])=>({id,...o}));
   const g={};all.forEach(o=>{const k=(o.projeto||"").trim()||"Sem projeto";(g[k]=g[k]||[]).push(o)});
   const keys=Object.keys(g).sort((a,b)=>a==="Sem projeto"?1:b==="Sem projeto"?-1:a.localeCompare(b));
-  let h=`<div class="toolbar"><div class="note" style="flex:1 1 280px">Monte o orçamento de cada evento antes de abrir inscrição: quantos inscritos, preço, custos por atleta e custos fixos. O imposto e o extra do contador já entram. Dê o mesmo nome de projeto às etapas de um circuito para ver o total.</div><button class="btn primary" data-orcnew="1">+ Novo orçamento</button></div>`;
+  let h=`<div class="toolbar"><div class="note" style="flex:1 1 280px">Monte o orçamento de cada evento antes de abrir inscrição: quantos inscritos, preço, custos por atleta e custos fixos. O imposto já entra. Dê o mesmo nome de projeto às etapas de um circuito para ver o total.</div><button class="btn primary" data-orcnew="1">+ Novo orçamento</button></div>`;
   if(!all.length)return h+`<div class="list"><div class="empty"><b>Nenhum orçamento ainda</b>Crie o primeiro em “+ Novo orçamento”. Ele já vem com os custos fixos da 2ª Corrida de Santo Aleixo como ponto de partida.</div></div>`;
   for(const k of keys){const os=g[k].sort((a,b)=>(a.data||"").localeCompare(b.data||"")||(a.criado||0)-(b.criado||0));const cs=os.map(orcCalcData);
     const T=cs.reduce((s,c)=>({rec:s.rec+c.rec,cus:s.cus+c.cus+c.imp,luc:s.luc+c.luc,ap0:s.ap0+c.apoio0,apM:s.apM+c.apoioM,N:s.N+c.N,ext:s.ext+c.extra}),{rec:0,cus:0,luc:0,ap0:0,apM:0,N:0,ext:0});
