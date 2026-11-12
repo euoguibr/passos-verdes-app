@@ -555,14 +555,14 @@ function renderPainel(){
   });
   $("fRep").textContent=nota;
   { /* reserva: só visualização de quanto ficaria na conta */
-    const pr=+((S.fiscal&&S.fiscal.reserva)??20),rec=RM.r.assessoria+RM.r.eventos+RM.r.produtos,rv=Math.round(rec*pr)/100,sob=res-rv;
+    const pr=+((S.fiscal&&S.fiscal.reserva)??20),rv=Math.max(0,Math.round(res*pr)/100),sob=res-rv;
     const ae=document.activeElement;if(!(ae&&ae.id==="fResPct"))$("fReserva").innerHTML=`<div class="line"><b>Reserva da empresa</b><label class="note" style="display:flex;align-items:center;gap:6px">guardar <input id="fResPct" type="number" min="0" max="100" step="5" value="${pr}" style="width:64px;padding:4px 6px"> %</label></div>
-      <div class="line"><span>Recebido no mês</span><b class="num" id="fResRec"></b></div>
+      <div class="line"><span>Resultado do fechamento</span><b class="num" id="fResRec"></b></div>
       <div class="line"><span>Ficaria na conta</span><b class="num" id="fResV"></b></div>
       <div class="line"><span>Para cada sócio, guardando a reserva</span><b class="num" id="fResS"></b></div>
       <div class="note" id="fResN"></div>`;
-    $("fResRec").textContent=brl(rec);$("fResV").textContent=brl(rv);$("fResS").textContent=brl(Math.max(0,sob)/4);
-    $("fResN").textContent=`Recebido = mensalidades ${brl(RM.r.assessoria)} + eventos ${brl(RM.r.eventos)} + produtos ${brl(RM.r.produtos)}. É só para visualizar: nada é descontado do fechamento.`+(sob<0?" Neste mês a reserva passa do resultado do fechamento; o resto teria que sair do lucro dos eventos.":"");
+    $("fResRec").textContent=brl(res);$("fResV").textContent=brl(rv);$("fResS").textContent=brl(Math.max(0,sob)/4);
+    $("fResN").textContent=res>0?`A reserva sai do que sobra depois de pagar custos, gastos e impostos. É só para visualizar: nada é descontado do fechamento.`:"Neste mês não sobrou resultado para reservar.";
     $("fResPct").onchange=e=>{const x=Math.min(100,Math.max(0,parseFloat(e.target.value)||0));if(!needDb())return;guard(()=>S.db.doc("config/fiscal").set({...(S.fiscal||{}),reserva:x}),"Reserva salva")};
   }
   $("fEv").textContent=m.eventos.net||retEv?`lucro ${brl(m.eventos.net-RM.imp.eventos)} após imposto ${brl(RM.imp.eventos)} · repassado no evento ${brl(retEv)}`:"sem movimento";
