@@ -111,11 +111,39 @@ async function manha(a, ctx) {
       }
     }
   }
+  // Cobranças da assessoria: avisa a equipe quem lembrar hoje (o lembrete ao aluno sai pelo WhatsApp, na Gestão)
+  try { resumo.push(await avisoCobrancas(a, ctx, toks, hoje)); } catch (e) { console.error('cobrancas', e); resumo.push('Cobranças: erro ' + (e.message || '')); }
   // Folhas: pódio do desafio da semana e do jogo (às segundas)
   if (diaSemana(hoje) === 1 || ctx.modo === 'teste') {
     try { resumo.push(...await pagarPodios(a, ctx, membros, toks, hoje)); } catch (e) { console.error('podios', e); resumo.push('Pódios: erro ' + (e.message || '')); }
   }
   return resumo;
+}
+
+async function avisoCobrancas(a, ctx, toks, hoje) {
+  const db = a.firestore(); const lim = addDias(hoje, 3);
+  const lista = [];
+  (await db.collection('caixa_alunos').get()).forEach(d => {
+    const x = d.data() || {};
+    if (x.status === 'pausado' || x.cortesia || !(Number(x.valor) > 0) || !x.proxVenc) return;
+    if (x.proxVenc <= lim && x.lembreteEm !== hoje) lista.push({ nome: String(x.nome || '').split(' ')[0], atrasado: x.proxVenc < hoje });
+  });
+  if (!lista.length) return 'Nenhuma cobrança para lembrar hoje';
+  const atr = lista.filter(x => x.atrasado).length;
+  const nomes = lista.map(x => x.nome).slice(0, 5).join(', ') + (lista.length > 5 ? ` e mais ${lista.length - 5}` : '');
+  const msg = {
+    title: `💚 Cobranças de hoje: ${lista.length} aluno${lista.length === 1 ? '' : 's'}`,
+    body: `${nomes}${atr ? ` (${atr} atrasado${atr === 1 ? '' : 's'})` : ''}. Abra a Gestão e mande o lembrete no WhatsApp.`,
+    url: '/gestao.html#alunos', tag: 'cobrancas-' + hoje
+  };
+  let uids = [];
+  if (ctx.modo === 'teste') uids = [ctx.uid];
+  else {
+    const emails = (await db.collection('admins').get()).docs.map(d => d.id);
+    for (const em of emails) { try { uids.push((await a.auth().getUserByEmail(em)).uid); } catch (e) {} }
+  }
+  const n = await enviar(a, uids.flatMap(u => toks[u] || []), ctx.modo === 'teste' ? { ...msg, title: '[Teste] ' + msg.title } : msg);
+  return `Cobranças: ${lista.length} para lembrar (${n} aviso${n === 1 ? '' : 's'} para a equipe)`;
 }
 
 const PADRAO_F = { podio: [60, 40, 25], jogo: [30, 20, 10] };

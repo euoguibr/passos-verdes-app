@@ -212,6 +212,8 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 [hidden]{display:none !important}
+.cob{margin-bottom:16px}.cobhead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}.cobhead h2{font-size:20px}
+.cob .item.dim{opacity:.6}
 /* Gestão: login, vendas e estoque */
 .gate{min-height:70vh;display:grid;place-items:center;text-align:center}
 .gate .box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 24px;max-width:380px;display:flex;flex-direction:column;gap:12px;align-items:center}
@@ -359,6 +361,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
 
   <!-- ASSESSORIA -->
   <main id="v-alunos" data-view="alunos" hidden>
+    <section class="panel cob" id="cobBox" hidden></section>
     <div class="toolbar"><div class="chips" id="stChips"></div></div>
     <div class="toolbar">
       <input id="q" type="search" placeholder="Buscar aluno">
@@ -511,8 +514,26 @@ function statusOf(a){
   if(diff<=5)return{k:"vence",t:diff===0?"Vence hoje":`Vence em ${diff}d`,ord:1,diff};
   return{k:"emdia",t:"Em dia",ord:2,diff};
 }
+/* ----- cobranças: Pix copia e cola (mesma chave do app, em Info do projeto) ----- */
+function pixKey(){let k=String((S.info&&S.info.pix)||"").trim();if(!k)return"";if(k.includes("@")||/[a-f0-9]{8}-[a-f0-9]{4}-/i.test(k))return k;if(k.startsWith("+"))return"+"+k.replace(/\D/g,"");const d=k.replace(/\D/g,"");return d.length===11||d.length===14?d:k.replace(/\s/g,"")}
+function crc16(s){let c=0xFFFF;for(let i=0;i<s.length;i++){c^=s.charCodeAt(i)<<8;for(let j=0;j<8;j++)c=c&0x8000?((c<<1)^0x1021)&0xFFFF:(c<<1)&0xFFFF}return c.toString(16).toUpperCase().padStart(4,"0")}
+function pixPayload(valor,txid){const key=pixKey();if(!key)return"";
+  const f=(id,v)=>id+String(v.length).padStart(2,"0")+v;
+  const clean=x=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9 ]/g,"").trim().toUpperCase();
+  const i=S.info||{};const nome=clean(i.pixNome||"Passos Verdes").slice(0,25)||"PASSOS VERDES",cid=clean(i.pixCidade||"Mage").slice(0,15)||"MAGE";
+  const p=f("00","01")+f("26",f("00","br.gov.bcb.pix")+f("01",key))+f("52","0000")+f("53","986")+(valor>0?f("54",valor.toFixed(2)):"")+f("58","BR")+f("59",nome)+f("60",cid)+f("62",f("05",(String(txid||"").replace(/[^A-Za-z0-9]/g,"").slice(0,25)||"***")))+"6304";
+  return p+crc16(p)}
+const DIAS_SEM=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+function cobMsg(a){const s=statusOf(a),n=a.nome.split(" ")[0],v=brl(+a.valor||0),d=fmtDY(a.proxVenc),ds=DIAS_SEM[parse(a.proxVenc).getDay()];
+  const px=pixPayload(+a.valor||0,"MENS"+(a.proxVenc||"").replace(/-/g,""));
+  let t=s.k==="atrasado"?`Oi ${n}, tudo bem? A mensalidade da Assessoria Passos Verdes (${v}) venceu em ${d} e ainda não localizamos o pagamento.`
+    :s.diff===0?`Oi ${n}! Lembrete rapidinho: a mensalidade da Assessoria Passos Verdes (${v}) vence hoje.`
+    :`Oi ${n}! Passando pra lembrar que a mensalidade da Assessoria Passos Verdes (${v}) vence ${s.diff===1?"amanhã":"na "+ds} (${d}).`;
+  if(px)t+=`\n\nPra facilitar, é só copiar o Pix abaixo e colar no app do banco (valor já preenchido):\n\n${px}`;
+  t+=s.k==="atrasado"?`\n\nSe já pagou, me manda o comprovante que eu dou baixa. Qualquer coisa é só chamar 💚`:`\n\nSe já pagou, desconsidera. Bons treinos! 💚`;
+  return t}
 function waLink(a){const n=(a.whatsapp||"").replace(/\D/g,"");if(n.length<10)return null;
-  const msg=`Oi ${a.nome.split(" ")[0]}! Passando pra lembrar da mensalidade da Assessoria Passos Verdes (${brl(a.valor)}), com vencimento em ${fmtDY(a.proxVenc)}. Qualquer coisa me chama! 💚`;
+  const msg=a.proxVenc?cobMsg(a):`Oi ${a.nome.split(" ")[0]}! Passando pra lembrar da mensalidade da Assessoria Passos Verdes (${brl(a.valor)}). Qualquer coisa me chama! 💚`;
   return "https://wa.me/55"+n+"?text="+encodeURIComponent(msg)}
 
 /* ---------- render ---------- */
@@ -660,7 +681,18 @@ function alunoRow(a,s,compact){
       ${compact?"":`<button class="btn sm" data-edit="${a.id}">Editar</button>`}
     </div></div>`;
 }
-function renderAlunos(){
+function cobLista(){const lim=3;return S.alunos.map(a=>({a,s:statusOf(a)})).filter(x=>(x.s.k==="atrasado"||(x.s.k==="vence"&&x.a.proxVenc&&x.s.diff<=lim)))
+  .sort((x,y)=>((x.a.lembreteEm===todayISO())-(y.a.lembreteEm===todayISO()))||x.s.ord-y.s.ord||(x.s.diff??0)-(y.s.diff??0))}
+function renderCob(){const box=$("cobBox");if(!S.loaded.a){box.hidden=true;return}
+  const L=cobLista(),hj=todayISO(),feitos=L.filter(x=>x.a.lembreteEm===hj).length;box.hidden=false;
+  const dias=d=>{const n=Math.round((parse(hj)-parse(d))/864e5);return n<=0?"hoje":n===1?"ontem":`há ${n} dias`};
+  box.innerHTML=`<div class="cobhead"><div><h2>Cobranças de hoje</h2><div class="note">${L.length?`${L.length} ${L.length===1?"aluno":"alunos"} para lembrar: vencem em até 3 dias ou estão atrasados.${feitos?` ${feitos} já ${feitos===1?"lembrado":"lembrados"} hoje.`:""}`:"Ninguém para lembrar hoje. 🎉"}</div></div>
+    ${pixKey()?"":`<span class="pill s-vence">Cadastre a chave Pix em Info do projeto, no app, pra ela ir na mensagem</span>`}</div>
+    ${L.length?`<div class="list">${L.map(({a,s})=>{const w=waLink(a),ok=a.lembreteEm===hj;return `<div class="item${ok?" dim":""}">
+      <div><div class="name">${esc(a.nome)}</div><div class="meta num"><span class="pill s-${s.k}">${esc(s.t)}</span><span>${brl(+a.valor||0)}</span><span>venc. ${fmtD(a.proxVenc)}</span>${a.lembreteEm?`<span>${ok?"✓ lembrado hoje":"último lembrete "+dias(a.lembreteEm)}</span>`:""}</div></div>
+      <div class="right">${w?`<a class="btn sm ${ok?"":"primary"}" href="${w}" target="_blank" rel="noopener" data-lembrei="${a.id}">${ok?"Mandar de novo":"Lembrar no WhatsApp"}</a>`:`<span class="note">sem WhatsApp</span><button class="btn sm" data-edit="${a.id}">Cadastrar</button>`}
+      <button class="btn sm ghost" data-pay="${a.id}" ${S.canWrite?"":"disabled"}>Pagou</button></div></div>`}).join("")}</div>`:""}`}
+function renderAlunos(){renderCob();
   const A=S.alunos.map(a=>({a,s:statusOf(a)}));
   const cnt=k=>A.filter(x=>k==="todos"||x.s.k===k).length;
   const chips=[["todos","Todos"],["atrasado","Atrasados"],["vence","Vencem logo"],["emdia","Em dia"],["cortesia","Cortesia"],["pausado","Pausados"]];
@@ -963,6 +995,10 @@ function resumoModal(){
 
 /* ---------- eventos de clique ---------- */
 let busy=false;
+/* marca o lembrete como enviado quando abre o WhatsApp (o link abre normalmente) */
+document.addEventListener("click",e=>{const l=e.target.closest("a[data-lembrei]");if(!l||!S.db||!S.canWrite)return;
+  const a=S.alunos.find(x=>x.id===l.dataset.lembrei);if(!a)return;const hj=todayISO();
+  S.db.doc("alunos/"+a.id).update({lembreteEm:hj,lembretes:[...(Array.isArray(a.lembretes)?a.lembretes:[]).slice(-11),hj]}).catch(()=>{})});
 document.addEventListener("click",async e=>{
   const t=e.target.closest("button");if(!t||t.closest(".modal"))return;
   const d=t.dataset;
@@ -1513,6 +1549,7 @@ onAuthStateChanged(auth,async u=>{
   col("pagamentos",s=>{S.pags=s.docs.map(d=>({id:d.id,...d.data()}));render()});
   col("lancamentos",s=>{S.lancs=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.l=true;render()});
   col("eventos",s=>{S.eventos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.e=true;render()});
+  unsubs.push(onSnapshot(doc(fs,"projeto","info"),s=>{S.info=s.exists()?s.data():null;render()},()=>{}));
   unsubs.push(DBA.doc("config/banco").onSnapshot(s=>{S.banco=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/fiscal").onSnapshot(s=>{S.fiscal=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/cenario").onSnapshot(s=>{if(!Object.keys(planPend).length)S.cen=s.exists?s.data():null;render()},fail));
