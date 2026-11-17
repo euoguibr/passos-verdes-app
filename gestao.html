@@ -481,6 +481,7 @@ const nowISO=()=>new Date().toISOString();
    data posterior, ou o mesmo dia mas registrado no caixa depois de você informar o saldo */
 function afterBase(x){
   const b=S.banco;if(!b)return false;
+  if(x.interId&&x.data<=b.data)return false; // veio do extrato e já estava no saldo do banco
   if(x.data>b.data)return true;
   if(x.data===b.data&&x.registradoEm&&b.atualizadoEm)return x.registradoEm>b.atualizadoEm;
   return false;
@@ -1155,19 +1156,25 @@ function estornoModal(id){
 function saldoModal(pre){
   const b=S.banco||{},se=saldoEst(),pa=partesAtuais();
   const cur=pa?{eventos:pa.eventos.ini+pa.eventos.mov,produtos:pa.produtos.ini+pa.produtos.mov}:{eventos:0,produtos:0};
+  // correção única: lançamentos do extrato do dia do saldo que foram contados duas vezes na divisão
+  const dup={eventos:0,produtos:0};
+  if(b.data&&!b.v2){S.lancs.filter(l=>real(l)&&l.interId&&l.data===b.data&&l.registradoEm&&b.atualizadoEm&&l.registradoEm<b.atualizadoEm).forEach(l=>{const f=frenteOf(l);if(f in dup)dup[f]+=sgn(l)*(+l.valor||0)})}
+  const temDup=Math.abs(dup.eventos)+Math.abs(dup.produtos)>0.004;
+  const dupTxt=temDup?`<div class="rbox note" id="bDup">Achei valores contados duas vezes na divisão: ${[dup.produtos?`camisas ${brl(dup.produtos)}`:"",dup.eventos?`eventos ${brl(dup.eventos)}`:""].filter(Boolean).join(" e ")}. <button class="btn sm primary" id="bFix">Corrigir</button></div>`:"";
   modal(`<h3>Saldo do Banco Inter</h3><div class="note">Digite o saldo que aparece no app do Inter e diga quanto dele é de eventos e de camisas. O resto fica como assessoria. Depois disso, cada lançamento atualiza as partes sozinho.</div>
     <div class="grid2"><label class="field">Saldo (R$)<input id="bS" type="number" step="0.01" inputmode="decimal" value="${pre!=null?(+pre).toFixed(2):se?se.v.toFixed(2):(b.saldo??"")}"></label>
     <label class="field">Data do saldo<input id="bD" type="date" value="${todayISO()}"></label>
     <label class="field">Desse saldo, é de eventos<input id="bE" type="number" step="0.01" value="${cur.eventos.toFixed(2)}"></label>
     <label class="field">É de camisas<input id="bP" type="number" step="0.01" value="${cur.produtos.toFixed(2)}"></label></div>
-    <div class="totalbox num"><span>Fica pra assessoria</span><span id="bA">—</span></div>
+    <div class="totalbox num"><span>Fica pra assessoria</span><span id="bA">—</span></div>${dupTxt}
     <div class="acts"><button class="btn" data-close>Cancelar</button><button class="btn primary" id="bOk">Salvar saldo</button></div>`,
   ov=>{
     const calc=()=>{const v=parseFloat($("bS").value)||0,e=parseFloat($("bE").value)||0,p=parseFloat($("bP").value)||0;$("bA").textContent=brl(v-e-p);return{v,e,p,a:Math.round((v-e-p)*100)/100}};
     ["bS","bE","bP"].forEach(i=>$(i).oninput=calc);calc();
+    if(temDup)$("bFix").onclick=()=>{$("bE").value=(parseFloat($("bE").value)-dup.eventos).toFixed(2);$("bP").value=(parseFloat($("bP").value)-dup.produtos).toFixed(2);calc();$("bDup").innerHTML="Corrigido. Confira os valores e clique em <b>Salvar saldo</b>."};
     ov.querySelector("#bOk").onclick=()=>{if(!needDb())return;const d=$("bD").value,c=calc();
       if(isNaN(parseFloat($("bS").value))||!d){toast("Preencha saldo e data.");return}
-      guard(()=>S.db.doc("config/banco").set({saldo:c.v,data:d,atualizadoEm:new Date().toISOString(),partes:{eventos:c.e,produtos:c.p,assessoria:c.a}}),"Saldo atualizado")};
+      guard(()=>S.db.doc("config/banco").set({saldo:c.v,data:d,atualizadoEm:new Date().toISOString(),partes:{eventos:c.e,produtos:c.p,assessoria:c.a},v2:true}),"Saldo atualizado")};
   });
 }
 
