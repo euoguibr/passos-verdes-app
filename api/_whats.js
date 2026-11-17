@@ -67,4 +67,8 @@ async function lembretesBoleto(db) {
   return out;
 }
 
-module.exports = { whatsOk, confere, enviarBoleto, lembretesBoleto };
+// Link do PDF para mandar à mão (vale até 15 dias depois do vencimento)
+function linkManual(codigo, venc) { if (!interCfg().hook || !wcfg().host) return null;
+  const dias = Math.max(7, Math.ceil((Date.parse(venc + 'T12:00:00Z') - Date.now()) / 864e5) + 15); return linkPdf(codigo, dias); }
+
+module.exports = { whatsOk, confere, enviarBoleto, lembretesBoleto, linkManual };

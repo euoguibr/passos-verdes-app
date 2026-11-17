@@ -368,6 +368,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
       <select id="fTrein" aria-label="Treinador"><option value="">Todos os treinadores</option></select>
       <span class="spacer"></span>
       <button class="btn" id="btnBoleto">Boletos Inter</button>
+      <button class="btn" id="btnAbertos">Mandar boletos</button>
       <button class="btn primary" id="btnNovoAluno">+ Novo aluno</button>
     </div>
     <div class="list" id="alunosList"><div class="empty"><b>Carregando alunos…</b></div></div>
@@ -1037,12 +1038,27 @@ async function pixCobModal(id){const a=S.alunos.find(x=>x.id===id);if(!a)return;
 async function boletoPdf(codigo,nome){try{const r=await interCall("boletoPdf",{codigo});const bin=atob(r.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([u8],{type:"application/pdf"}));a.download=`boleto-${String(nome||"aluno").replace(/\s+/g,"-")}.pdf`;document.body.appendChild(a);a.click();a.remove()}catch(e){toast(e.message)}}
 
+const bolTxt=(r,quando)=>`Oi, ${String(r.nome||"").split(" ")[0]}! Segue o boleto da sua mensalidade da PV Assessoria (${brl(+r.valor||0)}), que ${quando}.${r.link?`\n\nBoleto em PDF:\n${r.link}`:""}\n\nAssim que o pagamento cair, a baixa é automática 💚`;
+async function abertosModal(){
+  modal(`<h3>Mandar boletos no WhatsApp</h3><div class="note">Boletos que ainda não foram pagos. O botão abre a conversa do aluno com a mensagem e o link do PDF prontos, é só apertar enviar.</div><div id="abOut"><div class="note">Buscando…</div></div><div class="acts"><button class="btn" data-close>Fechar</button></div>`,
+  async ov=>{try{const r=await interCall("abertos");const hj=r.hoje;
+    const dif=v=>Math.round((parse(v)-parse(hj))/864e5);
+    const quando=v=>{const d=dif(v);return d===0?"vence hoje":d===1?"vence amanhã":d>1?`vence em ${fmtDY(v)}`:`venceu em ${fmtDY(v)}`};
+    const L=r.boletos;
+    $("abOut").innerHTML=!L.length?`<div class="note">Nenhum boleto em aberto 🎉</div>`:`<div class="list">${L.map((b,i)=>{const d=dif(b.venc),w=waMsg(b.whatsapp,bolTxt(b,quando(b.venc)));
+      return `<div class="item"><div><div class="name">${esc(b.nome)}</div><div class="meta num"><span>${brl(+b.valor||0)}</span><span class="${d<0?"neg":d<=3?"pos":""}">${quando(b.venc)}</span>${b.enviado?`<span>mandado ${fmtDY(b.enviado.slice(0,10))}</span>`:""}</div></div>
+      <div class="right"><button class="btn sm" data-epdf="${esc(b.codigo)}" data-en="${esc(b.nome)}">PDF</button>${w?`<a class="btn sm ${b.enviado?"":"primary"}" data-abw="${i}" href="${w}" target="_blank" rel="noopener">${b.enviado?"Mandar de novo":"Mandar no WhatsApp"}</a>`:`<span class="pill">sem WhatsApp</span>`}</div></div>`}).join("")}</div>
+      ${L.length&&!L[0].link?`<div class="rbox note">O link do PDF não está disponível. Confira se o INTER_WEBHOOK_TOKEN está na Vercel.</div>`:""}`;
+    ov.addEventListener("click",async e=>{const p=e.target.closest("[data-epdf]");if(p){boletoPdf(p.dataset.epdf,p.dataset.en);return}
+      const a=e.target.closest("[data-abw]");if(a){const b=L[+a.dataset.abw];a.classList.remove("primary");a.textContent="Mandado ✓";try{await interCall("marcarEnviado",{codigo:b.codigo})}catch(err){}}});
+  }catch(e){$("abOut").innerHTML=`<div class="rbox note">${esc(e.message)}</div>`}},true);
+}
 async function boletoApi(itens){
   modal(`<h3>Emitindo no Inter</h3><div class="note" id="eProg">0 de ${itens.length}</div><div class="list" id="eList"></div><div class="acts"><button class="btn" data-close>Fechar</button></div>`,null,true);
   const out=$("eList");let ok=0;
   for(let i=0;i<itens.length;i++){const it=itens[i];$("eProg").textContent=`${i} de ${itens.length}`;
     try{const r=await interCall("boleto",{alunoId:it.a.id,venc:it.venc,msg:it.msg});ok++;
-      const txt=`Oi, ${r.nome.split(" ")[0]}! Segue o boleto da mensalidade da PV Assessoria (${brl(r.valor)}, vence ${fmtDY(r.venc)}).${r.pix?`\n\nPix copia e cola:\n${r.pix}`:""}${r.linha?`\n\nLinha digitável:\n${r.linha}`:""}`;
+      const txt=bolTxt(r,`vence ${fmtDY(r.venc)}`)+(r.pix?`\n\nSe preferir o Pix copia e cola:\n${r.pix}`:"")+(r.linha?`\n\nLinha digitável:\n${r.linha}`:"");
       const w=waMsg(r.whatsapp,txt);
       out.insertAdjacentHTML("beforeend",`<div class="item"><div><div class="name">${esc(r.nome)}</div><div class="meta num"><span>${brl(r.valor)}</span><span>venc. ${fmtDY(r.venc)}</span></div></div>
         <div class="right"><button class="btn sm" data-epdf="${esc(r.codigo)}" data-en="${esc(r.nome)}">PDF</button>${S.inter&&S.inter.whats?`<button class="btn sm primary" data-ewa="${esc(r.codigo)}">Enviar agora</button>`:w?`<a class="btn sm primary" href="${w}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div></div>`);
@@ -1308,6 +1324,7 @@ document.addEventListener("click",async e=>{
 });
 $("btnNovoAluno").onclick=()=>alunoModal(null);
 $("btnBoleto").onclick=()=>boletoModal("gerar");
+$("btnAbertos").onclick=()=>abertosModal();
 $("btnNovoEv").onclick=()=>eventoModal(null);
 $("btnGasto").onclick=()=>itemModal({tipo:"saida",frente:S.lf!=="todos"?S.lf:"geral"});
 $("btnEntrada").onclick=()=>itemModal({tipo:"entrada",frente:S.lf!=="todos"&&S.lf!=="retirada"?S.lf:"geral"});
