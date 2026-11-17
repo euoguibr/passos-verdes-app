@@ -992,10 +992,11 @@ async function boletoApi(itens){
       const txt=`Oi, ${r.nome.split(" ")[0]}! Segue o boleto da mensalidade da PV Assessoria (${brl(r.valor)}, vence ${fmtDY(r.venc)}).${r.pix?`\n\nPix copia e cola:\n${r.pix}`:""}${r.linha?`\n\nLinha digitável:\n${r.linha}`:""}`;
       const w=waMsg(r.whatsapp,txt);
       out.insertAdjacentHTML("beforeend",`<div class="item"><div><div class="name">${esc(r.nome)}</div><div class="meta num"><span>${brl(r.valor)}</span><span>venc. ${fmtDY(r.venc)}</span></div></div>
-        <div class="right"><button class="btn sm" data-epdf="${esc(r.codigo)}" data-en="${esc(r.nome)}">PDF</button>${w?`<a class="btn sm primary" href="${w}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div></div>`);
+        <div class="right"><button class="btn sm" data-epdf="${esc(r.codigo)}" data-en="${esc(r.nome)}">PDF</button>${S.inter&&S.inter.whats?`<button class="btn sm primary" data-ewa="${esc(r.codigo)}">Enviar agora</button>`:w?`<a class="btn sm primary" href="${w}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div></div>`);
     }catch(e){out.insertAdjacentHTML("beforeend",`<div class="item dim"><div><div class="name">${esc(it.a.nome)}</div><div class="meta"><span class="neg">${esc(e.message)}</span></div></div></div>`)}}
-  $("eProg").textContent=`${ok} de ${itens.length} emitidos. O Inter avisa a Gestão quando cada um for pago.`;
-  out.onclick=e=>{const b=e.target.closest("[data-epdf]");if(b)boletoPdf(b.dataset.epdf,b.dataset.en)};
+  $("eProg").textContent=`${ok} de ${itens.length} emitidos. O Inter avisa a Gestão quando cada um for pago.${S.inter&&S.inter.whats?" O boleto em PDF vai sozinho pro WhatsApp do aluno 3 dias antes e no dia do vencimento.":""}`;
+  out.onclick=async e=>{const b=e.target.closest("[data-epdf]");if(b)boletoPdf(b.dataset.epdf,b.dataset.en);
+    const w=e.target.closest("[data-ewa]");if(w){w.disabled=true;try{await interCall("whats",{codigo:w.dataset.ewa});w.textContent="Enviado ✓"}catch(err){toast(err.message);w.disabled=false}}};
 }
 
 /* um modal para qualquer lançamento — gasto, entrada ou item de evento */
