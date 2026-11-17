@@ -948,25 +948,67 @@ function copiar(txt,btn){navigator.clipboard.writeText(txt).then(()=>{if(btn){bt
 async function puxarSaldo(btn){btn.disabled=true;const o=btn.textContent;btn.textContent="Buscando…";
   try{const r=await interCall("saldo");saldoModal(r.saldo)}catch(e){toast(e.message)}finally{btn.disabled=false;btn.textContent=o}}
 
-function extratoModal(){
-  const fim=todayISO(),ini=fim.slice(0,8)+"01";
-  modal(`<h3>Extrato do Inter</h3><div class="note">Mostra as movimentações da conta. O que ainda não está na Gestão aparece com o botão Lançar.</div>
+function extratoModal(ini0,fim0){
+  const fim=fim0||todayISO(),ini=ini0||fim.slice(0,8)+"01";
+  modal(`<h3>Extrato do Inter</h3><div class="note">Mostra as movimentações da conta. O que ainda não está na Gestão aparece com <b>Lançar</b>. Se um valor junta coisas diferentes (mensalidade + camisa, por exemplo), use <b>Dividir</b>.</div>
     <div class="grid2"><label class="field">De<input id="xI" type="date" value="${ini}"></label><label class="field">Até<input id="xF" type="date" value="${fim}"></label></div>
     <div class="acts" style="justify-content:flex-start"><button class="btn primary" id="xOk">Buscar</button></div><div id="xOut"></div>
     <div class="acts"><button class="btn" data-close>Fechar</button></div>`,
   ov=>{const ir=async()=>{$("xOut").innerHTML=`<div class="note">Buscando no Inter…</div>`;
     try{const r=await interCall("extrato",{inicio:$("xI").value,fim:$("xF").value});
-      const ja=t=>S.lancs.some(l=>l.interId===t.id||(!l.previsto&&l.data===t.data&&l.tipo===t.tipo&&Math.abs((+l.valor||0)-t.valor)<0.005))
-        ||(t.tipo==="entrada"&&S.pags.some(p=>p.data===t.data&&Math.abs((+p.valor||0)-t.valor)<0.005));
-      const L=r.transacoes.slice().sort((a,b)=>b.data.localeCompare(a.data));const novos=L.filter(t=>!ja(t)).length;
-      $("xOut").innerHTML=`<div class="note">${L.length} movimentações · <b>${novos}</b> ainda fora da Gestão</div><div class="list">${L.map(t=>{const j=ja(t);return `<div class="item mov${j?" dim":""}">
+      const L=r.transacoes.slice().sort((a,b)=>b.data.localeCompare(a.data));const novos=L.filter(t=>!extJa(t)).length;
+      $("xOut").innerHTML=`<div class="note">${L.length} movimentações · <b>${novos}</b> ainda fora da Gestão</div><div class="list">${L.map((t,i)=>{const j=extJa(t),p=j?[]:extParciais(t);return `<div class="item mov${j?" dim":""}">
         <div class="kind ${t.tipo==="entrada"?"k-in":"k-out"}" aria-hidden="true">${t.tipo==="entrada"?"+":"−"}</div>
-        <div><div class="name">${esc(t.titulo)}</div><div class="meta num"><span>${fmtDY(t.data)}</span><span>${esc(t.descricao)}</span></div></div>
-        <div class="right"><span class="amt num ${t.tipo==="entrada"?"pos":"neg"}">${brl(t.valor)}</span>${j?`<span class="pill s-emdia">Já lançado</span>`:`<button class="btn sm primary" data-xl='${esc(JSON.stringify(t))}'>Lançar</button>`}</div></div>`}).join("")}</div>`;
-      ov.querySelectorAll("[data-xl]").forEach(b=>b.onclick=()=>{const t=JSON.parse(b.dataset.xl);
+        <div><div class="name">${esc(t.titulo)}</div><div class="meta num"><span>${fmtDY(t.data)}</span><span>${esc(t.descricao)}</span>${p.length?`<span class="pos">${brl(p.reduce((s,x)=>s+x.valor,0))} desse dia já está na Gestão</span>`:""}</div></div>
+        <div class="right"><span class="amt num ${t.tipo==="entrada"?"pos":"neg"}">${brl(t.valor)}</span>${j?`<span class="pill s-emdia">Já lançado</span>`:`<button class="btn sm" data-xd="${i}">Dividir</button><button class="btn sm primary" data-xl="${i}">Lançar</button>`}</div></div>`}).join("")}</div>`;
+      ov.querySelectorAll("[data-xl]").forEach(b=>b.onclick=()=>{const t=L[+b.dataset.xl];
         itemModal({tipo:t.tipo,frente:"geral",pre:{desc:t.titulo+(t.descricao?" · "+t.descricao:""),unit:t.valor,valor:t.valor,data:t.data,interId:t.id}})});
+      ov.querySelectorAll("[data-xd]").forEach(b=>b.onclick=()=>dividirModal(L[+b.dataset.xd],$("xI").value,$("xF").value));
     }catch(e){$("xOut").innerHTML=`<div class="rbox note">${esc(e.message)}</div>`}};
     $("xOk").onclick=ir;ir()},true);
+}
+// já está na Gestão: marcado como conferido, lançado a partir do extrato ou um registro com mesmo dia e valor
+const extJa=t=>!!(S.extConf&&S.extConf[t.id])||S.lancs.some(l=>l.interId===t.id||(!l.previsto&&l.data===t.data&&l.tipo===t.tipo&&Math.abs((+l.valor||0)-t.valor)<0.005))
+  ||(t.tipo==="entrada"&&S.pags.some(p=>p.data===t.data&&Math.abs((+p.valor||0)-t.valor)<0.005));
+// registros do mesmo dia com valor menor: provavelmente uma parte desse valor
+const extParciais=t=>[
+  ...(t.tipo==="entrada"?S.pags.filter(p=>p.data===t.data&&+p.valor<t.valor-0.004).map(p=>({valor:+p.valor,desc:`Mensalidade · ${p.nome||"aluno"}`})):[]),
+  ...S.lancs.filter(l=>!l.previsto&&!l.interId&&l.data===t.data&&l.tipo===t.tipo&&+l.valor<t.valor-0.004).map(l=>({valor:+l.valor,desc:l.desc||l.cat||"Lançamento"}))
+];
+
+function dividirModal(t,ini,fim){
+  const cents=v=>Math.round((+v||0)*100);
+  const ja=extParciais(t),usado=ja.reduce((s,x)=>s+x.valor,0),rest=Math.max(0,Math.round((t.valor-usado)*100)/100);
+  let partes=[...ja.map(x=>({f:"ja",cat:"",desc:x.desc,valor:x.valor})),{f:t.tipo==="entrada"&&ja.length?"produtos":"geral",cat:t.tipo==="entrada"&&ja.length?"Venda de camisas":"",desc:t.titulo+(t.descricao?" · "+t.descricao:""),valor:rest||t.valor}];
+  const frentes=Object.keys(FR).filter(k=>t.tipo==="saida"||FR[k].in.length);
+  modal(`<h3>Dividir ${brl(t.valor)}</h3><div class="note">${fmtDY(t.data)} · ${esc(t.titulo)}. Separe o valor em partes. O que já foi registrado antes fica como <b>Já está na Gestão</b> e não é lançado de novo.</div>
+    <div id="dvL"></div><div class="acts" style="justify-content:flex-start"><button class="btn sm" id="dvAdd">+ Outra parte</button></div>
+    <div class="totalbox num"><span id="dvS">—</span><span id="dvR">—</span></div>
+    <div class="acts"><button class="btn" id="dvBack">Voltar</button><button class="btn primary" id="dvOk">Salvar divisão</button></div>`,
+  ov=>{
+    const draw=()=>{$("dvL").innerHTML=partes.map((p,i)=>`<div class="rbox" style="margin-top:8px"><div class="grid2">
+      <label class="field">Parte ${i+1}<select data-dv="${i}" data-k="f"><option value="ja" ${p.f==="ja"?"selected":""}>Já está na Gestão</option>${frentes.map(k=>`<option value="${k}" ${p.f===k?"selected":""}>${FR[k].t}</option>`).join("")}</select></label>
+      <label class="field">Valor (R$)<input data-dv="${i}" data-k="valor" type="number" step="0.01" inputmode="decimal" value="${p.valor}"></label>
+      ${p.f==="ja"?"":`<label class="field">Categoria<select data-dv="${i}" data-k="cat">${(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out).map(c=>`<option ${c===p.cat?"selected":""}>${esc(c)}</option>`).join("")}</select></label>`}
+      <label class="field">Descrição<input data-dv="${i}" data-k="desc" value="${esc(p.desc)}"></label></div>
+      ${partes.length>1?`<button class="btn sm ghost" data-dvx="${i}">Remover parte</button>`:""}</div>`).join("");calc()};
+    const calc=()=>{const s=partes.reduce((a,p)=>a+cents(p.valor),0),d=cents(t.valor)-s;$("dvS").textContent=`Partes: ${brl(s/100)} de ${brl(t.valor)}`;
+      $("dvR").textContent=d===0?"Fechou certinho":d>0?`Faltam ${brl(d/100)}`:`Passou ${brl(-d/100)}`;$("dvR").className=d===0?"pos":"neg";$("dvOk").disabled=d!==0;return d};
+    ov.addEventListener("input",e=>{const el=e.target;if(el.dataset.dv===undefined)return;const p=partes[+el.dataset.dv];p[el.dataset.k]=el.dataset.k==="valor"?el.value:el.value;
+      if(el.dataset.k==="f"){p.cat=p.f==="ja"?"":(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out)[0]||"Outros";draw()}else calc()});
+    ov.addEventListener("change",e=>{if(e.target.dataset.k==="f")return;calc()});
+    ov.addEventListener("click",e=>{const x=e.target.closest("[data-dvx]");if(x){partes.splice(+x.dataset.dvx,1);draw()}});
+    $("dvAdd").onclick=()=>{const d=calc();partes.push({f:"geral",cat:(t.tipo==="entrada"?FR.geral.in:FR.geral.out)[0],desc:t.titulo,valor:d>0?d/100:0});draw()};
+    $("dvBack").onclick=()=>extratoModal(ini,fim);
+    $("dvOk").onclick=()=>{if(!needDb()||calc()!==0)return;
+      const novas=partes.filter(p=>p.f!=="ja"&&cents(p.valor)>0);
+      guard(async()=>{for(const p of novas){const v=cents(p.valor)/100;
+          await S.db.collection("lancamentos").add({tipo:t.tipo,frente:p.f,eventoId:null,desc:(p.desc||t.titulo).trim(),cat:p.cat||"Outros",qtd:1,unit:v,valor:v,data:t.data,previsto:false,registradoEm:nowISO(),interId:t.id})}
+        await setDoc(doc(fs,"caixa_config","extrato"),{ids:{[t.id]:true}},{merge:true});
+        setTimeout(()=>extratoModal(ini,fim),300)},
+        novas.length?`${novas.length} ${novas.length===1?"parte lançada":"partes lançadas"}`:"Marcado como conferido")};
+    draw();
+  },true);
 }
 
 async function pixCobModal(id){const a=S.alunos.find(x=>x.id===id);if(!a)return;
@@ -1254,7 +1296,7 @@ $("btnGasto").onclick=()=>itemModal({tipo:"saida",frente:S.lf!=="todos"?S.lf:"ge
 $("btnEntrada").onclick=()=>itemModal({tipo:"entrada",frente:S.lf!=="todos"&&S.lf!=="retirada"?S.lf:"geral"});
 $("btnSaldo").onclick=()=>saldoModal();
 $("btnSaldoApi").onclick=e=>puxarSaldo(e.currentTarget);
-$("btnExtrato").onclick=extratoModal;
+$("btnExtrato").onclick=()=>extratoModal();
 $("btnResumo").onclick=resumoModal;
 $("btnFiscal").onclick=()=>{const F=fisc();const v=x=>String(x).replace(".",",");
   modal(`<h3>Alíquotas de imposto</h3><div class="note">Valores usados no fechamento, no resumo do faturamento e no lucro dos eventos.</div>
@@ -1782,6 +1824,7 @@ onAuthStateChanged(auth,async u=>{
   col("eventos",s=>{S.eventos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.e=true;render()});
   unsubs.push(onSnapshot(doc(fs,"projeto","info"),s=>{S.info=s.exists()?s.data():null;render()},()=>{}));
   unsubs.push(DBA.doc("config/banco").onSnapshot(s=>{S.banco=s.exists?s.data():null;render()},fail));
+  unsubs.push(DBA.doc("config/extrato").onSnapshot(s=>{S.extConf=s.exists?(s.data().ids||{}):{}},fail));
   unsubs.push(DBA.doc("config/boleto").onSnapshot(s=>{S.bol=s.exists?s.data():null},fail));
   unsubs.push(DBA.doc("config/fiscal").onSnapshot(s=>{S.fiscal=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/cenario").onSnapshot(s=>{if(!Object.keys(planPend).length)S.cen=s.exists?s.data():null;render()},fail));
