@@ -303,7 +303,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
         <div class="lbl">Saldo no Banco Inter</div>
         <div class="big num" id="bankEst">R$ —</div>
         <div class="sub" id="bankSub">Informe o saldo atual da conta para começar.</div>
-        <div class="row"><button class="btn sm" id="btnSaldo">Atualizar saldo do Inter</button></div>
+        <div class="row"><button class="btn sm" id="btnSaldo">Atualizar saldo do Inter</button><button class="btn sm primary" id="btnSaldoApi" hidden>Puxar saldo do Inter</button></div>
       </div>
       <div class="panel">
         <div class="eyebrow" id="splitTitle">Fechamento do mês</div>
@@ -379,6 +379,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
       <div class="chips" id="lfChips"></div>
       <span class="spacer"></span>
       <button class="btn" id="btnEntrada">+ Entrada</button>
+      <button class="btn" id="btnExtrato" hidden>Extrato Inter</button>
       <button class="btn primary" id="btnGasto">+ Gasto</button>
     </div>
     <div class="sumbar num" id="lSum"></div>
@@ -688,6 +689,7 @@ function alunoRow(a,s,compact){
     <div class="right">
       <span class="pill s-${s.k}">${esc(s.t)}</span>
       ${w?`<a class="btn sm ghost" href="${w}" target="_blank" rel="noopener">Cobrar no WhatsApp</a>`:""}
+      ${S.inter&&S.inter.pix&&s.k!=="pausado"&&s.k!=="cortesia"?`<button class="btn sm ghost" data-pixc="${a.id}">Cobrar no Pix</button>`:""}
       ${s.k!=="pausado"&&s.k!=="cortesia"?`<button class="btn sm primary" data-pay="${a.id}" ${S.canWrite?"":"disabled"}>Registrar pagamento</button>`:""}
       ${compact?"":`<button class="btn sm" data-edit="${a.id}">Editar</button>`}
     </div></div>`;
@@ -703,7 +705,7 @@ function renderCob(){const box=$("cobBox");if(!S.loaded.a){box.hidden=true;retur
       <div><div class="name">${esc(a.nome)}</div><div class="meta num"><span class="pill s-${s.k}">${esc(s.t)}</span><span>${brl(+a.valor||0)}</span><span>venc. ${fmtD(a.proxVenc)}</span>${a.lembreteEm?`<span>${ok?"✓ lembrado hoje":"último lembrete "+dias(a.lembreteEm)}</span>`:""}</div></div>
       <div class="right">${w?`<a class="btn sm ${ok?"":"primary"}" href="${w}" target="_blank" rel="noopener" data-lembrei="${a.id}">${ok?"Mandar de novo":"Lembrar no WhatsApp"}</a>`:`<span class="note">sem WhatsApp</span><button class="btn sm" data-edit="${a.id}">Cadastrar</button>`}
       <button class="btn sm ghost" data-pay="${a.id}" ${S.canWrite?"":"disabled"}>Pagou</button></div></div>`}).join("")}</div>`:""}`}
-function renderAlunos(){renderCob();
+function renderAlunos(){$("cobBox").hidden=true;
   const A=S.alunos.map(a=>({a,s:statusOf(a)}));
   const cnt=k=>A.filter(x=>k==="todos"||x.s.k===k).length;
   const chips=[["todos","Todos"],["atrasado","Atrasados"],["vence","Vencem logo"],["emdia","Em dia"],["cortesia","Cortesia"],["pausado","Pausados"]];
@@ -903,12 +905,17 @@ function boletoModal(aba){
       <div><div class="name">${esc(a.nome)}</div><div class="meta num"><span>${brl(+a.valor||0)}</span><span>1º venc. ${fmtDY(v1)}</span>${a.boletoAte?`<span>boletos até ${fmtDY(a.boletoAte)}</span>`:""}${p.length?`<span class="neg">falta ${p.join(", ")}</span>`:""}</div></div></label>
       <div class="right">${p.length?`<button class="btn sm" data-bedit="${a.id}">Completar</button>`:`<label class="note" style="display:flex;gap:6px;align-items:center">Meses<input type="number" min="1" max="12" value="1" data-bmes="${a.id}" style="width:64px"></label>`}</div></div>`}).join("")||`<div class="empty"><b>Nenhum aluno ativo</b></div>`}</div>
     <div class="totalbox num"><span id="bTot">0 boletos</span><span id="bVal">R$ 0,00</span></div>
-    <div class="acts"><button class="btn" data-close>Fechar</button><button class="btn primary" id="bOk">Gerar arquivo .REM</button></div>`,
+    ${S.inter&&S.inter.configurado?`<div class="rbox note"><b>Inter conectado.</b> "Emitir no Inter" cria os boletos na hora, com Pix, e a baixa é automática quando o aluno paga. O arquivo .REM continua como plano B.<div><button class="btn sm" id="bHook">Ativar avisos de pagamento</button></div></div>`:`<div class="note">Integração direta com o Inter: aguardando as credenciais. Por enquanto, use o arquivo .REM.</div>`}
+    <div class="acts"><button class="btn" data-close>Fechar</button>${S.inter&&S.inter.configurado?`<button class="btn" id="bOk">Gerar arquivo .REM</button><button class="btn primary" id="bApi">Emitir no Inter</button>`:`<button class="btn primary" id="bOk">Gerar arquivo .REM</button>`}</div>`,
   ov=>{ov.querySelectorAll("[data-ba]").forEach(b=>b.onclick=()=>boletoModal(b.dataset.ba));
     ov.querySelectorAll("[data-bedit]").forEach(b=>b.onclick=()=>alunoModal(b.dataset.bedit));
     const lista=()=>[...ov.querySelectorAll("[data-bsel]:checked")].map(c=>{const a=S.alunos.find(x=>x.id===c.dataset.bsel);const m=Math.max(1,Math.min(12,parseInt((ov.querySelector(`[data-bmes="${a.id}"]`)||{}).value)||1));return{a,m}});
     const tot=()=>{const L=lista(),n=L.reduce((s,x)=>s+x.m,0),v=L.reduce((s,x)=>s+x.m*(+x.a.valor||0),0);$("bTot").textContent=`${n} ${n===1?"boleto":"boletos"} · ${L.length} ${L.length===1?"aluno":"alunos"}`;$("bVal").textContent=brl(v)};
     ov.addEventListener("input",tot);ov.addEventListener("change",tot);tot();
+    const bApi=ov.querySelector("#bApi");if(bApi)bApi.onclick=()=>{const L=lista();if(!L.length){toast("Marque pelo menos um aluno.");return}
+      const msg=$("bG").value.trim()||BOL_DEF.msg,itens=[];L.forEach(({a,m})=>{const v1=bolPrimeiro(a);for(let k=0;k<m;k++){const venc=k?addMonth(v1,a.dia,k):v1;itens.push({a,venc,msg:`${msg} ${venc.slice(5,7)}/${venc.slice(0,4)}${m>1?` PARCELA ${k+1}/${m}`:""}`})}});
+      setDoc(doc(fs,"caixa_config","boleto"),{multa:+$("bM").value||0,juros:+$("bJ").value||0,limite:$("bL").value,msg},{merge:true}).catch(()=>{}).then(()=>boletoApi(itens))};
+    const bHook=ov.querySelector("#bHook");if(bHook)bHook.onclick=async()=>{bHook.disabled=true;try{const r=await interCall("avisos");toast("Avisos ativados: "+r.feito.join(" e "))}catch(e){toast(e.message)}finally{bHook.disabled=false}};
     $("bOk").onclick=()=>{if(!needDb())return;
       const c={razao:$("bR").value.trim(),conta:$("bC").value.replace(/\D/g,""),multa:+$("bM").value||0,juros:+$("bJ").value||0,limite:$("bL").value,seq:parseInt($("bS").value)||1,msg:$("bG").value.trim()};
       if(!c.razao||c.conta.length<5){toast("Preencha a razão social e a conta do Inter.");ov.querySelector("details").open=true;return}
@@ -925,9 +932,75 @@ function boletoModal(aba){
   },true);
 }
 
+/* ---------- integração com a API do Inter (liga sozinha quando as credenciais estiverem na Vercel) ---------- */
+S.inter=null;
+async function interCall(acao,extra={}){
+  if(!auth.currentUser)throw new Error("Entre de novo na Gestão.");
+  const tok=await auth.currentUser.getIdToken();
+  const r=await fetch("/api/inter",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+tok},body:JSON.stringify({acao,...extra})});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.erro||"Não deu para falar com o Inter.");return j;
+}
+function interStatus(){interCall("status").then(j=>{S.inter=j;$("btnSaldoApi").hidden=!j.configurado;$("btnExtrato").hidden=!j.configurado;render()}).catch(()=>{S.inter={configurado:false}})}
+const waMsg=(tel,txt)=>{const n=String(tel||"").replace(/\D/g,"");if(n.length<10)return null;return `https://wa.me/${n.length<=11?"55"+n:n}?text=${encodeURIComponent(txt)}`};
+function copiar(txt,btn){navigator.clipboard.writeText(txt).then(()=>{if(btn){btn.textContent="Copiado ✓";setTimeout(()=>btn.textContent="Copiar",1800)}}).catch(()=>toast("Não deu para copiar. Selecione o texto e copie."))}
+
+async function puxarSaldo(btn){btn.disabled=true;const o=btn.textContent;btn.textContent="Buscando…";
+  try{const r=await interCall("saldo");saldoModal(r.saldo)}catch(e){toast(e.message)}finally{btn.disabled=false;btn.textContent=o}}
+
+function extratoModal(){
+  const fim=todayISO(),ini=fim.slice(0,8)+"01";
+  modal(`<h3>Extrato do Inter</h3><div class="note">Mostra as movimentações da conta. O que ainda não está na Gestão aparece com o botão Lançar.</div>
+    <div class="grid2"><label class="field">De<input id="xI" type="date" value="${ini}"></label><label class="field">Até<input id="xF" type="date" value="${fim}"></label></div>
+    <div class="acts" style="justify-content:flex-start"><button class="btn primary" id="xOk">Buscar</button></div><div id="xOut"></div>
+    <div class="acts"><button class="btn" data-close>Fechar</button></div>`,
+  ov=>{const ir=async()=>{$("xOut").innerHTML=`<div class="note">Buscando no Inter…</div>`;
+    try{const r=await interCall("extrato",{inicio:$("xI").value,fim:$("xF").value});
+      const ja=t=>S.lancs.some(l=>l.interId===t.id||(!l.previsto&&l.data===t.data&&l.tipo===t.tipo&&Math.abs((+l.valor||0)-t.valor)<0.005))
+        ||(t.tipo==="entrada"&&S.pags.some(p=>p.data===t.data&&Math.abs((+p.valor||0)-t.valor)<0.005));
+      const L=r.transacoes.slice().sort((a,b)=>b.data.localeCompare(a.data));const novos=L.filter(t=>!ja(t)).length;
+      $("xOut").innerHTML=`<div class="note">${L.length} movimentações · <b>${novos}</b> ainda fora da Gestão</div><div class="list">${L.map(t=>{const j=ja(t);return `<div class="item mov${j?" dim":""}">
+        <div class="kind ${t.tipo==="entrada"?"k-in":"k-out"}" aria-hidden="true">${t.tipo==="entrada"?"+":"−"}</div>
+        <div><div class="name">${esc(t.titulo)}</div><div class="meta num"><span>${fmtDY(t.data)}</span><span>${esc(t.descricao)}</span></div></div>
+        <div class="right"><span class="amt num ${t.tipo==="entrada"?"pos":"neg"}">${brl(t.valor)}</span>${j?`<span class="pill s-emdia">Já lançado</span>`:`<button class="btn sm primary" data-xl='${esc(JSON.stringify(t))}'>Lançar</button>`}</div></div>`}).join("")}</div>`;
+      ov.querySelectorAll("[data-xl]").forEach(b=>b.onclick=()=>{const t=JSON.parse(b.dataset.xl);
+        itemModal({tipo:t.tipo,frente:"geral",pre:{desc:t.titulo+(t.descricao?" · "+t.descricao:""),unit:t.valor,valor:t.valor,data:t.data,interId:t.id}})});
+    }catch(e){$("xOut").innerHTML=`<div class="rbox note">${esc(e.message)}</div>`}};
+    $("xOk").onclick=ir;ir()},true);
+}
+
+async function pixCobModal(id){const a=S.alunos.find(x=>x.id===id);if(!a)return;
+  modal(`<h3>Pix para ${esc(a.nome)}</h3><div class="note">Gerando a cobrança no Inter…</div>`);
+  try{const r=await interCall("pix",{alunoId:id});
+    const txt=`Oi, ${a.nome.split(" ")[0]}! Segue o Pix da mensalidade da PV Assessoria (${brl(r.valor)}). É só copiar e colar no app do seu banco:\n\n${r.pix}\n\nAssim que cair, a baixa é automática 💚`;
+    const w=waMsg(a.whatsapp,txt);
+    modal(`<h3>Pix para ${esc(a.nome)}</h3><div class="note">${brl(r.valor)} · vale por 7 dias. Quando o aluno pagar, a mensalidade dá baixa sozinha.</div>
+      <label class="field">Pix copia e cola<textarea id="pxC" rows="4" readonly>${esc(r.pix)}</textarea></label>
+      <div class="acts"><button class="btn" id="pxCp">Copiar</button>${w?`<a class="btn primary" href="${w}" target="_blank" rel="noopener">Mandar no WhatsApp</a>`:""}<button class="btn" data-close>Fechar</button></div>`,
+      ov=>{ov.querySelector("#pxCp").onclick=e=>copiar(r.pix,e.target)});
+  }catch(e){modal(`<h3>Pix</h3><div class="rbox note">${esc(e.message)}</div><div class="acts"><button class="btn" data-close>Fechar</button></div>`)}
+}
+
+async function boletoPdf(codigo,nome){try{const r=await interCall("boletoPdf",{codigo});const bin=atob(r.pdf),u8=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([u8],{type:"application/pdf"}));a.download=`boleto-${String(nome||"aluno").replace(/\s+/g,"-")}.pdf`;document.body.appendChild(a);a.click();a.remove()}catch(e){toast(e.message)}}
+
+async function boletoApi(itens){
+  modal(`<h3>Emitindo no Inter</h3><div class="note" id="eProg">0 de ${itens.length}</div><div class="list" id="eList"></div><div class="acts"><button class="btn" data-close>Fechar</button></div>`,null,true);
+  const out=$("eList");let ok=0;
+  for(let i=0;i<itens.length;i++){const it=itens[i];$("eProg").textContent=`${i} de ${itens.length}`;
+    try{const r=await interCall("boleto",{alunoId:it.a.id,venc:it.venc,msg:it.msg});ok++;
+      const txt=`Oi, ${r.nome.split(" ")[0]}! Segue o boleto da mensalidade da PV Assessoria (${brl(r.valor)}, vence ${fmtDY(r.venc)}).${r.pix?`\n\nPix copia e cola:\n${r.pix}`:""}${r.linha?`\n\nLinha digitável:\n${r.linha}`:""}`;
+      const w=waMsg(r.whatsapp,txt);
+      out.insertAdjacentHTML("beforeend",`<div class="item"><div><div class="name">${esc(r.nome)}</div><div class="meta num"><span>${brl(r.valor)}</span><span>venc. ${fmtDY(r.venc)}</span></div></div>
+        <div class="right"><button class="btn sm" data-epdf="${esc(r.codigo)}" data-en="${esc(r.nome)}">PDF</button>${w?`<a class="btn sm primary" href="${w}" target="_blank" rel="noopener">WhatsApp</a>`:""}</div></div>`);
+    }catch(e){out.insertAdjacentHTML("beforeend",`<div class="item dim"><div><div class="name">${esc(it.a.nome)}</div><div class="meta"><span class="neg">${esc(e.message)}</span></div></div></div>`)}}
+  $("eProg").textContent=`${ok} de ${itens.length} emitidos. O Inter avisa a Gestão quando cada um for pago.`;
+  out.onclick=e=>{const b=e.target.closest("[data-epdf]");if(b)boletoPdf(b.dataset.epdf,b.dataset.en)};
+}
+
 /* um modal para qualquer lançamento — gasto, entrada ou item de evento */
-function itemModal({id,tipo,frente,eventoId}){
-  const l=id?S.lancs.find(x=>x.id===id):{tipo:tipo||"saida",frente:frente||(eventoId?"eventos":"geral"),eventoId:eventoId||null,desc:"",cat:"",qtd:1,unit:"",valor:0,data:eventoId?(S.eventos.find(e=>e.id===eventoId)||{}).data||todayISO():todayISO(),previsto:!!eventoId};
+function itemModal({id,tipo,frente,eventoId,pre}){
+  const l=id?S.lancs.find(x=>x.id===id):{...(pre||{}),tipo:tipo||"saida",frente:frente||(eventoId?"eventos":"geral"),eventoId:eventoId||null,desc:"",cat:"",qtd:1,unit:"",valor:0,data:eventoId?(S.eventos.find(e=>e.id===eventoId)||{}).data||todayISO():todayISO(),previsto:!!eventoId};
   if(!l)return;
   let t=l.tipo,f=frenteOf(l);
   const inEvent=!!(l.eventoId||eventoId);
@@ -963,7 +1036,7 @@ function itemModal({id,tipo,frente,eventoId}){
       const ev=(f==="eventos"||f==="retirada")?($("iEv").value||null):null;
       if(!desc||!d||isNaN(u)||u<0){toast("Preencha descrição, valor e data.");return}
       if(!ev&&!(v>0)){toast("O valor precisa ser maior que zero.");return}
-      const body={tipo:t,frente:(!ev&&t==="saida"&&$("iC").value.trim()==="Treinus")?"assessoria":f,eventoId:ev,desc,cat:$("iC").value.trim()||"Outros",qtd:isNaN(q)?1:q,unit:u,valor:Math.round(v*100)/100,data:d,previsto:$("iPv").checked};
+      const body={tipo:t,frente:(!ev&&t==="saida"&&$("iC").value.trim()==="Treinus")?"assessoria":f,eventoId:ev,desc,cat:$("iC").value.trim()||"Outros",qtd:isNaN(q)?1:q,unit:u,valor:Math.round(v*100)/100,data:d,previsto:$("iPv").checked,...(l.interId?{interId:l.interId}:{})};
       if(!body.previsto){if(!id||l.previsto)body.registradoEm=nowISO();else if(l.registradoEm)body.registradoEm=l.registradoEm;}
       const pg=parseFloat($("iPg").value);
       if(!body.previsto&&pg>0&&pg<v-0.004){const pgR=Math.round(pg*100)/100,rest=Math.round((v-pgR)*100)/100,rd=$("iRd").value||d,base=desc.replace(/\s*·\s*(sinal|parte paga)$/i,"");
@@ -1026,11 +1099,11 @@ function estornoModal(id){
   },"Pagamento estornado")});
 }
 
-function saldoModal(){
+function saldoModal(pre){
   const b=S.banco||{},se=saldoEst(),pa=partesAtuais();
   const cur=pa?{eventos:pa.eventos.ini+pa.eventos.mov,produtos:pa.produtos.ini+pa.produtos.mov}:{eventos:0,produtos:0};
   modal(`<h3>Saldo do Banco Inter</h3><div class="note">Digite o saldo que aparece no app do Inter e diga quanto dele é de eventos e de camisas. O resto fica como assessoria. Depois disso, cada lançamento atualiza as partes sozinho.</div>
-    <div class="grid2"><label class="field">Saldo (R$)<input id="bS" type="number" step="0.01" inputmode="decimal" value="${se?se.v.toFixed(2):(b.saldo??"")}"></label>
+    <div class="grid2"><label class="field">Saldo (R$)<input id="bS" type="number" step="0.01" inputmode="decimal" value="${pre!=null?(+pre).toFixed(2):se?se.v.toFixed(2):(b.saldo??"")}"></label>
     <label class="field">Data do saldo<input id="bD" type="date" value="${todayISO()}"></label>
     <label class="field">Desse saldo, é de eventos<input id="bE" type="number" step="0.01" value="${cur.eventos.toFixed(2)}"></label>
     <label class="field">É de camisas<input id="bP" type="number" step="0.01" value="${cur.produtos.toFixed(2)}"></label></div>
@@ -1156,6 +1229,7 @@ document.addEventListener("click",async e=>{
   const d=t.dataset;
   if(d.pay)payModal(d.pay);
   else if(d.edit)alunoModal(d.edit);
+  else if(d.pixc)pixCobModal(d.pixc);
   else if(d.st){S.st=d.st;renderAlunos()}
   else if(d.lf){S.lf=d.lf;renderMov()}
   else if(d.mov){const [k,id]=d.mov.split(":");k==="pag"?estornoModal(id):itemModal({id})}
@@ -1177,7 +1251,9 @@ $("btnBoleto").onclick=()=>boletoModal("gerar");
 $("btnNovoEv").onclick=()=>eventoModal(null);
 $("btnGasto").onclick=()=>itemModal({tipo:"saida",frente:S.lf!=="todos"?S.lf:"geral"});
 $("btnEntrada").onclick=()=>itemModal({tipo:"entrada",frente:S.lf!=="todos"&&S.lf!=="retirada"?S.lf:"geral"});
-$("btnSaldo").onclick=saldoModal;
+$("btnSaldo").onclick=()=>saldoModal();
+$("btnSaldoApi").onclick=e=>puxarSaldo(e.currentTarget);
+$("btnExtrato").onclick=extratoModal;
 $("btnResumo").onclick=resumoModal;
 $("btnFiscal").onclick=()=>{const F=fisc();const v=x=>String(x).replace(".",",");
   modal(`<h3>Alíquotas de imposto</h3><div class="note">Valores usados no fechamento, no resumo do faturamento e no lucro dos eventos.</div>
@@ -1696,7 +1772,7 @@ onAuthStateChanged(auth,async u=>{
   showGate("Conferindo acesso…",false);
   let ok=false;try{ok=(await getDoc(doc(fs,"admins",(u.email||"").toLowerCase()))).exists()}catch(e){console.error(e)}
   if(!ok){showGate(`A conta <b>${esc(u.email||"")}</b> não está na lista da organização. Entre com outra conta.`,true);return}
-  S.uid=u.uid;S.email=u.email;$("who").textContent=u.email;$("gate").hidden=true;$("app").hidden=false;S.db=DBA;
+  S.uid=u.uid;S.email=u.email;$("who").textContent=u.email;$("gate").hidden=true;$("app").hidden=false;S.db=DBA;interStatus();
   const fail=e=>{console.error(e);const b=$("banner");b.hidden=false;b.textContent=e&&e.code==="permission-denied"?"Sem permissão para ler os dados do caixa. Confira se as regras novas do Firestore foram publicadas.":"A conexão com os dados caiu. Recarregue a página."};
   const col=(p,fn)=>unsubs.push(DBA.collection(p).onSnapshot(fn,fail));
   col("alunos",s=>{S.alunos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.a=true;render()});
