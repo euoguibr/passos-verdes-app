@@ -191,6 +191,9 @@ async function rodar(tarefa, req, res) {
       try { await trava.create({ criado: Date.now() }); } catch (e) { return res.status(200).json({ ok: true, resumo: ['Já enviado hoje'] }); }
     }
     const resumo = tarefa === 'vespera' ? await vespera(a, ctx) : await manha(a, ctx);
+    if (tarefa === 'manha' && ctx.modo === 'cron') { // boletos da assessoria: 3 dias antes e no dia do vencimento
+      try { resumo.push(...await require('./_whats').lembretesBoleto(db)); } catch (e) { console.error('boletos whatsapp', e); resumo.push('Boletos no WhatsApp: ' + e.message); }
+    }
     return res.status(200).json({ ok: true, modo: ctx.modo, resumo });
   } catch (e) {
     console.error(e);

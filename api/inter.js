@@ -1,6 +1,7 @@
 // Ações da Gestão com o Banco Inter. Só organizadores (coleção "admins") podem chamar.
 // POST /api/inter  { acao, ... }  com o token do Firebase no cabeçalho Authorization.
 const { cfg, api, getAdmin, brtISO } = require('./_inter');
+const { whatsOk, confere, enviarBoleto } = require('./_whats');
 
 const S_EXTRATO = 'extrato.read';
 const S_BOL_R = 'boleto-cobranca.read', S_BOL_W = 'boleto-cobranca.write';
@@ -69,6 +70,13 @@ async function pix(db, b) {
 
 module.exports = async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
+  // PDF do boleto por link assinado (é o que a Meta baixa para anexar no WhatsApp)
+  if (req.method === 'GET' && req.query && req.query.pdf) {
+    if (!confere(String(req.query.pdf), req.query.e, req.query.s)) return res.status(403).end();
+    try { const r = await api('GET', '/cobranca/v3/cobrancas/' + encodeURIComponent(req.query.pdf) + '/pdf', S_BOL_R);
+      res.setHeader('Content-Type', 'application/pdf'); res.setHeader('Content-Disposition', 'inline; filename="boleto-pv.pdf"');
+      return res.status(200).send(Buffer.from(r.pdf, 'base64')); } catch (e) { return res.status(502).end(); }
+  }
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Use POST.' });
   let a; try { a = getAdmin(); } catch (e) { return res.status(500).json({ erro: e.message }); }
   if (!(await organizador(a, req))) return res.status(401).json({ erro: 'Só organizadores podem usar a integração.' });
@@ -76,7 +84,7 @@ module.exports = async (req, res) => {
   const db = a.firestore(), c = cfg();
   try {
     switch (b.acao) {
-      case 'status': return res.json({ configurado: c.ok, pix: !!c.chave, avisos: !!c.hook });
+      case 'status': return res.json({ configurado: c.ok, pix: !!c.chave, avisos: !!c.hook, whats: c.ok && whatsOk() });
       case 'saldo': { const r = await api('GET', '/banking/v2/saldo' + (b.data ? '?dataSaldo=' + b.data : ''), S_EXTRATO); return res.json({ saldo: +r.disponivel || 0, bloqueado: (+r.bloqueadoCheque || 0) + (+r.bloqueadoJudicialmente || 0) + (+r.bloqueadoAdministrativo || 0), data: brtISO() }); }
       case 'extrato': {
         const fim = b.fim || brtISO(), ini = b.inicio || fim.slice(0, 8) + '01';
@@ -88,6 +96,9 @@ module.exports = async (req, res) => {
       case 'boleto': return res.json(await boleto(db, b));
       case 'boletoPdf': { const r = await api('GET', '/cobranca/v3/cobrancas/' + encodeURIComponent(b.codigo) + '/pdf', S_BOL_R); return res.json({ pdf: r.pdf }); }
       case 'pix': return res.json(await pix(db, b));
+      case 'whats': { if (!whatsOk()) return res.status(503).json({ erro: 'WhatsApp oficial ainda não configurado na Vercel.' });
+        const ref = (await db.doc('caixa_cobrancas/' + String(b.codigo || '')).get()).data(); if (!ref) return res.status(404).json({ erro: 'Boleto não encontrado.' });
+        await enviarBoleto(db, String(b.codigo), 'vence em ' + ref.venc.slice(8, 10) + '/' + ref.venc.slice(5, 7)); return res.json({ ok: true }); }
       case 'avisos': {
         if (!c.hook || c.hook.length < 16) return res.status(400).json({ erro: 'Crie a variável INTER_WEBHOOK_TOKEN na Vercel (uma senha com 16 ou mais caracteres).' });
         const url = `https://${req.headers.host}/api/inter-webhook?t=${encodeURIComponent(c.hook)}`, feito = [];
