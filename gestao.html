@@ -987,22 +987,27 @@ function dividirModal(t,ini,fim){
     <div class="acts"><button class="btn" id="dvBack">Voltar</button><button class="btn primary" id="dvOk">Salvar divisão</button></div>`,
   ov=>{
     const draw=()=>{$("dvL").innerHTML=partes.map((p,i)=>`<div class="rbox" style="margin-top:8px"><div class="grid2">
-      <label class="field">Parte ${i+1}<select data-dv="${i}" data-k="f"><option value="ja" ${p.f==="ja"?"selected":""}>Já está na Gestão</option>${frentes.map(k=>`<option value="${k}" ${p.f===k?"selected":""}>${FR[k].t}</option>`).join("")}</select></label>
+      <label class="field">Parte ${i+1}<select data-dv="${i}" data-k="f"><option value="ja" ${p.f==="ja"?"selected":""}>Já está na Gestão</option>${t.tipo==="entrada"?`<option value="mens" ${p.f==="mens"?"selected":""}>Mensalidade de aluno</option>`:""}${frentes.map(k=>`<option value="${k}" ${p.f===k?"selected":""}>${FR[k].t}</option>`).join("")}</select></label>
       <label class="field">Valor (R$)<input data-dv="${i}" data-k="valor" type="number" step="0.01" inputmode="decimal" value="${p.valor}"></label>
-      ${p.f==="ja"?"":`<label class="field">Categoria<select data-dv="${i}" data-k="cat">${(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out).map(c=>`<option ${c===p.cat?"selected":""}>${esc(c)}</option>`).join("")}</select></label>`}
-      <label class="field">Descrição<input data-dv="${i}" data-k="desc" value="${esc(p.desc)}"></label></div>
+      ${p.f==="mens"?`<label class="field">Aluno<select data-dv="${i}" data-k="aluno"><option value="">Escolha o aluno</option>${S.alunos.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(a=>`<option value="${a.id}" ${p.aluno===a.id?"selected":""}>${esc(a.nome)}</option>`).join("")}</select></label>`:p.f==="ja"?"":`<label class="field">Categoria<select data-dv="${i}" data-k="cat">${(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out).map(c=>`<option ${c===p.cat?"selected":""}>${esc(c)}</option>`).join("")}</select></label>`}
+      ${p.f==="mens"?"":`<label class="field">Descrição<input data-dv="${i}" data-k="desc" value="${esc(p.desc)}"></label>`}</div>${p.f==="mens"?`<div class="note">Dá baixa na mensalidade e o vencimento do aluno anda um mês, igual a Registrar pagamento.</div>`:""}
       ${partes.length>1?`<button class="btn sm ghost" data-dvx="${i}">Remover parte</button>`:""}</div>`).join("");calc()};
     const calc=()=>{const s=partes.reduce((a,p)=>a+cents(p.valor),0),d=cents(t.valor)-s;$("dvS").textContent=`Partes: ${brl(s/100)} de ${brl(t.valor)}`;
       $("dvR").textContent=d===0?"Fechou certinho":d>0?`Faltam ${brl(d/100)}`:`Passou ${brl(-d/100)}`;$("dvR").className=d===0?"pos":"neg";$("dvOk").disabled=d!==0;return d};
     ov.addEventListener("input",e=>{const el=e.target;if(el.dataset.dv===undefined)return;const p=partes[+el.dataset.dv];p[el.dataset.k]=el.dataset.k==="valor"?el.value:el.value;
-      if(el.dataset.k==="f"){p.cat=p.f==="ja"?"":(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out)[0]||"Outros";draw()}else calc()});
-    ov.addEventListener("change",e=>{if(e.target.dataset.k==="f")return;calc()});
+      if(el.dataset.k==="f"){p.cat=p.f==="ja"||p.f==="mens"?"":(t.tipo==="entrada"?FR[p.f].in:FR[p.f].out)[0]||"Outros";draw()}else calc()});
+    ov.addEventListener("change",e=>{const el=e.target;if(el.dataset.k==="aluno"){const p=partes[+el.dataset.dv],a=S.alunos.find(x=>x.id===el.value);if(a&&!(+p.valor>0))p.valor=a.valor;draw();return}if(el.dataset.k==="f")return;calc()});
     ov.addEventListener("click",e=>{const x=e.target.closest("[data-dvx]");if(x){partes.splice(+x.dataset.dvx,1);draw()}});
     $("dvAdd").onclick=()=>{const d=calc();partes.push({f:"geral",cat:(t.tipo==="entrada"?FR.geral.in:FR.geral.out)[0],desc:t.titulo,valor:d>0?d/100:0});draw()};
     $("dvBack").onclick=()=>extratoModal(ini,fim);
     $("dvOk").onclick=()=>{if(!needDb()||calc()!==0)return;
       const novas=partes.filter(p=>p.f!=="ja"&&cents(p.valor)>0);
+      if(novas.some(p=>p.f==="mens"&&!p.aluno)){toast("Escolha o aluno da mensalidade");return}
+      const forma=/pix/i.test(t.titulo+" "+t.descricao)?"Pix":/boleto|cobran/i.test(t.titulo+" "+t.descricao)?"Boleto":"Pix";
       guard(async()=>{for(const p of novas){const v=cents(p.valor)/100;
+          if(p.f==="mens"){const a=S.alunos.find(x=>x.id===p.aluno);if(!a)continue;
+            await S.db.collection("pagamentos").add({alunoId:a.id,nome:a.nome,valor:v,data:t.data,forma,registradoEm:nowISO(),vencAnterior:a.proxVenc||null,ultimoAnterior:a.ultimoPgto||null,interId:t.id});
+            await S.db.doc("alunos/"+a.id).update({ultimoPgto:t.data,proxVenc:addMonth(a.proxVenc||t.data,a.dia)});continue}
           await S.db.collection("lancamentos").add({tipo:t.tipo,frente:p.f,eventoId:null,desc:(p.desc||t.titulo).trim(),cat:p.cat||"Outros",qtd:1,unit:v,valor:v,data:t.data,previsto:false,registradoEm:nowISO(),interId:t.id})}
         await setDoc(doc(fs,"caixa_config","extrato"),{ids:{[t.id]:true}},{merge:true});
         setTimeout(()=>extratoModal(ini,fim),300)},
