@@ -1,7 +1,7 @@
 // Ações da Gestão com o Banco Inter. Só organizadores (coleção "admins") podem chamar.
 // POST /api/inter  { acao, ... }  com o token do Firebase no cabeçalho Authorization.
 const { cfg, api, getAdmin, brtISO } = require('./_inter');
-const { whatsOk, confere, enviarBoleto } = require('./_whats');
+const { whatsOk, confere, enviarBoleto, linkManual } = require('./_whats');
 
 const S_EXTRATO = 'extrato.read';
 const S_BOL_R = 'boleto-cobranca.read', S_BOL_W = 'boleto-cobranca.write';
@@ -50,7 +50,7 @@ async function boleto(db, b) {
   await db.doc('caixa_cobrancas/' + codigo).set({ tipo: 'boleto', alunoId: a.id, nome: a.nome, valor, venc, seuNumero: seu, criado: new Date().toISOString() });
   await db.doc('caixa_alunos/' + a.id).update({ cobranca: 'Boleto', boletoAte: a.boletoAte && a.boletoAte > venc ? a.boletoAte : venc });
   let det = null; try { det = await api('GET', '/cobranca/v3/cobrancas/' + codigo, S_BOL_R); } catch (e) {}
-  return { codigo, nome: a.nome, valor, venc, whatsapp: a.whatsapp || '',
+  return { codigo, nome: a.nome, valor, venc, whatsapp: a.whatsapp || '', link: linkManual(codigo, venc),
     linha: det && det.boleto ? det.boleto.linhaDigitavel : null, pix: det && det.pix ? det.pix.pixCopiaECola : null };
 }
 
@@ -94,6 +94,16 @@ module.exports = async (req, res) => {
         return res.json({ inicio: ini, fim, transacoes: L });
       }
       case 'boleto': return res.json(await boleto(db, b));
+      case 'abertos': { // boletos ainda não pagos, do mês passado pra frente
+        const hoje = brtISO(), desde = new Date(Date.parse(hoje + 'T12:00:00Z') - 45 * 864e5).toISOString().slice(0, 10);
+        const snap = await db.collection('caixa_cobrancas').where('venc', '>=', desde).get(), out = [];
+        for (const d of snap.docs) { const x = d.data(); if (x.tipo !== 'boleto' || x.cancelado) continue;
+          if ((await db.doc('caixa_pagamentos/inter_' + d.id).get()).exists) continue;
+          const al = (await db.doc('caixa_alunos/' + x.alunoId).get()).data() || {};
+          out.push({ codigo: d.id, nome: x.nome, valor: x.valor, venc: x.venc, whatsapp: al.whatsapp || '', link: linkManual(d.id, x.venc), enviado: (x.avisos || {}).manual || (x.avisos || {}).d0 || (x.avisos || {}).d3 || null }); }
+        out.sort((p, q) => p.venc.localeCompare(q.venc)); return res.json({ boletos: out, hoje }); }
+      case 'marcarEnviado': { const ref = db.doc('caixa_cobrancas/' + String(b.codigo || '')); if (!(await ref.get()).exists) return res.status(404).json({ erro: 'Boleto não encontrado.' });
+        await ref.set({ avisos: { manual: new Date().toISOString() } }, { merge: true }); return res.json({ ok: true }); }
       case 'boletoPdf': { const r = await api('GET', '/cobranca/v3/cobrancas/' + encodeURIComponent(b.codigo) + '/pdf', S_BOL_R); return res.json({ pdf: r.pdf }); }
       case 'pix': return res.json(await pix(db, b));
       case 'whats': { if (!whatsOk()) return res.status(503).json({ erro: 'WhatsApp oficial ainda não configurado na Vercel.' });
