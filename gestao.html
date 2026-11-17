@@ -367,6 +367,7 @@ input,select,textarea{background:var(--surface);border:1px solid var(--line);bor
       <input id="q" type="search" placeholder="Buscar aluno">
       <select id="fTrein" aria-label="Treinador"><option value="">Todos os treinadores</option></select>
       <span class="spacer"></span>
+      <button class="btn" id="btnBoleto">Boletos Inter</button>
       <button class="btn primary" id="btnNovoAluno">+ Novo aluno</button>
     </div>
     <div class="list" id="alunosList"><div class="empty"><b>Carregando alunos…</b></div></div>
@@ -752,7 +753,7 @@ function modal(html,onMount,wide){
 function close(){$("modalRoot").innerHTML=""}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
 /* maquininha Inter: taxas vêm do Planejamento (campos Débito / Crédito), com os valores do Inter como padrão */
-const FORMAS=["Pix","Dinheiro","Débito","Crédito à vista","Crédito 2x","Transferência"];
+const FORMAS=["Pix","Boleto","Dinheiro","Débito","Crédito à vista","Crédito 2x","Transferência"];
 const TX_KEY={"Débito":"t_deb","Crédito à vista":"t_c1","Crédito 2x":"t_c2"},TX_DEF={t_deb:1.40,t_c1:3.45,t_c2:6.07};
 function taxaCartao(forma,valor){const k=TX_KEY[forma];if(!k)return 0;const o=S.cen&&S.cen.v;const p=o&&o[k]!=null&&o[k]!==""?+o[k]:TX_DEF[k];return Math.round(valor*p)/100}
 function taxaLanc(forma,valor,data,desc,ref){const t=taxaCartao(forma,valor);if(!(t>0))return null;
@@ -797,17 +798,131 @@ function alunoModal(id){
     <label class="field">Próximo vencimento<input id="aP" type="date" value="${a.proxVenc||""}"></label>
     <label class="field">Situação<select id="aS">${[["ativo","Ativo"],["pausado","Pausado"]].map(([v,t])=>`<option value="${v}" ${a.status===v?"selected":""}>${t}</option>`).join("")}</select></label></div>
     <label class="field check"><input id="aC" type="checkbox" ${a.cortesia?"checked":""}> Cortesia ou sorteio (não paga)</label>
+    <details ${a.cpf||a.cobranca==="Boleto"?"open":""}><summary class="note">Dados para boleto Inter</summary>
+    <div class="grid2"><label class="field">Cobrança<select id="aCob">${opts(["Pix","Boleto"],a.cobranca||"Pix")}</select></label>
+    <label class="field">CPF<input id="aCpf" inputmode="numeric" value="${esc(a.cpf||"")}" placeholder="000.000.000-00"></label>
+    <label class="field">Endereço<input id="aEnd" maxlength="40" value="${esc(a.endereco||"")}" placeholder="Rua, número, bairro, cidade"></label>
+    <label class="field">CEP<input id="aCep" inputmode="numeric" value="${esc(a.cep||"")}" placeholder="25900-000"></label></div></details>
     <label class="field">Observações<input id="aO" value="${esc(a.obs||"")}"></label>
     <div class="acts">${id?`<button class="btn danger left" id="aDel">Excluir</button>`:""}<button class="btn" data-close>Cancelar</button><button class="btn primary" id="aOk">Salvar</button></div>`,
   ov=>{
     ov.querySelector("#aOk").onclick=()=>{
       if(!needDb())return;const nome=$("aN").value.trim();if(!nome){toast("Informe o nome.");return}
       const body={nome,whatsapp:$("aW").value.trim(),treinador:$("aT").value,valor:parseFloat($("aV").value)||0,dia:parseInt($("aD").value)||null,
-        proxVenc:$("aP").value||null,status:$("aS").value,cortesia:$("aC").checked,obs:$("aO").value.trim(),forma:a.forma||"Pix",ultimoPgto:a.ultimoPgto||null};
+        proxVenc:$("aP").value||null,status:$("aS").value,cortesia:$("aC").checked,obs:$("aO").value.trim(),forma:a.forma||"Pix",ultimoPgto:a.ultimoPgto||null,
+        cobranca:$("aCob").value,cpf:$("aCpf").value.trim(),endereco:$("aEnd").value.trim(),cep:$("aCep").value.trim()};
+      if(body.cpf&&!cpfOk(body.cpf)){toast("CPF inválido. Confira os números.");return}
       guard(()=>id?S.db.doc("alunos/"+id).update(body):S.db.collection("alunos").add({...body,criadoEm:todayISO()}),id?"Aluno atualizado":"Aluno adicionado");
     };
     armDelete(ov.querySelector("#aDel"),()=>{if(needDb())guard(()=>S.db.doc("alunos/"+id).delete(),"Aluno excluído")});
   });
+}
+
+/* ---------- boletos Inter (CNAB 400, manual Inter v1.1) ----------
+   Gerar: monta o arquivo de remessa com um boleto por mês para os alunos escolhidos.
+   Retorno: lê o arquivo .RET do Inter e dá baixa nas mensalidades pagas. */
+const BOL_DEF={razao:"PASSOS VERDES",conta:"",seq:1,multa:2,juros:1,limite:"30",msg:"MENSALIDADE PV ASSESSORIA"};
+function cpfOk(c){c=String(c||"").replace(/\D/g,"");if(c.length!==11||/^(\d)\1+$/.test(c))return false;
+  for(let t=9;t<11;t++){let s=0;for(let i=0;i<t;i++)s+=+c[i]*(t+1-i);if(((s*10)%11)%10!==+c[t])return false}return true}
+const cnA=(s,n)=>{s=String(s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toUpperCase().replace(/[^A-Z0-9 .,\/\-]/g," ").replace(/\s+/g," ").trim();return(s+" ".repeat(n)).slice(0,n)};
+const cnN=(v,n)=>{v=String(v??"").replace(/\D/g,"");return v.length>n?v.slice(-n):v.padStart(n,"0")};
+const cnD=iso=>iso.slice(8,10)+iso.slice(5,7)+iso.slice(2,4);
+const cnC=v=>Math.round(Number(v)*100);
+const cnISO=d=>/^\d{6}$/.test(d)&&d!=="000000"?"20"+d.slice(4,6)+"-"+d.slice(2,4)+"-"+d.slice(0,2):null;
+const addDay=(iso,k)=>{const d=parse(iso);d.setDate(d.getDate()+k);return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
+const bolCfg=()=>({...BOL_DEF,...(S.bol||{})});
+function bolPend(a){const f=[];if(!cpfOk(a.cpf))f.push("CPF");if(!(a.endereco||"").trim())f.push("endereço");
+  if(String(a.cep||"").replace(/\D/g,"").length!==8)f.push("CEP");if(!(+a.valor>0))f.push("valor");if(!a.proxVenc)f.push("vencimento");return f}
+const bolPrimeiro=a=>a.boletoAte&&a.proxVenc&&a.boletoAte>=a.proxVenc?addMonth(a.boletoAte,a.dia):a.proxVenc;
+
+function cnabRemessa(cfg,bols){
+  const L=[],hoje=todayISO(),m=cnC(cfg.multa)>0,j=cnC(cfg.juros)>0;
+  L.push("0"+"1"+"REMESSA"+"01"+cnA("COBRANCA",15)+" ".repeat(20)+cnA(cfg.razao,30)+"077"+cnA("INTER",15)+cnD(hoje)+" ".repeat(10)+cnN(cfg.seq,7)+" ".repeat(277)+cnN(1,6));
+  bols.forEach((b,i)=>{const d1=cnD(addDay(b.venc,1)),cep=cnN(b.cep,8);
+    L.push("1"+" ".repeat(19)+"112"+"0001"+cnN(cfg.conta,10)+(b.controle+" ".repeat(25)).slice(0,25)+" ".repeat(3)
+      +(m?"2":"0")+cnN(0,13)+cnN(m?cnC(cfg.multa):0,4)+(m?d1:cnN(0,6))
+      +cnN(0,11)+" ".repeat(8)+"01"+cnA(b.seu,10)+cnD(b.venc)+cnN(cnC(b.valor),13)+cnN(cfg.limite,2)+" ".repeat(6)+"99"+"N"+" ".repeat(9)
+      +(j?"2":"0")+cnN(0,13)+cnN(j?cnC(cfg.juros):0,4)+(j?d1:cnN(0,6))
+      +"0"+cnN(0,13)+cnN(0,4)+cnN(0,6)+cnN(0,13)
+      +"01"+cnN(b.cpf,14)+cnA(b.nome,40)+cnA(b.end,40)+cep.slice(0,5)+cep.slice(5)+cnA(b.msg,70)+cnN(i+2,6))});
+  L.push("9"+cnN(bols.length,6)+" ".repeat(387)+cnN(bols.length+2,6));
+  if(L.some(l=>l.length!==400))throw new Error("Linha fora do tamanho do layout");
+  return L.join("\r\n")+"\r\n";
+}
+function cnabRetorno(txt){
+  return txt.split(/\r?\n/).filter(l=>l[0]==="1"&&l.length>=240).map(l=>({controle:l.slice(37,62).trim(),oc:l.slice(89,91),data:cnISO(l.slice(91,97)),
+    seu:l.slice(97,107).trim(),nosso:l.slice(107,118).trim()||l.slice(70,81).trim(),venc:cnISO(l.slice(118,124)),valor:+l.slice(124,137)/100,
+    pago:+l.slice(159,172)/100,credito:cnISO(l.slice(172,178)),nome:l.slice(181,221).trim(),cpf:l.slice(226,240).replace(/^000/,""),motivo:l.slice(240,380).trim()}));
+}
+function dlText(nome,txt){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/plain"}));a.download=nome;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+function bolAluno(r){const k=r.controle.lastIndexOf("M"),id=k>0?r.controle.slice(0,k):r.controle;let a=S.alunos.find(x=>x.id===id);
+  if(!a){const c=r.cpf.replace(/\D/g,"").slice(-11);const L=S.alunos.filter(x=>String(x.cpf||"").replace(/\D/g,"")===c);if(L.length===1)a=L[0]}return a||null}
+
+function boletoModal(aba){
+  const cfg=bolCfg();
+  const seg=`<div class="seg" role="group" aria-label="Boletos"><button data-ba="gerar" aria-pressed="${aba==="gerar"}">Gerar remessa</button><button data-ba="retorno" aria-pressed="${aba==="retorno"}">Ler retorno do Inter</button></div>`;
+  if(aba==="retorno"){
+    modal(`<h3>Boletos Inter</h3>${seg}
+      <div class="note">No Inter: Cobranças › Emissão via CNAB › Retorno. Baixe o arquivo <b>.RET</b> e escolha aqui: os boletos pagos viram pagamento registrado, com a data em que o aluno pagou.</div>
+      <label class="field">Arquivo de retorno<input id="rF" type="file" accept=".ret,.RET,.txt"></label><div id="rOut"></div>
+      <div class="acts"><button class="btn" data-close>Fechar</button><button class="btn primary" id="rOk" disabled>Dar baixa</button></div>`,
+    ov=>{ov.querySelectorAll("[data-ba]").forEach(b=>b.onclick=()=>boletoModal(b.dataset.ba));let fila=[];
+      $("rF").onchange=async e=>{const f=e.target.files[0];if(!f)return;const R=cnabRetorno(await f.text());
+        const pagos=R.filter(r=>r.oc==="06"),erros=R.filter(r=>r.oc==="03"),abertos=R.filter(r=>r.oc==="02").length,baix=R.filter(r=>r.oc==="07").length;
+        const ja=new Set(S.pags.map(p=>p.nossoNumero).filter(Boolean));
+        fila=pagos.map(r=>({r,a:bolAluno(r),dup:ja.has(r.nosso)})).sort((x,y)=>(x.r.venc||"").localeCompare(y.r.venc||""));
+        const ok=fila.filter(x=>x.a&&!x.dup);
+        $("rOut").innerHTML=`<div class="note">${R.length} boletos no arquivo · ${pagos.length} pagos · ${abertos} registrados em aberto${erros.length?` · <b class="neg">${erros.length} com erro</b>`:""}${baix?` · ${baix} baixados`:""}</div>
+          ${fila.length?`<div class="list">${fila.map(x=>`<div class="item${x.a&&!x.dup?"":" dim"}"><div><div class="name">${esc(x.a?x.a.nome:x.r.nome)}</div>
+            <div class="meta num"><span>venc. ${fmtDY(x.r.venc)}</span><span>pago ${fmtDY(x.r.data)}</span><span>${brl(x.r.pago||x.r.valor)}</span></div></div>
+            <div class="right"><span class="pill ${x.dup?"s-emdia":x.a?"s-vence":"s-atrasado"}">${x.dup?"Já registrado":x.a?"Vai dar baixa":"Aluno não encontrado"}</span></div></div>`).join("")}</div>`:""}
+          ${erros.length?`<div class="rbox note"><b>Boletos recusados pelo Inter</b>${erros.map(r=>`<div>${esc(r.nome||r.seu)}: ${esc(r.motivo||"sem motivo informado")}</div>`).join("")}</div>`:""}`;
+        const b=$("rOk");b.disabled=!ok.length;b.textContent=ok.length?`Dar baixa em ${ok.length} ${ok.length===1?"pagamento":"pagamentos"}`:"Nada para dar baixa"};
+      $("rOk").onclick=()=>{if(!needDb())return;const ok=fila.filter(x=>x.a&&!x.dup);if(!ok.length)return;
+        guard(async()=>{const est={};
+          for(const{r,a}of ok){const cur=est[a.id]||{proxVenc:a.proxVenc,ultimoPgto:a.ultimoPgto||null};const d=r.data||r.credito||todayISO(),v=r.pago||r.valor;
+            await S.db.collection("pagamentos").add({alunoId:a.id,nome:a.nome,valor:v,data:d,forma:"Boleto",nossoNumero:r.nosso,registradoEm:nowISO(),vencAnterior:cur.proxVenc||null,ultimoAnterior:cur.ultimoPgto});
+            const novo=addMonth(cur.proxVenc||d,a.dia);est[a.id]={proxVenc:novo,ultimoPgto:d};
+            await S.db.doc("alunos/"+a.id).update({ultimoPgto:d,proxVenc:novo})}
+        },`${ok.length} ${ok.length===1?"pagamento registrado":"pagamentos registrados"}`)};
+    },true);return}
+
+  const cand=S.alunos.filter(a=>a.status!=="pausado"&&!a.cortesia).sort((x,y)=>((y.cobranca==="Boleto")-(x.cobranca==="Boleto"))||x.nome.localeCompare(y.nome,"pt"));
+  modal(`<h3>Boletos Inter</h3>${seg}
+    <details ${cfg.conta?"":"open"}><summary class="note">Dados da conta e regras de atraso</summary>
+    <div class="grid2"><label class="field">Razão social<input id="bR" maxlength="30" value="${esc(cfg.razao)}"></label>
+    <label class="field">Conta corrente Inter (com dígito, sem traço)<input id="bC" inputmode="numeric" value="${esc(cfg.conta)}"></label>
+    <label class="field">Multa por atraso (%)<input id="bM" type="number" step="0.01" value="${cfg.multa}"></label>
+    <label class="field">Juros (% ao mês)<input id="bJ" type="number" step="0.01" value="${cfg.juros}"></label>
+    <label class="field">Pode pagar até<select id="bL">${[["0","o vencimento"],["30","30 dias depois"],["60","60 dias depois"]].map(([v,t])=>`<option value="${v}" ${cfg.limite==v?"selected":""}>${t}</option>`).join("")}</select></label>
+    <label class="field">Nº da próxima remessa<input id="bS" type="number" min="1" value="${cfg.seq}"></label></div>
+    <label class="field">Mensagem no boleto<input id="bG" maxlength="50" value="${esc(cfg.msg)}"></label></details>
+    <div class="note">Marque quem recebe boleto. "Meses" gera um boleto por mês a partir do 1º vencimento: 1 no mensal, 12 no anual com fidelidade.</div>
+    <div class="list" id="bList">${cand.map(a=>{const p=bolPend(a),v1=bolPrimeiro(a);return `<div class="item${p.length?" dim":""}">
+      <label class="check" style="display:flex;gap:10px;align-items:center"><input type="checkbox" data-bsel="${a.id}" ${a.cobranca==="Boleto"&&!p.length?"checked":""} ${p.length?"disabled":""}>
+      <div><div class="name">${esc(a.nome)}</div><div class="meta num"><span>${brl(+a.valor||0)}</span><span>1º venc. ${fmtDY(v1)}</span>${a.boletoAte?`<span>boletos até ${fmtDY(a.boletoAte)}</span>`:""}${p.length?`<span class="neg">falta ${p.join(", ")}</span>`:""}</div></div></label>
+      <div class="right">${p.length?`<button class="btn sm" data-bedit="${a.id}">Completar</button>`:`<label class="note" style="display:flex;gap:6px;align-items:center">Meses<input type="number" min="1" max="12" value="1" data-bmes="${a.id}" style="width:64px"></label>`}</div></div>`}).join("")||`<div class="empty"><b>Nenhum aluno ativo</b></div>`}</div>
+    <div class="totalbox num"><span id="bTot">0 boletos</span><span id="bVal">R$ 0,00</span></div>
+    <div class="acts"><button class="btn" data-close>Fechar</button><button class="btn primary" id="bOk">Gerar arquivo .REM</button></div>`,
+  ov=>{ov.querySelectorAll("[data-ba]").forEach(b=>b.onclick=()=>boletoModal(b.dataset.ba));
+    ov.querySelectorAll("[data-bedit]").forEach(b=>b.onclick=()=>alunoModal(b.dataset.bedit));
+    const lista=()=>[...ov.querySelectorAll("[data-bsel]:checked")].map(c=>{const a=S.alunos.find(x=>x.id===c.dataset.bsel);const m=Math.max(1,Math.min(12,parseInt((ov.querySelector(`[data-bmes="${a.id}"]`)||{}).value)||1));return{a,m}});
+    const tot=()=>{const L=lista(),n=L.reduce((s,x)=>s+x.m,0),v=L.reduce((s,x)=>s+x.m*(+x.a.valor||0),0);$("bTot").textContent=`${n} ${n===1?"boleto":"boletos"} · ${L.length} ${L.length===1?"aluno":"alunos"}`;$("bVal").textContent=brl(v)};
+    ov.addEventListener("input",tot);ov.addEventListener("change",tot);tot();
+    $("bOk").onclick=()=>{if(!needDb())return;
+      const c={razao:$("bR").value.trim(),conta:$("bC").value.replace(/\D/g,""),multa:+$("bM").value||0,juros:+$("bJ").value||0,limite:$("bL").value,seq:parseInt($("bS").value)||1,msg:$("bG").value.trim()};
+      if(!c.razao||c.conta.length<5){toast("Preencha a razão social e a conta do Inter.");ov.querySelector("details").open=true;return}
+      const L=lista();if(!L.length){toast("Marque pelo menos um aluno.");return}
+      const bols=[],ate={};
+      L.forEach(({a,m})=>{const v1=bolPrimeiro(a);for(let k=0;k<m;k++){const venc=k?addMonth(v1,a.dia,k):v1;
+        bols.push({controle:a.id+"M"+pad(k+1),seu:"PV"+cnN(c.seq,4)+cnN(bols.length+1,4),venc,valor:+a.valor,cpf:a.cpf,nome:a.nome,end:a.endereco,cep:a.cep,
+          msg:`${c.msg} ${venc.slice(5,7)}/${venc.slice(0,4)}${m>1?` PARCELA ${k+1}/${m}`:""}`});ate[a.id]=venc}});
+      let txt;try{txt=cnabRemessa(c,bols)}catch(e){toast(e.message);return}
+      const nome="CI400_001_"+cnN(c.seq,7)+".REM";dlText(nome,txt);
+      guard(async()=>{await setDoc(doc(fs,"caixa_config","boleto"),{...c,seq:c.seq+1,ultima:{arquivo:nome,em:nowISO(),boletos:bols.length}},{merge:true});
+        for(const id in ate)await S.db.doc("alunos/"+id).update({boletoAte:ate[id],cobranca:"Boleto"})},
+        `${nome} baixado com ${bols.length} ${bols.length===1?"boleto":"boletos"}. Agora suba no Inter.`)};
+  },true);
 }
 
 /* um modal para qualquer lançamento — gasto, entrada ou item de evento */
@@ -1058,6 +1173,7 @@ document.addEventListener("click",async e=>{
     await guard(async()=>{for(const l of its)await S.db.doc("lancamentos/"+l.id).update({previsto:false,registradoEm:nowISO()})},`${its.length} itens marcados como no caixa`,true);busy=false}
 });
 $("btnNovoAluno").onclick=()=>alunoModal(null);
+$("btnBoleto").onclick=()=>boletoModal("gerar");
 $("btnNovoEv").onclick=()=>eventoModal(null);
 $("btnGasto").onclick=()=>itemModal({tipo:"saida",frente:S.lf!=="todos"?S.lf:"geral"});
 $("btnEntrada").onclick=()=>itemModal({tipo:"entrada",frente:S.lf!=="todos"&&S.lf!=="retirada"?S.lf:"geral"});
@@ -1589,6 +1705,7 @@ onAuthStateChanged(auth,async u=>{
   col("eventos",s=>{S.eventos=s.docs.map(d=>({id:d.id,...d.data()}));S.loaded.e=true;render()});
   unsubs.push(onSnapshot(doc(fs,"projeto","info"),s=>{S.info=s.exists()?s.data():null;render()},()=>{}));
   unsubs.push(DBA.doc("config/banco").onSnapshot(s=>{S.banco=s.exists?s.data():null;render()},fail));
+  unsubs.push(DBA.doc("config/boleto").onSnapshot(s=>{S.bol=s.exists?s.data():null},fail));
   unsubs.push(DBA.doc("config/fiscal").onSnapshot(s=>{S.fiscal=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/cenario").onSnapshot(s=>{if(!Object.keys(planPend).length)S.cen=s.exists?s.data():null;render()},fail));
   unsubs.push(DBA.doc("config/orcamentos").onSnapshot(s=>{S.orcs=(s.exists&&s.data().lista)||{};render()},fail));
